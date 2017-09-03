@@ -27,6 +27,8 @@
 #include <iterator>
 #include <type_traits>
 
+#include "details/iterator.hpp"
+
 namespace constexprStd {
 
 template<typename Container>
@@ -78,6 +80,13 @@ class insert_iterator {
 		return *this;
 	}
 };
+
+template<typename InputIterator, typename Distance>
+constexpr void advance(InputIterator& i, const Distance n)
+		noexcept(noexcept(details::advanceImpl(i, n, details::iteratorCategory<InputIterator>))) {
+	details::advanceImpl(i, n, details::iteratorCategory<InputIterator>);
+	return;
+}
 
 template<typename Container>
 constexpr insert_iterator<Container> inserter(Container& c, const typename Container::iterator iter)

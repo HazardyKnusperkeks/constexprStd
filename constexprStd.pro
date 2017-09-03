@@ -46,7 +46,8 @@ gcc {
 SOURCES		 = test_main.cpp\
 			   test_files/*.cpp
 
-HEADERS		 = include/constexprStd/*
+HEADERS		 = include/constexprStd/*\
+			   include/constexprStd/details/*
 
 OTHER_FILES	+= constexprStd.pri\
 			   LICENSE\

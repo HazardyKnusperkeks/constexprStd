@@ -35,7 +35,7 @@ Has to be checked if there are actually `constexpr` streams.
 
 #### Iterator operations
 Are actually defined as `constexpr`, but as stated earlier there are bugs in the GCC implementation, so we provide them too.
-- [ ] advance
+- [X] advance
 - [ ] distance
 - [ ] next
 - [ ] prev
