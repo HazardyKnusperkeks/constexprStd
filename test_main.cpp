@@ -18,6 +18,37 @@
 
 #include <QtTest>
 
+#include <array>
+#include <set>
+
+#include <constexprStd/iterator>
+
+class TestContainer : public std::array<int, 10> {
+	public:
+	constexpr TestContainer(void) noexcept : std::array<int, 10>{{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}} {
+		return;
+	}
+	
+	constexpr TestContainer(std::array<int, 10> a) noexcept : std::array<int, 10>{a} {
+		return;
+	}
+	
+	constexpr iterator insert(iterator iter, const int value) noexcept {
+		*iter = value;
+		return iter;
+	}
+	
+	constexpr bool operator==(const TestContainer& c) const noexcept {
+		for ( std::size_t i = 0; i < 10u; ++i ) {
+			if ( operator[](i) != c[i] ) {
+				return false;
+			} //if ( operator[](i) != c[i] )
+		} //for ( std::size_t i = 0; i < 10u; ++i )
+		return true;
+	}
+};
+
+
 class TestConstexprStd : public QObject {
 	Q_OBJECT
 	private slots:
