@@ -12,3 +12,33 @@ Projects based on Qt can `include(constexprStd/constexprStd.pri)` in their proje
 
 And then you use the library just like the STL.  
 Instead of `#include <algorithm>` you write `#include <constexprStd/algorithm>` and the content is in the namespace `constexprStd::` instead of `std::`.
+
+## Implementation
+### [Iterator library](http://en.cppreference.com/w/cpp/iterator)
+#### Iterator primitives
+These can be used directly from the `std::` namespace.
+
+#### Iterator adaptors
+- [ ] reverse_iterator
+- [ ] make_reverse_iterator
+- [ ] move_iterator
+- [ ] make_move_iterator
+- [ ] back_insert_iterator
+- [ ] back_inserter
+- [ ] front_insert_iterator
+- [ ] front_inserter
+- [X] insert_iterator
+- [X] inserter
+
+#### Stream iterators
+Has to be checked if there are actually `constexpr` streams.
+
+#### Iterator operations
+Are actually defined as `constexpr`, but as stated earlier there are bugs in the GCC implementation, so we provide them too.
+- [ ] advance
+- [ ] distance
+- [ ] next
+- [ ] prev
+
+#### Range access & Container access
+These can be used directly from the `std::` namespace.

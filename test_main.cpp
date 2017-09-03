@@ -52,10 +52,38 @@ class TestContainer : public std::array<int, 10> {
 class TestConstexprStd : public QObject {
 	Q_OBJECT
 	private slots:
+	void testInsert_iterator(void) const noexcept;
 	
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
 };
+
+void TestConstexprStd::testInsert_iterator(void) const noexcept {
+	//Test the acutal constexprness
+	auto l = [](void) constexpr {
+			TestContainer c;
+			auto iter = c.begin() + 5;
+			auto inserter = constexprStd::inserter(c, iter);
+			for ( int i = 0; i < 3; ++i ) {
+				*inserter = i;
+			} //for ( int i = 0; i < 3; ++i )
+			return c;
+		};
+	static_assert(l() == TestContainer{std::array{1, 2, 3, 4, 5, 0, 1, 2, 9, 10}});
+	
+	//Test runtime behavior and compare against std::insert_iterator.
+	std::set<int> cs{1, 4, 5}, ss{cs};
+	auto cinserter = constexprStd::inserter(cs, cs.end());
+	auto sinserter =          std::inserter(ss, ss.end());
+	
+	for ( int i = 0; i < 3; ++i ) {
+		*cinserter = i;
+		*sinserter = i;
+	} //for ( int i = 0; i < 3; ++i )
+	QCOMPARE(cs, (std::set{0, 1, 2, 4, 5}));
+	QCOMPARE(ss, (std::set{0, 1, 2, 4, 5}));
+	return;
+}
 
 QTEST_APPLESS_MAIN(TestConstexprStd)
 
