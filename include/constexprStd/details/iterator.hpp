@@ -64,6 +64,25 @@ constexpr void advanceImpl(RandomAccessIterator& i, const Distance n, std::rando
 	return;
 }
 
+template<typename InputIterator>
+constexpr auto distanceImpl(InputIterator first, const InputIterator last, const std::input_iterator_tag)
+		noexcept(noexcept(first != last) && noexcept(++first) &&
+		         std::is_nothrow_constructible_v<typename std::iterator_traits<InputIterator>::difference_type, int> &&
+		         noexcept(++std::declval<typename std::iterator_traits<InputIterator>::difference_type&>())) {
+	typename std::iterator_traits<InputIterator>::difference_type n = 0;
+	for ( ; first != last; ++first, ++n ) {
+		
+	} //for ( ; first != last; ++first, ++n )
+	return n;
+}
+
+template<typename RandomAccessIterator>
+constexpr auto distanceImpl(RandomAccessIterator first, const RandomAccessIterator last,
+                            const std::random_access_iterator_tag)
+		noexcept(noexcept(last - first)) {
+	return last - first;
+}
+
 } //namespace constexprStd::details
 
 #endif

@@ -88,6 +88,12 @@ constexpr void advance(InputIterator& i, const Distance n)
 	return;
 }
 
+template<typename InputIterator>
+constexpr auto distance(const InputIterator first, const InputIterator last)
+		noexcept(noexcept(details::distanceImpl(first, last, details::iteratorCategory<InputIterator>))) {
+	return details::distanceImpl(first, last, details::iteratorCategory<InputIterator>);
+}
+
 template<typename Container>
 constexpr insert_iterator<Container> inserter(Container& c, const typename Container::iterator iter)
 		noexcept(std::is_nothrow_constructible_v<insert_iterator<Container>, Container&,

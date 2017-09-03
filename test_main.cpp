@@ -60,6 +60,7 @@ class TestConstexprStd : public QObject {
 	
 	//Iterator operations
 	void testAdvance(void) const noexcept;
+	void testDistance(void) const noexcept;
 	
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
@@ -175,6 +176,48 @@ void TestConstexprStd::testAdvance(void) const noexcept {
 	         std::advance(sfiter, 8);
 	QCOMPARE(*cfiter, 9);
 	QCOMPARE(*sfiter, 9);
+	return;
+}
+
+void TestConstexprStd::testDistance(void) const noexcept {
+	//Test the acutal constexprness
+	auto ran1 = [](void) constexpr {
+			TestContainer c;
+			return constexprStd::distance(c.begin(), c.end());
+		};
+	static_assert(ran1() == 10);
+	auto ran2 = [](void) constexpr {
+			TestContainer c;
+			return constexprStd::distance(c.end(), c.begin());
+		};
+	static_assert(ran2() == -10);
+	auto fwd = [](void) constexpr {
+		TestContainer c;
+		//A little cheating
+		return constexprStd::details::distanceImpl(c.begin(), c.end(), std::input_iterator_tag{});
+	};
+	static_assert(fwd() == 10);
+	
+	//Test runtime behavior and compare against std::distance.
+	
+	//Random Access
+	TestContainer c;
+	auto ccdist = constexprStd::distance(c.begin(), c.end());
+	auto scdist =          std::distance(c.begin(), c.end());
+	QCOMPARE(ccdist, 10);
+	QCOMPARE(scdist, 10);
+	
+	ccdist = constexprStd::distance(c.end(), c.begin());
+	scdist =          std::distance(c.end(), c.begin());
+	QCOMPARE(ccdist, -10);
+	QCOMPARE(scdist, -10);
+	
+	//Fwd
+	std::forward_list<int> f{1, 2, 3, 4, 5, 6};
+	auto cfdist = constexprStd::distance(f.begin(), f.end());
+	auto sfdist =          std::distance(f.begin(), f.end());
+	QCOMPARE(cfdist, 6);
+	QCOMPARE(sfdist, 6);
 	return;
 }
 
