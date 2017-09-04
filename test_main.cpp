@@ -22,8 +22,19 @@
 #include <forward_list>
 #include <list>
 #include <set>
+#include <string>
+#include <string_view>
+#include <utility>
 
 #include <constexprStd/iterator>
+#include <constexprStd/utility>
+
+namespace QTest {
+static bool qCompare(const std::string& t1, const char *t2, const char *actual, const char *expected, const char *file,
+                     const int line) {
+	return compare_string_helper(t1.c_str(), t2, actual, expected, file, line);
+}
+} //namespace QTest
 
 class TestContainer : public std::array<int, 10> {
 	public:
@@ -61,6 +72,10 @@ class TestConstexprStd : public QObject {
 	//Iterator operations
 	void testAdvance(void) const noexcept;
 	void testDistance(void) const noexcept;
+	
+	//Utility lib
+	//Swap, forward and move
+	void testExchange(void) const noexcept;
 	
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
@@ -218,6 +233,35 @@ void TestConstexprStd::testDistance(void) const noexcept {
 	auto sfdist =          std::distance(f.begin(), f.end());
 	QCOMPARE(cfdist, 6);
 	QCOMPARE(sfdist, 6);
+	return;
+}
+
+void TestConstexprStd::testExchange(void) const noexcept {
+	//Test the acutal constexprness
+	auto l = [](int i) constexpr noexcept {
+			return constexprStd::exchange(i, 5);
+		};
+	static_assert(l(8) == 8);
+	
+	//Test runtime behavior and compare against std::exchange.
+	std::string cstr1 = "foo";
+	std::string sstr1 = "foo";
+	QCOMPARE(cstr1, "foo");
+	QCOMPARE(sstr1, "foo");
+	
+	auto cstr2 = constexprStd::exchange(cstr1, std::string{"bar"});
+	auto sstr2 =          std::exchange(sstr1, std::string{"bar"});
+	QCOMPARE(cstr1, "bar");
+	QCOMPARE(sstr1, "bar");
+	QCOMPARE(cstr2, "foo");
+	QCOMPARE(sstr2, "foo");
+	
+	cstr2 = constexprStd::exchange(cstr1, "baz");
+	sstr2 =          std::exchange(sstr1, "baz");
+	QCOMPARE(cstr1, "baz");
+	QCOMPARE(sstr1, "baz");
+	QCOMPARE(cstr2, "bar");
+	QCOMPARE(sstr2, "bar");
 	return;
 }
 

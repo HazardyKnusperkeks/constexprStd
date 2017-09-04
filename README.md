@@ -42,3 +42,32 @@ Are actually defined as `constexpr`, but as stated earlier there are bugs in the
 
 #### Range access & Container access
 These can be used directly from the `std::` namespace.
+
+### [Utility library](http://en.cppreference.com/w/cpp/utility)
+#### optional, variant and any
+Will be handled seperately
+
+#### Pairs and tuples
+Is mostly `constexpr`, so nothing to do here
+
+#### Swap, forward and move
+- [ ] swap
+- [X] exchange
+The remainder is `constexpr`.
+
+#### Type operations
+These can be used directly from the `std::` namespace.
+
+#### Relational operators
+- [ ] operator!=
+- [ ] operator>
+- [ ] operator<=
+- [ ] operator>=
+
+#### Elementary string conversions
+- [ ] to_chars
+- [ ] from_chars
+- [X] chars_format: This can be used directly from the `std::` namespace.
+
+#### Hash support
+- [ ] hash
