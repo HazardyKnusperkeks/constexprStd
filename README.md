@@ -188,6 +188,7 @@ Is mostly `constexpr`, so nothing to do here
 #### Swap, forward and move
 - [ ] swap
 - [X] exchange
+
 The remainder is `constexpr`.
 
 #### Type operations
