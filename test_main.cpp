@@ -18,6 +18,7 @@
 
 #include <QtTest>
 
+#include <algorithm>
 #include <array>
 #include <forward_list>
 #include <list>
@@ -26,6 +27,7 @@
 #include <string_view>
 #include <utility>
 
+#include <constexprStd/algorithm>
 #include <constexprStd/iterator>
 #include <constexprStd/utility>
 
@@ -65,6 +67,10 @@ class TestContainer : public std::array<int, 10> {
 class TestConstexprStd : public QObject {
 	Q_OBJECT
 	private slots:
+	//Algorithm lib
+	//Modifying sequence operations
+	void testCopy(void) const noexcept;
+	
 	//Iterator lib
 	//Iterator adaptors
 	void testInsert_iterator(void) const noexcept;
@@ -80,6 +86,51 @@ class TestConstexprStd : public QObject {
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
 };
+
+void TestConstexprStd::testCopy(void) const noexcept {
+	//Test the acutal constexprness
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			std::array a{42, 66, 0x185, 1337};
+			constexprStd::copy(a.begin(), a.end(), c.begin());
+			return c;
+		};
+	static_assert(l() == TestContainer{std::array{42, 66, 0x185, 1337, 5, 6, 7, 8, 9, 10}});
+	
+	//Test runtime behavior and compare against std::copy.
+	TestContainer cc;
+	TestContainer sc;
+	const std::array sa{19, 97};
+	int ba[2] = {18, 85};
+	const TestContainer expected1;
+	const TestContainer expected2{std::array{19, 97,  3,  4,  5,  6,  7,  8,  9, 10}};
+	const TestContainer expected3{std::array{19, 97, 18, 85,  5,  6,  7,  8,  9, 10}};
+	const TestContainer expected4{std::array{19, 97, 18, 85, 19, 97,  7,  8,  9, 10}};
+	const TestContainer expected5{std::array{19, 97, 18, 85, 19, 97, 18, 85,  9, 10}};
+	auto citer = cc.begin();
+	auto siter = sc.begin();
+	
+	QCOMPARE(cc, expected1);
+	QCOMPARE(sc, expected1);
+	
+	citer = constexprStd::copy(sa.begin(), sa.end(), citer);
+	siter =          std::copy(sa.begin(), sa.end(), siter);
+	QCOMPARE(cc, expected2);
+	QCOMPARE(sc, expected2);
+	
+	citer = constexprStd::copy(&ba[0], &ba[2], citer);
+	siter =          std::copy(&ba[0], &ba[2], siter);
+	QCOMPARE(cc, expected3);
+	QCOMPARE(sc, expected3);
+	
+	//Test convenience overoads
+	citer = constexprStd::copy(sa, citer);
+	QCOMPARE(cc, expected4);
+	
+	citer = constexprStd::copy(ba, citer);
+	QCOMPARE(cc, expected5);
+	return;
+}
 
 void TestConstexprStd::testInsert_iterator(void) const noexcept {
 	//Test the acutal constexprness

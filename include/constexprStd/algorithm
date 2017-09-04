@@ -1,0 +1,56 @@
+/**
+ ** This file is part of the constexprStd project.
+ ** Copyright 2017 Björn Schäpers <bjoern@hazardy.de>.
+ **
+ ** This program is free software: you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as
+ ** published by the Free Software Foundation, either version 3 of the
+ ** License, or (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU Lesser General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+/**
+ * @file
+ * @brief Defines constexpr variants of the <algorithm>.
+ */
+
+#ifndef CONSTEXPRSTD_ALGORITHM
+#define CONSTEXPRSTD_ALGORITHM
+
+#include <iterator>
+#include <type_traits>
+
+#include <constexprStd/iterator>
+
+#include "details/algorithm.hpp"
+
+namespace constexprStd {
+
+/*****                                       Modifying sequence operations                                        *****/
+
+template<typename InputIterator, typename OutputIterator>
+constexpr OutputIterator copy(InputIterator sourceFirst, const InputIterator sourceLast, OutputIterator destination)
+		noexcept(noexcept(sourceFirst != sourceLast) && noexcept(++sourceFirst) && noexcept(++destination) &&
+		         noexcept(*destination = *sourceFirst)) {
+	for ( ; sourceFirst != sourceLast; ++sourceFirst, ++destination ) {
+		*destination = *sourceFirst;
+	} //for ( ; sourceFirst != sourceLast; ++sourceFirst, ++destination )
+	return destination;
+}
+
+template<typename Container, typename OutputIterator>
+constexpr OutputIterator copy(const Container& container, OutputIterator destination)
+		noexcept(noexcept(copy(std::begin(container), std::end(container), destination))) {
+	return copy(std::begin(container), std::end(container), destination);
+}
+
+} //namespace constexprStd
+
+#endif
