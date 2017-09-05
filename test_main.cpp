@@ -71,6 +71,7 @@ class TestConstexprStd : public QObject {
 	//Non-modifying sequence operations
 	void testEqual(void) const noexcept;
 	void testUnequal(void) const noexcept;
+	void testFindIf(void) const noexcept;
 	
 	//Modifying sequence operations
 	void testCopy(void) const noexcept;
@@ -306,6 +307,23 @@ void TestConstexprStd::testUnequal(void) const noexcept {
 	QVERIFY(!(constexprStd::equal(cla, cc1)));
 	QVERIFY(!(constexprStd::equal(cnl, cc1)));
 	QVERIFY(!(constexprStd::equal(cll, cc1)));
+	return;
+}
+
+void TestConstexprStd::testFindIf(void) const noexcept {
+	//Test constexprness
+	constexpr TestContainer cc;
+	
+	auto isFive   = [](const int i) constexpr noexcept { return i %  5 == 0; };
+	auto isEleven = [](const int i) constexpr noexcept { return i % 11 == 0; };
+	
+	static_assert(*constexprStd::find_if(cc.begin(), cc.end(), isFive) == 5);
+	static_assert(constexprStd::find_if(cc.begin(), cc.end(), isEleven) == cc.end());
+	
+	static_assert(*constexprStd::find_if(cc, isFive) == 5);
+	static_assert(constexprStd::find_if(cc, isEleven) == cc.end());
+	
+	//I don't think a comparison to std::find_if is neccessary.
 	return;
 }
 

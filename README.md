@@ -29,7 +29,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] mismatch
 - [X] equal
 - [ ] find
-- [ ] find_if
+- [X] find_if
 - [ ] find_if_not
 - [ ] find_end
 - [ ] find_first_of
