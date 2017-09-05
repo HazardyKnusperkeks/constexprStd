@@ -32,6 +32,69 @@
 #include "details/algorithm.hpp"
 
 namespace constexprStd {
+/*****                                     Non-modifying sequence operations                                      *****/
+
+template<typename IterT1, typename IterT2, typename BinaryPredicate>
+constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const BinaryPredicate pred)
+		noexcept(noexcept(first1 != last1) && noexcept(++first1, ++first2) && noexcept(pred(*first1, *first2))) {
+	for ( ; first1 != last1; ++first1, ++first2 ) {
+		if ( !pred(*first1, *first2) ) {
+			return false;
+		} //if ( !pred(*first1, *first2) )
+	} //for ( ; first1 != last1; ++first1, ++first2 )
+	return true;
+}
+
+template<typename IterT1, typename IterT2>
+constexpr bool equal(const IterT1 first1, const IterT1 last1, const IterT2 first2)
+		noexcept(noexcept(constexprStd::equal(first1, last1, first2,
+		                                      *details::cmp::equal<std::decay_t<decltype(*first1)>,
+		                                                           std::decay_t<decltype(*first2)>>))) {
+	return constexprStd::equal(first1, last1, first2, *details::cmp::equal<std::decay_t<decltype(*first1)>,
+	                                                                       std::decay_t<decltype(*first2)>>);
+}
+
+template<typename Container, typename IterT2, typename BinaryPredicate>
+constexpr bool equal(const Container& c, const IterT2 first2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::equal(std::begin(c), std::end(c), first2, pred))) {
+	return constexprStd::equal(std::begin(c), std::end(c), first2, pred);
+}
+
+template<typename Container, typename IterT2, std::enable_if_t<details::IsIterV<IterT2>>* = nullptr>
+constexpr bool equal(const Container& c, const IterT2 first2)
+		noexcept(noexcept(constexprStd::equal(std::begin(c), std::end(c), first2))) {
+	return constexprStd::equal(std::begin(c), std::end(c), first2);
+}
+
+template<typename IterT1, typename IterT2, typename BinaryPredicate>
+constexpr bool equal(const IterT1 first1, const IterT1 last1, const IterT2 first2, const IterT2 last2,
+                     const BinaryPredicate pred)
+		noexcept(noexcept(details::equalImpl(first1, last1, first2, last2, pred))) {
+	return details::equalImpl(first1, last1, first2, last2, pred);
+}
+
+template<typename IterT1, typename IterT2>
+constexpr bool equal(const IterT1 first1, const IterT1 last1, const IterT2 first2, const IterT2 last2)
+		noexcept(noexcept(constexprStd::equal(first1, last1, first2, last2,
+		                                      *details::cmp::equal<std::decay_t<decltype(*first1)>,
+		                                                           std::decay_t<decltype(*first2)>>))) {
+	return constexprStd::equal(first1, last1, first2, last2,
+	                           *details::cmp::equal<std::decay_t<decltype(*first1)>,
+	                                                std::decay_t<decltype(*first2)>>);
+}
+
+template<typename Container1, typename Container2, typename BinaryPredicate>
+constexpr bool equal(const Container1& c1, const Container2& c2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), pred))) {
+	return constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), pred);
+}
+
+template<typename Container1, typename Container2,
+         std::enable_if_t<std::negation_v<details::IsIter<Container2>>>* = nullptr>
+constexpr bool equal(const Container1& c1, const Container2& c2)
+		noexcept(noexcept(constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2)))) {
+	return constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2));
+}
 
 /*****                                       Modifying sequence operations                                        *****/
 

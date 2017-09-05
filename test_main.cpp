@@ -68,6 +68,10 @@ class TestConstexprStd : public QObject {
 	Q_OBJECT
 	private slots:
 	//Algorithm lib
+	//Non-modifying sequence operations
+	void testEqual(void) const noexcept;
+	void testUnequal(void) const noexcept;
+	
 	//Modifying sequence operations
 	void testCopy(void) const noexcept;
 	
@@ -86,6 +90,224 @@ class TestConstexprStd : public QObject {
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
 };
+
+void TestConstexprStd::testEqual(void) const noexcept {
+	constexpr TestContainer cc1, cc2;
+	constexpr std::array csa{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	constexpr int cba[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	constexpr std::array cla{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+	
+	//We only test the overloads without the predicates, because they call the ones with.
+	
+	//Test 3 argument overload
+	static_assert(constexprStd::equal(cc1.begin(), cc1.end(), cc2.begin()));
+	static_assert(constexprStd::equal(cc1.begin(), cc1.end(), csa.begin()));
+	static_assert(constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba)));
+	static_assert(constexprStd::equal(cc1.begin(), cc1.end(), cla.begin()));
+	
+	static_assert(constexprStd::equal(cc2.begin(),     cc2.end(),     cc1.begin()));
+	static_assert(constexprStd::equal(csa.begin(),     csa.end(),     cc1.begin()));
+	static_assert(constexprStd::equal(std::begin(cba), std::end(cba), cc1.begin()));
+	//static_assert(!constexprStd::equal(cla.begin(),     cla.end(),     cc1.begin())); would access out of bounds on cc1
+	
+	//Test 1st 2 argument overload
+	static_assert(constexprStd::equal(cc1, cc2.begin()));
+	static_assert(constexprStd::equal(cc1, csa.begin()));
+	static_assert(constexprStd::equal(cc1, std::begin(cba)));
+	static_assert(constexprStd::equal(cc1, cla.begin()));
+	
+	static_assert(constexprStd::equal(cc2, cc1.begin()));
+	static_assert(constexprStd::equal(csa, cc1.begin()));
+	static_assert(constexprStd::equal(cba, cc1.begin()));
+	//static_assert(!constexprStd::equal(cla, cc1.begin())); would access out of bounds on cc1
+	
+	//Test 4 argument overload
+	static_assert( constexprStd::equal(cc1.begin(), cc1.end(), cc2.begin(),     cc2.end()));
+	static_assert( constexprStd::equal(cc1.begin(), cc1.end(), csa.begin(),     csa.end()));
+	static_assert( constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba), std::end(cba)));
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), cla.begin(),     cla.end()));
+	
+	static_assert( constexprStd::equal(cc2.begin(),     cc2.end(),     cc1.begin(), cc1.end()));
+	static_assert( constexprStd::equal(csa.begin(),     csa.end(),     cc1.begin(), cc1.end()));
+	static_assert( constexprStd::equal(std::begin(cba), std::end(cba), cc1.begin(), cc1.end()));
+	static_assert(!constexprStd::equal(cla.begin(),     cla.end(),     cc1.begin(), cc1.end()));
+	
+	//Test 2nd 2 argument overload
+	static_assert( constexprStd::equal(cc1, cc2));
+	static_assert( constexprStd::equal(cc1, csa));
+	//Ambiguous because one overload works with const int[10], the next with const int*.
+	//static_assert( constexprStd::equal(cc1, cba));
+	static_assert(!constexprStd::equal(cc1, cla));
+	
+	static_assert( constexprStd::equal(cc2, cc1));
+	static_assert( constexprStd::equal(csa, cc1));
+	static_assert( constexprStd::equal(cba, cc1));
+	static_assert(!constexprStd::equal(cla, cc1));
+	
+	
+	//Test runtime and compare against std::equal
+	std::list cnl{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	std::list cll{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+	TestContainer sc1;
+	
+	//Test 3 argument overload
+	QVERIFY((constexprStd::equal(cc1.begin(), cc1.end(), cc2.begin())));
+	QVERIFY((         std::equal(sc1.begin(), sc1.end(), cc2.begin())));
+	QVERIFY((constexprStd::equal(cc1.begin(), cc1.end(), csa.begin())));
+	QVERIFY((         std::equal(sc1.begin(), sc1.end(), csa.begin())));
+	QVERIFY((constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba))));
+	QVERIFY((         std::equal(sc1.begin(), sc1.end(), std::begin(cba))));
+	QVERIFY((constexprStd::equal(cc1.begin(), cc1.end(), cla.begin())));
+	QVERIFY((         std::equal(sc1.begin(), sc1.end(), cla.begin())));
+	QVERIFY((constexprStd::equal(cc1.begin(), cc1.end(), cnl.begin())));
+	QVERIFY((         std::equal(sc1.begin(), sc1.end(), cnl.begin())));
+	QVERIFY((constexprStd::equal(cc1.begin(), cc1.end(), cll.begin())));
+	QVERIFY((         std::equal(sc1.begin(), sc1.end(), cll.begin())));
+	
+	//Test 1st 2 argument overload
+	QVERIFY((constexprStd::equal(cc1, cc2.begin())));
+	QVERIFY((constexprStd::equal(cc1, csa.begin())));
+	QVERIFY((constexprStd::equal(cc1, std::begin(cba))));
+	QVERIFY((constexprStd::equal(cc1, cla.begin())));
+	QVERIFY((constexprStd::equal(cc1, cnl.begin())));
+	QVERIFY((constexprStd::equal(cc1, cll.begin())));
+	
+	QVERIFY((constexprStd::equal(cc2, cc1.begin())));
+	QVERIFY((constexprStd::equal(csa, cc1.begin())));
+	QVERIFY((constexprStd::equal(cba, cc1.begin())));
+	QVERIFY((constexprStd::equal(cnl, cc1.begin())));
+	
+	//Test 4 argument overload
+	QVERIFY( (constexprStd::equal(cc1.begin(), cc1.end(), cc2.begin(),     cc2.end())));
+	QVERIFY( (         std::equal(sc1.begin(), sc1.end(), cc2.begin(),     cc2.end())));
+	QVERIFY( (constexprStd::equal(cc1.begin(), cc1.end(), csa.begin(),     csa.end())));
+	QVERIFY( (         std::equal(sc1.begin(), sc1.end(), csa.begin(),     csa.end())));
+	QVERIFY( (constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba), std::end(cba))));
+	QVERIFY( (         std::equal(sc1.begin(), sc1.end(), std::begin(cba), std::end(cba))));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cla.begin(),     cla.end())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cla.begin(),     cla.end())));
+	QVERIFY( (constexprStd::equal(cc1.begin(), cc1.end(), cnl.begin(),     cnl.end())));
+	QVERIFY( (         std::equal(sc1.begin(), sc1.end(), cnl.begin(),     cnl.end())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cll.begin(),     cll.end())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cll.begin(),     cll.end())));
+	
+	//Test 1st 2 argument overload
+	QVERIFY( (constexprStd::equal(cc1, cc2)));
+	QVERIFY( (constexprStd::equal(cc1, csa)));
+	//QVERIFY( (constexprStd::equal(cc1, cba)));
+	QVERIFY(!(constexprStd::equal(cc1, cla)));
+	QVERIFY( (constexprStd::equal(cc1, cnl)));
+	QVERIFY(!(constexprStd::equal(cc1, cll)));
+	
+	QVERIFY( (constexprStd::equal(cc2, cc1)));
+	QVERIFY( (constexprStd::equal(csa, cc1)));
+	QVERIFY( (constexprStd::equal(cba, cc1)));
+	QVERIFY(!(constexprStd::equal(cla, cc1)));
+	QVERIFY( (constexprStd::equal(cnl, cc1)));
+	QVERIFY(!(constexprStd::equal(cll, cc1)));
+	return;
+}
+
+void TestConstexprStd::testUnequal(void) const noexcept {
+	constexpr TestContainer cc1;
+	constexpr std::array csa{1, 2, 3, 4, 5, 6, 7, 8, 7, 10};
+	constexpr int cba[10] = {1, 2, 3, 4, 5, 6, 7, 8, 7, 10};
+	constexpr std::array cla{1, 2, 3, 4, 5, 6, 7, 8, 7, 10, 11, 12, 13};
+	
+	//We only test the overloads without the predicates, because they call the ones with.
+	
+	//Test 3 argument overload
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), csa.begin()));
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba)));
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), cla.begin()));
+	
+	static_assert(!constexprStd::equal(csa.begin(),     csa.end(),     cc1.begin()));
+	static_assert(!constexprStd::equal(std::begin(cba), std::end(cba), cc1.begin()));
+	static_assert(!constexprStd::equal(cla.begin(),     cla.end(),     cc1.begin()));
+	
+	//Test 1st 2 argument overload
+	static_assert(!constexprStd::equal(cc1, csa.begin()));
+	static_assert(!constexprStd::equal(cc1, std::begin(cba)));
+	static_assert(!constexprStd::equal(cc1, cla.begin()));
+	
+	static_assert(!constexprStd::equal(csa, cc1.begin()));
+	static_assert(!constexprStd::equal(cba, cc1.begin()));
+	static_assert(!constexprStd::equal(cla, cc1.begin()));
+	
+	//Test 4 argument overload
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), csa.begin(),     csa.end()));
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba), std::end(cba)));
+	static_assert(!constexprStd::equal(cc1.begin(), cc1.end(), cla.begin(),     cla.end()));
+	
+	static_assert(!constexprStd::equal(csa.begin(),     csa.end(),     cc1.begin(), cc1.end()));
+	static_assert(!constexprStd::equal(std::begin(cba), std::end(cba), cc1.begin(), cc1.end()));
+	static_assert(!constexprStd::equal(cla.begin(),     cla.end(),     cc1.begin(), cc1.end()));
+	
+	//Test 2nd 2 argument overload
+	static_assert(!constexprStd::equal(cc1, csa));
+	//Ambiguous because one overload works with const int[10], the next with const int*.
+	//static_assert( constexprStd::equal(cc1, cba));
+	static_assert(!constexprStd::equal(cc1, cla));
+	
+	static_assert(!constexprStd::equal(csa, cc1));
+	static_assert(!constexprStd::equal(cba, cc1));
+	static_assert(!constexprStd::equal(cla, cc1));
+	
+	
+	//Test runtime and compare against std::equal
+	std::list cnl{1, 2, 3, 4, 5, 6, 7, 8, 7, 10};
+	std::list cll{1, 2, 3, 4, 5, 6, 7, 8, 7, 10, 11, 12, 13};
+	TestContainer sc1;
+	
+	//Test 3 argument overload
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), csa.begin())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), csa.begin())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba))));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), std::begin(cba))));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cla.begin())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cla.begin())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cnl.begin())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cnl.begin())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cll.begin())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cll.begin())));
+	
+	//Test 1st 2 argument overload
+	QVERIFY(!(constexprStd::equal(cc1, csa.begin())));
+	QVERIFY(!(constexprStd::equal(cc1, std::begin(cba))));
+	QVERIFY(!(constexprStd::equal(cc1, cla.begin())));
+	QVERIFY(!(constexprStd::equal(cc1, cnl.begin())));
+	QVERIFY(!(constexprStd::equal(cc1, cll.begin())));
+	
+	QVERIFY(!(constexprStd::equal(csa, cc1.begin())));
+	QVERIFY(!(constexprStd::equal(cba, cc1.begin())));
+	QVERIFY(!(constexprStd::equal(cnl, cc1.begin())));
+	
+	//Test 4 argument overload
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), csa.begin(),     csa.end())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), csa.begin(),     csa.end())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), std::begin(cba), std::end(cba))));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), std::begin(cba), std::end(cba))));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cla.begin(),     cla.end())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cla.begin(),     cla.end())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cnl.begin(),     cnl.end())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cnl.begin(),     cnl.end())));
+	QVERIFY(!(constexprStd::equal(cc1.begin(), cc1.end(), cll.begin(),     cll.end())));
+	QVERIFY(!(         std::equal(sc1.begin(), sc1.end(), cll.begin(),     cll.end())));
+	
+	//Test 1st 2 argument overload
+	QVERIFY(!(constexprStd::equal(cc1, csa)));
+	//QVERIFY( (constexprStd::equal(cc1, cba)));
+	QVERIFY(!(constexprStd::equal(cc1, cla)));
+	QVERIFY(!(constexprStd::equal(cc1, cnl)));
+	QVERIFY(!(constexprStd::equal(cc1, cll)));
+	
+	QVERIFY(!(constexprStd::equal(csa, cc1)));
+	QVERIFY(!(constexprStd::equal(cba, cc1)));
+	QVERIFY(!(constexprStd::equal(cla, cc1)));
+	QVERIFY(!(constexprStd::equal(cnl, cc1)));
+	QVERIFY(!(constexprStd::equal(cll, cc1)));
+	return;
+}
 
 void TestConstexprStd::testCopy(void) const noexcept {
 	//Test the acutal constexprness
