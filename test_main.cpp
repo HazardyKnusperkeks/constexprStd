@@ -72,6 +72,7 @@ class TestConstexprStd : public QObject {
 	void testEqual(void) const noexcept;
 	void testUnequal(void) const noexcept;
 	void testFindIf(void) const noexcept;
+	void testFindIfNot(void) const noexcept;
 	
 	//Modifying sequence operations
 	void testCopy(void) const noexcept;
@@ -324,6 +325,23 @@ void TestConstexprStd::testFindIf(void) const noexcept {
 	static_assert(constexprStd::find_if(cc, isEleven) == cc.end());
 	
 	//I don't think a comparison to std::find_if is neccessary.
+	return;
+}
+
+void TestConstexprStd::testFindIfNot(void) const noexcept {
+	//Test constexprness
+	constexpr TestContainer cc;
+	
+	auto isOdd            = [](const int i) constexpr noexcept { return i % 2 == 1; };
+	auto isLessThanEleven = [](const int i) constexpr noexcept { return i < 11; };
+	
+	static_assert(*constexprStd::find_if_not(cc.begin(), cc.end(), isOdd) == 2);
+	static_assert(constexprStd::find_if_not(cc.begin(), cc.end(), isLessThanEleven) == cc.end());
+	
+	static_assert(*constexprStd::find_if_not(cc, isOdd) == 2);
+	static_assert(constexprStd::find_if_not(cc, isLessThanEleven) == cc.end());
+	
+	//I don't think a comparison to std::find_if_not is neccessary.
 	return;
 }
 

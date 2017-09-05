@@ -111,6 +111,19 @@ constexpr auto find_if(const Container& c, const UnaryPredicate pred)
 	return constexprStd::find_if(std::begin(c), std::end(c), pred);
 }
 
+template<typename InputIter, typename UnaryPredicate>
+constexpr InputIter find_if_not(const InputIter first, const InputIter last, UnaryPredicate pred)
+		/*noexcept(noexcept(constexprStd::find_if(std::begin(c), std::end(c), pred)))*/ {
+	return constexprStd::find_if(first, last, [pred](const auto x) noexcept(noexcept(pred(x))) { return !pred(x); });
+//	return constexprStd::find_if(first, last, constexprStd::not_fn(std::move(pred)));
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr auto find_if_not(const Container& c, const UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_if_not(std::begin(c), std::end(c), pred))) {
+	return constexprStd::find_if_not(std::begin(c), std::end(c), pred);
+}
+
 /*****                                       Modifying sequence operations                                        *****/
 
 template<typename InputIterator, typename OutputIterator>
