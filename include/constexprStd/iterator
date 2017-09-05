@@ -42,9 +42,9 @@ class insert_iterator {
 	IterType Iter;
 	
 	public:
-	using value_type 		= void;
-	using difference_type 	= void;
-	using pointer 			= void;
+	using value_type        = void;
+	using difference_type   = void;
+	using pointer           = void;
 	using reference         = void;
 	using iterator_category = std::output_iterator_tag;
 	using container_type    = Container;
