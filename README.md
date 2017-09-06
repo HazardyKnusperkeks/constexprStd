@@ -156,6 +156,9 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] bad_function_call: If used, use `std::`.
 - [X] invoke
 
+#### Negators
+- [X] not_fn
+
 ### [Iterator library](http://en.cppreference.com/w/cpp/iterator)
 #### Iterator primitives
 These can be used directly from the `std::` namespace.

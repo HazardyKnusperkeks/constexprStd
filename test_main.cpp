@@ -95,6 +95,9 @@ class TestConstexprStd : public QObject {
 	//Polymorphic function wrappers
 	void testInvoke(void) const noexcept;
 	
+	//Negators
+	void testNotFn(void) const noexcept;
+	
 	//Iterator lib
 	//Iterator adaptors
 	void testInsert_iterator(void) const noexcept;
@@ -534,6 +537,37 @@ void TestConstexprStd::testInvoke(void) const noexcept {
 	QCOMPARE(std::invoke(&Base::calc,    b, 2), 16);
 	QCOMPARE(std::invoke(&Base::calc,    d, 2),  6);
 	QCOMPARE(std::invoke(&Derived::calc, d, 2),  7);
+	return;
+}
+	
+void TestConstexprStd::testNotFn(void) const noexcept {
+	static_assert(constexprStd::not_fn(isMultipleOfFive)(7));
+	QVERIFY(std::not_fn(isMultipleOfFive)(7));
+	
+	constexpr auto isEvenC = constexprStd::not_fn(isOdd);
+	auto isEven = std::not_fn(isOdd);
+	
+	static_assert(isEvenC(2));
+	QVERIFY(isEven(2));
+	
+	static_assert(constexprStd::not_fn([](){ return false; })());
+	QVERIFY(std::not_fn([](){ return false; })());
+	
+	constexpr auto multiArgument = [](const int a, const int b, const int c, const int d) {
+			return a == 1 && b == 2 && c == 3 && d == 4;
+		};
+	static_assert(!constexprStd::not_fn(multiArgument)(1, 2, 3, 4));
+	QVERIFY(!std::not_fn(multiArgument)(1, 2, 3, 4));
+	
+	struct Foo {
+		constexpr bool func(void) const noexcept {
+			return false;
+		}
+	};
+	
+	constexpr Foo f;
+	static_assert(constexprStd::not_fn(&Foo::func)(f));
+	QVERIFY(std::not_fn(&Foo::func)(f));
 	return;
 }
 

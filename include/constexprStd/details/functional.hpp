@@ -27,7 +27,37 @@
 #include <type_traits>
 #include <utility>
 
+namespace constexprStd {
+template<typename F, typename... Args>
+constexpr decltype(auto) invoke(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>);
+} //namespace constexprStd
+
 namespace constexprStd::details {
+template<typename F>
+class NotFnReturnType {
+	private:
+	std::decay_t<F> Functor;
+	
+	public:
+	constexpr NotFnReturnType(NotFnReturnType&&) = default;
+	constexpr NotFnReturnType(const NotFnReturnType&) = default;
+	constexpr explicit NotFnReturnType(F&& functor) : Functor{std::forward<F>(functor)} {
+		return;
+	}
+	
+	template<typename... Args>
+	constexpr decltype(auto) operator()(Args&&... args) const &
+			noexcept(noexcept(!constexprStd::invoke(Functor, std::forward<Args>(args)...))) {
+		return !constexprStd::invoke(Functor, std::forward<Args>(args)...);
+	}
+	
+	template<typename... Args>
+	constexpr decltype(auto) operator()(Args&&... args) &&
+			noexcept(noexcept(!constexprStd::invoke(std::move(Functor), std::forward<Args>(args)...))) {
+		return !constexprStd::invoke(std::move(Functor), std::forward<Args>(args)...);
+	}
+};
+
 template<typename MemberFunction, typename Class, typename... Args,
          std::enable_if_t<std::is_member_function_pointer_v<MemberFunction>>* = nullptr>
 constexpr decltype(auto) invokeImpl(MemberFunction&& func, Class&& object, Args&&... args)
