@@ -83,6 +83,7 @@ class TestConstexprStd : public QObject {
 	private slots:
 	//Algorithm lib
 	//Non-modifying sequence operations
+	void testCount(void) const noexcept;
 	void testCountIf(void) const noexcept;
 	void testEqual(void) const noexcept;
 	void testUnequal(void) const noexcept;
@@ -115,6 +116,13 @@ class TestConstexprStd : public QObject {
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
 };
+
+void TestConstexprStd::testCount(void) const noexcept {
+	constexpr TestContainer c;
+	static_assert(constexprStd::count(c.begin(), c.end(), 2) == 1);
+	static_assert(constexprStd::count(c.begin(), c.end(), 17) == 0);
+	static_assert(constexprStd::count(c, 5) == 1);
+}
 
 void TestConstexprStd::testCountIf(void) const noexcept {
 	constexpr TestContainer c;

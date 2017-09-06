@@ -24,7 +24,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] none_of
 - [ ] for_each
 - [ ] for_each_n
-- [ ] count
+- [X] count
 - [X] count_if
 - [ ] mismatch
 - [X] equal

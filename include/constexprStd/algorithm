@@ -55,6 +55,18 @@ constexpr auto count_if(const Container& c, const UnaryPredicate pred)
 	return constexprStd::count_if(std::begin(c), std::end(c), pred);
 }
 
+template<typename InputIter, typename T>
+constexpr auto count(const InputIter first, const InputIter last, const T& t)
+		noexcept(noexcept(constexprStd::count_if(first, last, details::cmp::Equal{t}))) {
+	return constexprStd::count_if(first, last, details::cmp::Equal{t});
+}
+
+template<typename Container, typename T>
+constexpr auto count(const Container& c, const T& t)
+		noexcept(noexcept(constexprStd::count(std::begin(c), std::end(c), t))) {
+	return constexprStd::count(std::begin(c), std::end(c), t);
+}
+
 template<typename IterT1, typename IterT2, typename BinaryPredicate>
 constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const BinaryPredicate pred)
 		noexcept(noexcept(first1 != last1) && noexcept(++first1, ++first2) && noexcept(pred(*first1, *first2))) {
