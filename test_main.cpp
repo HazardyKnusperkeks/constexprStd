@@ -85,6 +85,7 @@ class TestConstexprStd : public QObject {
 	//Non-modifying sequence operations
 	void testEqual(void) const noexcept;
 	void testUnequal(void) const noexcept;
+	void testFind(void) const noexcept;
 	void testFindIf(void) const noexcept;
 	void testFindIfNot(void) const noexcept;
 	
@@ -329,6 +330,24 @@ void TestConstexprStd::testUnequal(void) const noexcept {
 	QVERIFY(!(constexprStd::equal(cla, cc1)));
 	QVERIFY(!(constexprStd::equal(cnl, cc1)));
 	QVERIFY(!(constexprStd::equal(cll, cc1)));
+	return;
+}
+
+void TestConstexprStd::testFind(void) const noexcept {
+	constexpr TestContainer c;
+	static_assert(*constexprStd::find(c.begin(), c.end(), 5) == 5);
+	static_assert(*constexprStd::find(c, 8) == 8);
+	static_assert(constexprStd::find(c.begin(), c.end(), 11) == c.end());
+	static_assert(constexprStd::find(c, 12) == c.end());
+	
+	std::forward_list<std::string> l{"foo", "bar", "moo"};
+	QCOMPARE(*constexprStd::find(l.begin(), l.end(), "foo"), "foo");
+	QCOMPARE(*         std::find(l.begin(), l.end(), "foo"), "foo");
+	
+	QCOMPARE(constexprStd::find(l.begin(), l.end(), "not"), l.end());
+	QCOMPARE(         std::find(l.begin(), l.end(), "not"), l.end());
+	
+	QCOMPARE(*constexprStd::find(l, "moo"), "moo");
 	return;
 }
 

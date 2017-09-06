@@ -24,6 +24,8 @@
 #ifndef CONSTEXPRSTD_DETAILS_ALGORITHM_HPP
 #define CONSTEXPRSTD_DETAILS_ALGORITHM_HPP
 
+#include <type_traits>
+
 #include <constexprStd/iterator>
 
 #include "helper.hpp"
@@ -37,6 +39,19 @@ constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const Bin
 
 namespace constexprStd::details {
 namespace cmp {
+template<typename T>
+struct Equal {
+	const T& Object;
+	
+	template<typename U>
+	constexpr bool operator()(const U& compare) const noexcept(noexcept(Object == compare)) {
+		return Object == compare;
+	}
+};
+
+template<typename T>
+Equal(T) -> Equal<T>;
+
 template<typename T1, typename T2>
 constexpr bool equal(const T1& t1, const T2& t2) noexcept(noexcept(t1 == t2)) {
 	return t1 == t2;

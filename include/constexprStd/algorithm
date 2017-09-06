@@ -112,6 +112,18 @@ constexpr auto find_if(const Container& c, const UnaryPredicate pred)
 	return constexprStd::find_if(std::begin(c), std::end(c), pred);
 }
 
+template<typename InputIter, typename T>
+constexpr InputIter find(const InputIter first, const InputIter last, const T& t)
+		noexcept(noexcept(constexprStd::find_if(first, last, details::cmp::Equal{t}))) {
+	return constexprStd::find_if(first, last, details::cmp::Equal{t});
+}
+
+template<typename Container, typename T>
+constexpr auto find(const Container& c, const T& t)
+		noexcept(noexcept(constexprStd::find(std::begin(c), std::end(c), t))) {
+	return constexprStd::find(std::begin(c), std::end(c), t);
+}
+
 template<typename InputIter, typename UnaryPredicate>
 constexpr InputIter find_if_not(const InputIter first, const InputIter last, UnaryPredicate pred)
 		noexcept(noexcept(constexprStd::find_if(first, last, constexprStd::not_fn(std::move(pred))))) {
