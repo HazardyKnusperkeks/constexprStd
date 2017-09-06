@@ -94,6 +94,9 @@ class TestConstexprStd : public QObject {
 	//Modifying sequence operations
 	void testCopy(void) const noexcept;
 	
+	//Permutations
+	void testIsPermutation(void) const noexcept;
+	
 	//Function objects
 	//Polymorphic function wrappers
 	void testInvoke(void) const noexcept;
@@ -438,6 +441,258 @@ void TestConstexprStd::testCopy(void) const noexcept {
 	
 	citer = constexprStd::copy(ba, citer);
 	QCOMPARE(cc, expected5);
+	return;
+}
+
+void TestConstexprStd::testIsPermutation(void) const noexcept {
+	constexpr std::array sa1{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10};
+	constexpr std::array sa2{ 1,  2,  3,  4,  5,  6,  7,  9,  8, 10};
+	constexpr std::array sa3{10,  2,  3,  4,  5,  6,  7,  8,  9,  1};
+	constexpr std::array sa4{ 5,  6,  1,  2,  3,  4,  7,  8,  9, 10};
+	constexpr std::array sa5{10,  9,  8,  7,  6,  5,  4,  3,  2,  1};
+	constexpr std::array sa6{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 12};
+	constexpr std::array sa7{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12};
+	constexpr std::array sa8{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 12, 11};
+	
+	auto sameParity = [](const int x, const int y) noexcept {
+			return x % 2 == y % 2;
+		};
+	
+	//Test normal variant
+	//Compare 1 to X
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa1.begin(), sa1.end()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa2.begin(), sa2.end()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa3.begin(), sa3.end()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa4.begin(), sa4.end()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa5.begin(), sa5.end()));
+	static_assert(!constexprStd::is_permutation(sa1.begin(), sa1.end(), sa6.begin(), sa6.end()));
+	static_assert(!constexprStd::is_permutation(sa1.begin(), sa1.end(), sa7.begin(), sa7.end()));
+	static_assert(!constexprStd::is_permutation(sa1.begin(), sa1.end(), sa8.begin(), sa8.end()));
+	
+	//Compare 2 to X as container overload
+	static_assert( constexprStd::is_permutation(sa2, sa1));
+	static_assert( constexprStd::is_permutation(sa2, sa2));
+	static_assert( constexprStd::is_permutation(sa2, sa3));
+	static_assert( constexprStd::is_permutation(sa2, sa4));
+	static_assert( constexprStd::is_permutation(sa2, sa5));
+	static_assert(!constexprStd::is_permutation(sa2, sa6));
+	static_assert(!constexprStd::is_permutation(sa2, sa7));
+	static_assert(!constexprStd::is_permutation(sa2, sa8));
+	
+	//Compare 6 to X
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa1.begin(), sa1.end()));
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa2.begin(), sa2.end()));
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa3.begin(), sa3.end()));
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa4.begin(), sa4.end()));
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa5.begin(), sa5.end()));
+	static_assert( constexprStd::is_permutation(sa6.begin(), sa6.end(), sa6.begin(), sa6.end()));
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa7.begin(), sa7.end()));
+	static_assert(!constexprStd::is_permutation(sa6.begin(), sa6.end(), sa8.begin(), sa8.end()));
+	
+	//Compare 7 to X
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa1.begin(), sa1.end()));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa2.begin(), sa2.end()));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa3.begin(), sa3.end()));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa4.begin(), sa4.end()));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa5.begin(), sa5.end()));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa6.begin(), sa6.end()));
+	static_assert( constexprStd::is_permutation(sa7.begin(), sa7.end(), sa7.begin(), sa7.end()));
+	static_assert( constexprStd::is_permutation(sa7.begin(), sa7.end(), sa8.begin(), sa8.end()));
+	
+	//Test predicate variant
+	//Compare 1 to X
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa1.begin(), sa1.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa2.begin(), sa2.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa3.begin(), sa3.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa4.begin(), sa4.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa5.begin(), sa5.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa6.begin(), sa6.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa1.begin(), sa1.end(), sa7.begin(), sa7.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa1.begin(), sa1.end(), sa8.begin(), sa8.end(), sameParity));
+	
+	//Compare 2 to X as container overload
+	static_assert( constexprStd::is_permutation(sa2, sa1, sameParity));
+	static_assert( constexprStd::is_permutation(sa2, sa2, sameParity));
+	static_assert( constexprStd::is_permutation(sa2, sa3, sameParity));
+	static_assert( constexprStd::is_permutation(sa2, sa4, sameParity));
+	static_assert( constexprStd::is_permutation(sa2, sa5, sameParity));
+	static_assert( constexprStd::is_permutation(sa2, sa6, sameParity));
+	static_assert(!constexprStd::is_permutation(sa2, sa7, sameParity));
+	static_assert(!constexprStd::is_permutation(sa2, sa8, sameParity));
+	
+	//Compare 7 to X
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa1.begin(), sa1.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa2.begin(), sa2.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa3.begin(), sa3.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa4.begin(), sa4.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa5.begin(), sa5.end(), sameParity));
+	static_assert(!constexprStd::is_permutation(sa7.begin(), sa7.end(), sa6.begin(), sa6.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa7.begin(), sa7.end(), sa7.begin(), sa7.end(), sameParity));
+	static_assert( constexprStd::is_permutation(sa7.begin(), sa7.end(), sa8.begin(), sa8.end(), sameParity));
+	
+	//Test 3 iterator variant
+	//Compare 1 to X
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa1.begin()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa2.begin()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa3.begin()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa4.begin()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa5.begin()));
+	static_assert(!constexprStd::is_permutation(sa1.begin(), sa1.end(), sa6.begin()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa7.begin()));
+	static_assert( constexprStd::is_permutation(sa1.begin(), sa1.end(), sa8.begin()));
+	
+	//Compare 2 to X with Container overload
+	static_assert( constexprStd::is_permutation(sa2, sa1.begin()));
+	static_assert( constexprStd::is_permutation(sa2, sa2.begin()));
+	static_assert( constexprStd::is_permutation(sa2, sa3.begin()));
+	static_assert( constexprStd::is_permutation(sa2, sa4.begin()));
+	static_assert( constexprStd::is_permutation(sa2, sa5.begin()));
+	static_assert(!constexprStd::is_permutation(sa2, sa6.begin()));
+	static_assert( constexprStd::is_permutation(sa2, sa7.begin()));
+	static_assert( constexprStd::is_permutation(sa2, sa8.begin()));
+	
+	//Compare 3 to X with predicate
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa1.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa2.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa3.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa4.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa5.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa6.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa7.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa3.begin(), sa3.end(), sa8.begin(), sameParity));
+	
+	//Compare 4 to X with container overload and predicate
+	static_assert( constexprStd::is_permutation(sa4, sa1.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa2.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa3.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa4.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa5.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa6.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa7.begin(), sameParity));
+	static_assert( constexprStd::is_permutation(sa4, sa8.begin(), sameParity));
+	
+	//And now with not random access iterators
+	std::forward_list l1{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10};
+	std::forward_list l2{ 1,  2,  3,  4,  5,  6,  7,  9,  8, 10};
+	std::forward_list l3{10,  2,  3,  4,  5,  6,  7,  8,  9,  1};
+	std::forward_list l4{ 5,  6,  1,  2,  3,  4,  7,  8,  9, 10};
+	std::forward_list l5{10,  9,  8,  7,  6,  5,  4,  3,  2,  1};
+	std::forward_list l6{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 12};
+	std::forward_list l7{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12};
+	std::forward_list l8{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 12, 11};
+	
+	//Test normal variant
+	//Compare 1 to X
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l1.begin(), l1.end()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l2.begin(), l2.end()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l3.begin(), l3.end()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l4.begin(), l4.end()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l5.begin(), l5.end()));
+	QVERIFY(!constexprStd::is_permutation(l1.begin(), l1.end(), l6.begin(), l6.end()));
+	QVERIFY(!constexprStd::is_permutation(l1.begin(), l1.end(), l7.begin(), l7.end()));
+	QVERIFY(!constexprStd::is_permutation(l1.begin(), l1.end(), l8.begin(), l8.end()));
+	
+	//Compare 2 to X as container overload
+	QVERIFY( constexprStd::is_permutation(l2, l1));
+	QVERIFY( constexprStd::is_permutation(l2, l2));
+	QVERIFY( constexprStd::is_permutation(l2, l3));
+	QVERIFY( constexprStd::is_permutation(l2, l4));
+	QVERIFY( constexprStd::is_permutation(l2, l5));
+	QVERIFY(!constexprStd::is_permutation(l2, l6));
+	QVERIFY(!constexprStd::is_permutation(l2, l7));
+	QVERIFY(!constexprStd::is_permutation(l2, l8));
+	
+	//Compare 6 to X
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l1.begin(), l1.end()));
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l2.begin(), l2.end()));
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l3.begin(), l3.end()));
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l4.begin(), l4.end()));
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l5.begin(), l5.end()));
+	QVERIFY( constexprStd::is_permutation(l6.begin(), l6.end(), l6.begin(), l6.end()));
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l7.begin(), l7.end()));
+	QVERIFY(!constexprStd::is_permutation(l6.begin(), l6.end(), l8.begin(), l8.end()));
+	
+	//Compare 7 to X
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l1.begin(), l1.end()));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l2.begin(), l2.end()));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l3.begin(), l3.end()));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l4.begin(), l4.end()));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l5.begin(), l5.end()));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l6.begin(), l6.end()));
+	QVERIFY( constexprStd::is_permutation(l7.begin(), l7.end(), l7.begin(), l7.end()));
+	QVERIFY( constexprStd::is_permutation(l7.begin(), l7.end(), l8.begin(), l8.end()));
+	
+	//Test predicate variant
+	//Compare 1 to X
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l1.begin(), l1.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l2.begin(), l2.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l3.begin(), l3.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l4.begin(), l4.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l5.begin(), l5.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l6.begin(), l6.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l1.begin(), l1.end(), l7.begin(), l7.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l1.begin(), l1.end(), l8.begin(), l8.end(), sameParity));
+	
+	//Compare 2 to X as container overload
+	QVERIFY( constexprStd::is_permutation(l2, l1, sameParity));
+	QVERIFY( constexprStd::is_permutation(l2, l2, sameParity));
+	QVERIFY( constexprStd::is_permutation(l2, l3, sameParity));
+	QVERIFY( constexprStd::is_permutation(l2, l4, sameParity));
+	QVERIFY( constexprStd::is_permutation(l2, l5, sameParity));
+	QVERIFY( constexprStd::is_permutation(l2, l6, sameParity));
+	QVERIFY(!constexprStd::is_permutation(l2, l7, sameParity));
+	QVERIFY(!constexprStd::is_permutation(l2, l8, sameParity));
+	
+	//Compare 7 to X
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l1.begin(), l1.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l2.begin(), l2.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l3.begin(), l3.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l4.begin(), l4.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l5.begin(), l5.end(), sameParity));
+	QVERIFY(!constexprStd::is_permutation(l7.begin(), l7.end(), l6.begin(), l6.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l7.begin(), l7.end(), l7.begin(), l7.end(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l7.begin(), l7.end(), l8.begin(), l8.end(), sameParity));
+	
+	//Test 3 iterator variant
+	//Compare 1 to X
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l1.begin()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l2.begin()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l3.begin()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l4.begin()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l5.begin()));
+	QVERIFY(!constexprStd::is_permutation(l1.begin(), l1.end(), l6.begin()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l7.begin()));
+	QVERIFY( constexprStd::is_permutation(l1.begin(), l1.end(), l8.begin()));
+	
+	//Compare 2 to X with Container overload
+	QVERIFY( constexprStd::is_permutation(l2, l1.begin()));
+	QVERIFY( constexprStd::is_permutation(l2, l2.begin()));
+	QVERIFY( constexprStd::is_permutation(l2, l3.begin()));
+	QVERIFY( constexprStd::is_permutation(l2, l4.begin()));
+	QVERIFY( constexprStd::is_permutation(l2, l5.begin()));
+	QVERIFY(!constexprStd::is_permutation(l2, l6.begin()));
+	QVERIFY( constexprStd::is_permutation(l2, l7.begin()));
+	QVERIFY( constexprStd::is_permutation(l2, l8.begin()));
+	
+	//Compare 3 to X with predicate
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l1.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l2.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l3.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l4.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l5.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l6.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l7.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l3.begin(), l3.end(), l8.begin(), sameParity));
+	
+	//Compare 4 to X with container overload and predicate
+	QVERIFY( constexprStd::is_permutation(l4, l1.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l2.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l3.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l4.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l5.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l6.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l7.begin(), sameParity));
+	QVERIFY( constexprStd::is_permutation(l4, l8.begin(), sameParity));
 	return;
 }
 
