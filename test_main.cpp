@@ -65,13 +65,18 @@ class TestContainer : public std::array<int, 10> {
 	}
 };
 
-constexpr int fib(const int i) noexcept {
+static constexpr int fib(const int i) noexcept {
 	switch ( i ) {
 		case 0 : 
 		case 1 : return i;
 	} //switch ( i )
 	return fib(i-1) + fib(i-2);
 }
+
+static constexpr bool isLessThanEleven(const int i) noexcept { return i < 11; }
+static constexpr bool isMultipleOfFive(const int i) noexcept { return i %  5 == 0; }
+static constexpr bool isMultipleOfEleven(const int i) noexcept { return i % 11 == 0; }
+static constexpr bool isOdd(const int i) noexcept { return i % 2 == 1; }
 
 class TestConstexprStd : public QObject {
 	Q_OBJECT
@@ -328,14 +333,11 @@ void TestConstexprStd::testFindIf(void) const noexcept {
 	//Test constexprness
 	constexpr TestContainer cc;
 	
-	auto isFive   = [](const int i) constexpr noexcept { return i %  5 == 0; };
-	auto isEleven = [](const int i) constexpr noexcept { return i % 11 == 0; };
+	static_assert(*constexprStd::find_if(cc.begin(), cc.end(), isMultipleOfFive) == 5);
+	static_assert(constexprStd::find_if(cc.begin(), cc.end(), isMultipleOfEleven) == cc.end());
 	
-	static_assert(*constexprStd::find_if(cc.begin(), cc.end(), isFive) == 5);
-	static_assert(constexprStd::find_if(cc.begin(), cc.end(), isEleven) == cc.end());
-	
-	static_assert(*constexprStd::find_if(cc, isFive) == 5);
-	static_assert(constexprStd::find_if(cc, isEleven) == cc.end());
+	static_assert(*constexprStd::find_if(cc, isMultipleOfFive) == 5);
+	static_assert(constexprStd::find_if(cc, isMultipleOfEleven) == cc.end());
 	
 	//I don't think a comparison to std::find_if is neccessary.
 	return;
@@ -344,9 +346,6 @@ void TestConstexprStd::testFindIf(void) const noexcept {
 void TestConstexprStd::testFindIfNot(void) const noexcept {
 	//Test constexprness
 	constexpr TestContainer cc;
-	
-	auto isOdd            = [](const int i) constexpr noexcept { return i % 2 == 1; };
-	auto isLessThanEleven = [](const int i) constexpr noexcept { return i < 11; };
 	
 	static_assert(*constexprStd::find_if_not(cc.begin(), cc.end(), isOdd) == 2);
 	static_assert(constexprStd::find_if_not(cc.begin(), cc.end(), isLessThanEleven) == cc.end());
