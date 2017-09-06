@@ -28,7 +28,7 @@ gcc {
 
 gcc {
 	extraWarnings = -pedantic -Wformat=2 -Wfloat-equal -Wconversion -Wzero-as-null-pointer-constant \
-	                -Wsign-conversion -Wlogical-op -Winline -Wshadow
+	                -Wsign-conversion -Wlogical-op -Wshadow
 	greaterThan(ALG_GCC_MAJOR_VERSION, 5):extraWarnings += -Wnull-dereference -Wduplicated-cond -Wplacement-new=2
 	greaterThan(ALG_GCC_MAJOR_VERSION, 6):extraWarnings += -Wdangling-else
 	QMAKE_CFLAGS	*= $$extraWarnings
