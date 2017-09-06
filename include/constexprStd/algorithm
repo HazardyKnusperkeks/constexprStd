@@ -34,6 +34,26 @@
 
 namespace constexprStd {
 /*****                                     Non-modifying sequence operations                                      *****/
+template<typename InputIter, typename UnaryPredicate>
+constexpr auto count_if(InputIter first, const InputIter last, const UnaryPredicate pred)
+		noexcept(std::is_nothrow_constructible_v<typename std::iterator_traits<InputIter>::difference_type,
+                                                 decltype(0)> &&
+		         noexcept(first != last) && noexcept(++first) && noexcept(pred(*first)) &&
+		         noexcept(++std::declval<typename std::iterator_traits<InputIter>::difference_type&>())) {
+	typename std::iterator_traits<InputIter>::difference_type ret = 0;
+	for ( ; first != last; ++first ) {
+		if ( pred(*first) ) {
+			++ret;
+		} //if ( pred(*first) )
+	} //for ( ; first != last; ++first )
+	return ret;
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr auto count_if(const Container& c, const UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::count_if(std::begin(c), std::end(c), pred))) {
+	return constexprStd::count_if(std::begin(c), std::end(c), pred);
+}
 
 template<typename IterT1, typename IterT2, typename BinaryPredicate>
 constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const BinaryPredicate pred)
