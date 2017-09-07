@@ -52,10 +52,12 @@ struct EqualToValue {
 template<typename T>
 EqualToValue(T) -> EqualToValue<T>;
 
-template<typename T1, typename T2>
-constexpr bool equal(const T1& t1, const T2& t2) noexcept(noexcept(t1 == t2)) {
-	return t1 == t2;
-}
+struct Equal {
+	template<typename T1, typename T2>
+	constexpr bool operator()(const T1& t1, const T2& t2) const noexcept(noexcept(t1 == t2)) {
+		return t1 == t2;
+	}
+};
 } //namespace cmp
 
 template<typename IterT1, typename IterT2, typename BinaryPredicate,
