@@ -40,7 +40,7 @@ constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const Bin
 namespace constexprStd::details {
 namespace cmp {
 template<typename T>
-struct Equal {
+struct EqualToValue {
 	const T& Object;
 	
 	template<typename U>
@@ -50,7 +50,7 @@ struct Equal {
 };
 
 template<typename T>
-Equal(T) -> Equal<T>;
+EqualToValue(T) -> EqualToValue<T>;
 
 template<typename T1, typename T2>
 constexpr bool equal(const T1& t1, const T2& t2) noexcept(noexcept(t1 == t2)) {

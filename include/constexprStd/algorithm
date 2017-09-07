@@ -57,8 +57,8 @@ constexpr auto count_if(const Container& c, const UnaryPredicate pred)
 
 template<typename InputIter, typename T>
 constexpr auto count(const InputIter first, const InputIter last, const T& t)
-		noexcept(noexcept(constexprStd::count_if(first, last, details::cmp::Equal{t}))) {
-	return constexprStd::count_if(first, last, details::cmp::Equal{t});
+		noexcept(noexcept(constexprStd::count_if(first, last, details::cmp::EqualToValue{t}))) {
+	return constexprStd::count_if(first, last, details::cmp::EqualToValue{t});
 }
 
 template<typename Container, typename T>
@@ -146,8 +146,8 @@ constexpr auto find_if(const Container& c, const UnaryPredicate pred)
 
 template<typename InputIter, typename T>
 constexpr InputIter find(const InputIter first, const InputIter last, const T& t)
-		noexcept(noexcept(constexprStd::find_if(first, last, details::cmp::Equal{t}))) {
-	return constexprStd::find_if(first, last, details::cmp::Equal{t});
+		noexcept(noexcept(constexprStd::find_if(first, last, details::cmp::EqualToValue{t}))) {
+	return constexprStd::find_if(first, last, details::cmp::EqualToValue{t});
 }
 
 template<typename Container, typename T>
