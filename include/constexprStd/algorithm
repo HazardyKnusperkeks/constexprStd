@@ -274,12 +274,12 @@ constexpr bool is_permutation(const Container1& c1, const Container2& c2, const 
 template<typename ForwardIter1, typename ForwardIter2>
 constexpr bool is_permutation(const ForwardIter1 first1, const ForwardIter1 last1,
                               const ForwardIter2 first2, const ForwardIter2 last2)
-	noexcept(noexcept(constexprStd::is_permutation(first1, last1, first2, last2, details::cmp::equal<
+	noexcept(noexcept(constexprStd::is_permutation(first1, last1, first2, last2, *details::cmp::equal<
 		typename std::iterator_traits<ForwardIter1>::value_type,
 		typename std::iterator_traits<ForwardIter2>::value_type>))){
 	return constexprStd::is_permutation(first1, last1, first2, last2,
-	                                    details::cmp::equal<typename std::iterator_traits<ForwardIter1>::value_type,
-	                                                        typename std::iterator_traits<ForwardIter2>::value_type>);
+	                                    *details::cmp::equal<typename std::iterator_traits<ForwardIter1>::value_type,
+	                                                         typename std::iterator_traits<ForwardIter2>::value_type>);
 }
 
 template<typename Container1, typename Container2,
@@ -310,12 +310,12 @@ constexpr bool is_permutation(const Container& c, const ForwardIter2 first2, con
 
 template<typename ForwardIter1, typename ForwardIter2, std::enable_if_t<details::IsIterV<ForwardIter1>>* = nullptr>
 constexpr bool is_permutation(const ForwardIter1 first1, const ForwardIter1 last1, const ForwardIter2 first2)
-		noexcept(noexcept(constexprStd::is_permutation(first1, last1, first2, details::cmp::equal<
+		noexcept(noexcept(constexprStd::is_permutation(first1, last1, first2, *details::cmp::equal<
 			typename std::iterator_traits<ForwardIter1>::value_type,
 			typename std::iterator_traits<ForwardIter2>::value_type>))){
 	return constexprStd::is_permutation(first1, last1, first2,
-	                                    details::cmp::equal<typename std::iterator_traits<ForwardIter1>::value_type,
-	                                                        typename std::iterator_traits<ForwardIter2>::value_type>);
+	                                    *details::cmp::equal<typename std::iterator_traits<ForwardIter1>::value_type,
+	                                                         typename std::iterator_traits<ForwardIter2>::value_type>);
 }
 
 template<typename Container, typename ForwardIter2, std::enable_if_t<details::IsIterV<ForwardIter2>>* = nullptr>
