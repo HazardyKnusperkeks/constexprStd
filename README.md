@@ -198,7 +198,7 @@ Will be handled seperately
 Is mostly `constexpr`, so nothing to do here
 
 #### Swap, forward and move
-- [ ] swap
+- [X] swap
 - [X] exchange
 
 The remainder is `constexpr`.

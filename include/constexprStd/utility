@@ -33,6 +33,15 @@ constexpr T exchange(T& object, U&& newValue) {
 	object = std::forward<U>(newValue);
 	return ret;
 }
+
+template<typename T>
+constexpr void swap(T& t1, T& t2)
+		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_move_assignable<T>>) {
+	T temp{std::move(t1)};
+	t1 = std::move(t2);
+	t2 = std::move(temp);
+	return;
+}
 } //namespace constexprStd
 
 #endif

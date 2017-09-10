@@ -115,6 +115,7 @@ class TestConstexprStd : public QObject {
 	//Utility lib
 	//Swap, forward and move
 	void testExchange(void) const noexcept;
+	void testSwap(void) const noexcept;
 	
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
@@ -1043,6 +1044,25 @@ void TestConstexprStd::testExchange(void) const noexcept {
 	QCOMPARE(sstr1, "baz");
 	QCOMPARE(cstr2, "bar");
 	QCOMPARE(sstr2, "bar");
+	return;
+}
+
+void TestConstexprStd::testSwap(void) const noexcept {
+	//Test the acutal constexprness
+	auto l = [](void) constexpr noexcept {
+		int ret = 5, foo = 8;
+		constexprStd::swap(ret, foo);
+		return ret;
+	};
+	static_assert(l() == 8);
+	
+	//Test runtime behavior
+	std::string str1 = "foo", str2 = "bar";
+	
+	constexprStd::swap(str1, str2);
+	
+	QCOMPARE(str1, "bar");
+	QCOMPARE(str2, "foo");
 	return;
 }
 
