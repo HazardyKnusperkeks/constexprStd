@@ -28,7 +28,8 @@
 
 namespace constexprStd {
 template<typename T, typename U = T>
-constexpr T exchange(T& object, U&& newValue) {
+constexpr T exchange(T& object, U&& newValue)
+		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_assignable<T, U&&>>){
 	T ret{std::move(object)};
 	object = std::forward<U>(newValue);
 	return ret;
