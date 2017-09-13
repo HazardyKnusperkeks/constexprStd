@@ -78,6 +78,17 @@ static constexpr bool isMultipleOfFive(const int i) noexcept { return i %  5 == 
 static constexpr bool isMultipleOfEleven(const int i) noexcept { return i % 11 == 0; }
 static constexpr bool isOdd(const int i) noexcept { return i % 2 == 1; }
 
+static constexpr inline const char *fooString    = "foo";
+static constexpr inline const char *barString    = "bar";
+static constexpr inline const char *bazString    = "baz";
+static constexpr inline const char *emptyString  = "";
+static constexpr inline const char *longString   = "This is a long string, to be allocated on the heap!";
+static const     inline std::string fooStrings   = fooString;
+static const     inline std::string barStrings   = barString;
+static const     inline std::string bazStrings   = bazString;
+static const     inline std::string emptyStrings = emptyString;
+static const     inline std::string longStrings  = longString;
+
 class TestConstexprStd : public QObject {
 	Q_OBJECT
 	private slots:
@@ -361,14 +372,14 @@ void TestConstexprStd::testFind(void) const noexcept {
 	static_assert(constexprStd::find(c.begin(), c.end(), 11) == c.end());
 	static_assert(constexprStd::find(c, 12) == c.end());
 	
-	std::forward_list<std::string> l{"foo", "bar", "moo"};
-	QCOMPARE(*constexprStd::find(l.begin(), l.end(), "foo"), "foo");
-	QCOMPARE(*         std::find(l.begin(), l.end(), "foo"), "foo");
+	std::forward_list<std::string> l{fooString, barString, bazString};
+	QCOMPARE(*constexprStd::find(l.begin(), l.end(), fooString), fooString);
+	QCOMPARE(*         std::find(l.begin(), l.end(), fooString), fooString);
 	
 	QCOMPARE(constexprStd::find(l.begin(), l.end(), "not"), l.end());
 	QCOMPARE(         std::find(l.begin(), l.end(), "not"), l.end());
 	
-	QCOMPARE(*constexprStd::find(l, "moo"), "moo");
+	QCOMPARE(*constexprStd::find(l, bazString), bazString);
 	return;
 }
 
@@ -1026,24 +1037,24 @@ void TestConstexprStd::testExchange(void) const noexcept {
 	static_assert(l(8) == 8);
 	
 	//Test runtime behavior and compare against std::exchange.
-	std::string cstr1 = "foo";
-	std::string sstr1 = "foo";
-	QCOMPARE(cstr1, "foo");
-	QCOMPARE(sstr1, "foo");
+	std::string cstr1 = fooString;
+	std::string sstr1 = fooString;
+	QCOMPARE(cstr1, fooString);
+	QCOMPARE(sstr1, fooString);
 	
-	auto cstr2 = constexprStd::exchange(cstr1, std::string{"bar"});
-	auto sstr2 =          std::exchange(sstr1, std::string{"bar"});
-	QCOMPARE(cstr1, "bar");
-	QCOMPARE(sstr1, "bar");
-	QCOMPARE(cstr2, "foo");
-	QCOMPARE(sstr2, "foo");
+	auto cstr2 = constexprStd::exchange(cstr1, std::string{barString});
+	auto sstr2 =          std::exchange(sstr1, std::string{barString});
+	QCOMPARE(cstr1, barString);
+	QCOMPARE(sstr1, barString);
+	QCOMPARE(cstr2, fooString);
+	QCOMPARE(sstr2, fooString);
 	
-	cstr2 = constexprStd::exchange(cstr1, "baz");
-	sstr2 =          std::exchange(sstr1, "baz");
-	QCOMPARE(cstr1, "baz");
-	QCOMPARE(sstr1, "baz");
-	QCOMPARE(cstr2, "bar");
-	QCOMPARE(sstr2, "bar");
+	cstr2 = constexprStd::exchange(cstr1, bazString);
+	sstr2 =          std::exchange(sstr1, bazString);
+	QCOMPARE(cstr1, bazString);
+	QCOMPARE(sstr1, bazString);
+	QCOMPARE(cstr2, barString);
+	QCOMPARE(sstr2, barString);
 	return;
 }
 
@@ -1057,12 +1068,12 @@ void TestConstexprStd::testSwap(void) const noexcept {
 	static_assert(l() == 8);
 	
 	//Test runtime behavior
-	std::string str1 = "foo", str2 = "bar";
+	std::string str1 = fooString, str2 = barString;
 	
 	constexprStd::swap(str1, str2);
 	
-	QCOMPARE(str1, "bar");
-	QCOMPARE(str2, "foo");
+	QCOMPARE(str1, barString);
+	QCOMPARE(str2, fooString);
 	return;
 }
 
