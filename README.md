@@ -19,13 +19,17 @@ I've added conditional noexcept statements to nearly all (member) functions.
 So what can be noexcept should also be marked as such.
 I've only omited the statements when a throw is actually used in its body.
 
-### constexprStd::variant
+### `constexprStd::variant`
+#### Incompatibilites to `std::variant`
 Using types with a non trivial destructor is not possible in `constexpr` context, so they can't be used in `constexrStd::variant` either.
 But all other types can be used, even `emplace` and the assignment operator, which are not `constexpr` in their `std::` incarnation.
 This comes at the cost, that the implementation does not meet all requirements.
 When emplacing a new type, the value is not direct initialized, but move assigned to the storage where another type was before.
 This means that some types are not save to be used in `constexprStd::variant`.
 If you want to use such a type and need direct initialization, add a non trivial destructor to it and the variant behaves like `std::variant`.
+
+#### Additions
+- It is possible to (un-)equal compare different types of variant. They only compare as equal, iff both hold the same type and the equal comparison of this type returns true.
 
 ## Implementation
 ### [Algorihms library](http://en.cppreference.com/w/cpp/algorithm)

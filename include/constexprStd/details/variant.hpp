@@ -41,18 +41,7 @@ class variant;
 namespace details {
 template<typename... Types>
 union VarUnion;
-} //namespace details
 
-template<typename... Types>
-void swap(constexprStd::details::VarUnion<Types...>&, constexprStd::details::VarUnion<Types...>&) = delete;
-} //namespace constexprStd
-
-namespace std {
-template<typename... Types>
-void swap(constexprStd::details::VarUnion<Types...>&, constexprStd::details::VarUnion<Types...>&) = delete;
-} //namespace std
-
-namespace constexprStd::details {
 template<typename T>
 struct IsVariant : std::false_type { };
 
@@ -61,7 +50,26 @@ struct IsVariant<constexprStd::variant<Types...>> : std::true_type { };
 
 template<typename T>
 inline constexpr bool IsVariantV = IsVariant<T>::value;
+} //namespace details
 
+template<typename... Types>
+void swap(constexprStd::details::VarUnion<Types...>&, constexprStd::details::VarUnion<Types...>&) = delete;
+} //namespace constexprStd
+
+namespace std {
+template<std::size_t I, typename Variant,
+         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
+constexpr decltype(auto) get(Variant&& v);
+
+template<typename T, typename Variant,
+         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
+constexpr decltype(auto) get(Variant&& v);
+
+template<typename... Types>
+void swap(constexprStd::details::VarUnion<Types...>&, constexprStd::details::VarUnion<Types...>&) = delete;
+} //namespace std
+
+namespace constexprStd::details {
 template<typename... Types>
 struct OverloadSet {
 	constexpr static void function(void) noexcept;
@@ -731,6 +739,55 @@ struct VariantBase : public VariantStorage<TrivialDestructible, Types...> {
 		return Storage::Data.compareLess(Storage::Index, that.Data);
 	}
 };
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+
+template<typename... Types1>
+struct CompareVariant {
+	const variant<Types1...>& V1;
+	
+	//We only need to check Types1, because we will never compare against a type containend in Types2, but not in Types1
+	using AllEqualCompareNoexcept =
+		std::bool_constant<(noexcept(std::declval<const Types1&>() == std::declval<const Types1&>()) && ...)>;
+	
+	template<std::size_t I1, std::size_t I2, typename... Types2>
+	static constexpr bool compare(const variant<Types1...>& v1, const variant<Types2...>& v2)
+			noexcept(AllEqualCompareNoexcept::value) {
+		using T1 = std::decay_t<std::variant_alternative_t<I1, decltype(v1)>>;
+		using T2 = std::decay_t<std::variant_alternative_t<I2, decltype(v2)>>;
+		if constexpr ( std::is_same_v<T1, T2> ) {
+			return std::get<I1>(v1) == std::get<I2>(v2);
+		} //if constexpr ( std::is_same_v<T1, T2> )
+		return false;
+	}
+	
+	template<typename... Types2>
+	using CompareType = std::conditional_t<AllEqualCompareNoexcept::value,
+	                                       bool(*)(const variant<Types1...>&, const variant<Types2...>&) noexcept,
+	                                       bool(*)(const variant<Types1...>&, const variant<Types2...>&)>;
+	
+	template<std::size_t I1, typename... Types2>
+	static constexpr std::array<CompareType<Types2...>, sizeof...(Types2)>
+		CompareT2{&CompareVariant::compare<I1, TypeIndex<Types2, Types2...>::value>...};
+	
+	template<typename... Types2, std::size_t... I1s>
+	static constexpr auto createCompare(const std::index_sequence<I1s...>) noexcept {
+		std::array ret{CompareT2<I1s, Types2...>...};
+		return ret;
+	}
+	
+	template<typename... Types2>
+	constexpr bool operator()(const variant<Types2...>& v2) const noexcept(AllEqualCompareNoexcept::value) {
+		auto cmp = createCompare<Types2...>(std::index_sequence_for<Types1...>{});
+		return cmp[V1.index()][v2.index()](V1, v2);
+	}
+};
+
+template<typename... Types1>
+CompareVariant(const variant<Types1...>&) -> CompareVariant<Types1...>;
+
+#pragma GCC diagnostic pop
 
 [[noreturn]] inline void throwBadVariantAccess(void) {
 	throw std::bad_variant_access{};

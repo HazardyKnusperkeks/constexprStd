@@ -267,6 +267,23 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 	}
 };
 
+template<typename... Types1, typename... Types2>
+constexpr bool operator==(const variant<Types1...>& v1, const variant<Types2...>& v2)
+		noexcept(noexcept(details::CompareVariant{v1}(v2))) {
+	const bool v1Valueless = v1.valueless_by_exception();
+	const bool v2Valueless = v2.valueless_by_exception();
+	
+	if ( !v1Valueless && !v2Valueless ) {
+		return details::CompareVariant{v1}(v2);
+	} //if ( !v1Valueless && !v2Valueless )
+	return v1Valueless && v2Valueless;
+}
+
+template<typename... Types1, typename... Types2>
+constexpr bool operator!=(const variant<Types1...>& v1, const variant<Types2...>& v2) noexcept(noexcept(v1 == v2)) {
+	return !(v1 == v2);
+}
+
 using monostate = std::monostate;
 
 template<typename T>

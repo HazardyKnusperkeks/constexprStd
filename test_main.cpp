@@ -340,6 +340,9 @@ class TestConstexprStd : public QObject {
 	void testVariantConvertAssign(void) const noexcept;
 	void testVariantCompare(void) const noexcept;
 	
+	//Variant extension
+	void testDifferentVariantCompare(void) const noexcept;
+	
 	//Swap, forward and move
 	void testExchange(void) const noexcept;
 	void testSwap(void) const noexcept;
@@ -2667,6 +2670,91 @@ void TestConstexprStd::testVariantCompare(void) const noexcept {
 	QVERIFY(!(cv1 <= cv2));
 	QVERIFY( (sv1 >= sv2));
 	QVERIFY( (cv1 >= cv2));
+	return;
+}
+
+void TestConstexprStd::testDifferentVariantCompare(void ) const noexcept {
+	using V1 = constexprStd::variant<int, bool, LiteralThrows>;
+	using V2 = constexprStd::variant<char, int, bool, double, LiteralThrows>;
+	V1 v1{7};
+	V2 v2{7};
+	
+	//Same type, equal value
+	QVERIFY( (v1 == v2));
+	QVERIFY(!(v1 != v2));
+	static_assert( (V1{7} == V2{7}));
+	static_assert(!(V1{7} != V2{7}));
+	
+	//Same type, unequal value
+	v2 = 9;
+	QVERIFY(!(v1 == v2));
+	QVERIFY( (v1 != v2));
+	static_assert(!(V1{7} == V2{9}));
+	static_assert( (V1{7} != V2{9}));
+	
+	//Different type
+	v2 = 7.9;
+	QVERIFY(!(v1 == v2));
+	QVERIFY( (v1 != v2));
+	static_assert(!(V1{7} == V2{7.9}));
+	static_assert( (V1{7} != V2{7.9}));
+	
+	//Lefthand side valueless
+	try { v1.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v1.valueless_by_exception());
+	QVERIFY(!(v1 == v2));
+	QVERIFY( (v1 != v2));
+	
+	//Both valueless
+	try { v2.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v2.valueless_by_exception());
+	QVERIFY( (v1 == v2));
+	QVERIFY(!(v1 != v2));
+	
+	//Righthand side valueless
+	v1 = true;
+	QVERIFY(!(v1 == v2));
+	QVERIFY( (v1 != v2));
+	
+	//The other way around
+	v1 = 7;
+	v2 = 7;
+	//Same type, equal value
+	QVERIFY( (v2 == v1));
+	QVERIFY(!(v2 != v1));
+	static_assert( (V2{7} == V1{7}));
+	static_assert(!(V2{7} != V1{7}));
+	
+	//Same type, unequal value
+	v2 = 9;
+	QVERIFY(!(v2 == v1));
+	QVERIFY( (v2 != v1));
+	static_assert(!(V2{7} == V1{9}));
+	static_assert( (V2{7} != V1{9}));
+	
+	//Different type
+	v2 = 7.9;
+	QVERIFY(!(v2 == v1));
+	QVERIFY( (v2 != v1));
+	static_assert(!(V2{7.9} == V1{7}));
+	static_assert( (V2{7.9} != V1{7}));
+	
+	//Lefthand side valueless
+	try { v2.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v2.valueless_by_exception());
+	QVERIFY(!(v2 == v1));
+	QVERIFY( (v2 != v1));
+	
+	//Both valueless
+	try { v1.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v1.valueless_by_exception());
+	QVERIFY( (v2 == v1));
+	QVERIFY(!(v2 != v1));
+	
+	//Righthand side valueless
+	v2 = true;
+	QVERIFY(!(v2 == v1));
+	QVERIFY( (v2 != v1));
 	return;
 }
 
