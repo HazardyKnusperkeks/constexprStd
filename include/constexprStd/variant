@@ -376,6 +376,27 @@ namespace std {
 template<typename... Types>
 struct variant_size<constexprStd::variant<Types...>> : std::variant_size<std::variant<Types...>> { };
 
+template<typename... Types>
+struct variant_size<const constexprStd::variant<Types...>> : std::variant_size<std::variant<Types...>> { };
+
+template<typename... Types>
+struct variant_size<volatile constexprStd::variant<Types...>> : std::variant_size<std::variant<Types...>> { };
+
+template<typename... Types>
+struct variant_size<const volatile constexprStd::variant<Types...>> : std::variant_size<std::variant<Types...>> { };
+
+template<typename... Types>
+struct variant_size<constexprStd::variant<Types...>&> : std::variant_size<std::variant<Types...>> { };
+
+template<typename... Types>
+struct variant_size<const constexprStd::variant<Types...>&> : std::variant_size<std::variant<Types...>> { };
+
+template<typename... Types>
+struct variant_size<volatile constexprStd::variant<Types...>&> : std::variant_size<std::variant<Types...>> { };
+
+template<typename... Types>
+struct variant_size<const volatile constexprStd::variant<Types...>&> : std::variant_size<std::variant<Types...>> { };
+
 template<std::size_t I, typename... Types>
 struct variant_alternative<I, constexprStd::variant<Types...>> : std::variant_alternative<I, std::variant<Types...>> {};
 
