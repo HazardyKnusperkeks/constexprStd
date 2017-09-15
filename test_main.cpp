@@ -592,13 +592,20 @@ void TestConstexprStd::testFind(void) const noexcept {
 	static_assert(constexprStd::find(c, 12) == c.end());
 	
 	std::forward_list<std::string> l{fooString, barString, bazString};
-	QCOMPARE(*constexprStd::find(l.begin(), l.end(), fooString), fooString);
-	QCOMPARE(*         std::find(l.begin(), l.end(), fooString), fooString);
+	
+	auto cp = constexprStd::find(l.begin(), l.end(), fooString);
+	auto sp =          std::find(l.begin(), l.end(), fooString);
+	QVERIFY(cp != l.end());
+	QVERIFY(sp != l.end());
+	QCOMPARE(*cp, fooString);
+	QCOMPARE(*sp, fooString);
 	
 	QCOMPARE(constexprStd::find(l.begin(), l.end(), "not"), l.end());
 	QCOMPARE(         std::find(l.begin(), l.end(), "not"), l.end());
 	
-	QCOMPARE(*constexprStd::find(l, bazString), bazString);
+	cp = constexprStd::find(l, bazString);
+	QVERIFY(cp != l.end());
+	QCOMPARE(*cp, bazString);
 	return;
 }
 
