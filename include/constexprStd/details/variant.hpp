@@ -731,6 +731,10 @@ struct VariantBase : public VariantStorage<TrivialDestructible, Types...> {
 		return Storage::Data.compareLess(Storage::Index, that.Data);
 	}
 };
+
+[[noreturn]] inline void throwBadVariantAccess(void) {
+	throw std::bad_variant_access{};
+}
 } //namespace constexprStd::details
 
 #endif

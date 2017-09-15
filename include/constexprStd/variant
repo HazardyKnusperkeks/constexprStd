@@ -131,7 +131,7 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 	template<std::size_t I>
 	constexpr decltype(auto) get(void) & {
 		if ( I != index() ) {
-			throw std::bad_variant_access{};
+			details::throwBadVariantAccess();
 		} //if ( I != index() )
 		return Base::Data.template get<I>();
 	}
@@ -139,7 +139,7 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 	template<std::size_t I>
 	constexpr decltype(auto) get(void) const & {
 		if ( I != index() ) {
-			throw std::bad_variant_access{};
+			details::throwBadVariantAccess();
 		} //if ( I != index() )
 		return Base::Data.template get<I>();
 	}
@@ -147,7 +147,7 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 	template<std::size_t I>
 	constexpr decltype(auto) get(void) && {
 		if ( I != index() ) {
-			throw std::bad_variant_access{};
+			details::throwBadVariantAccess();
 		} //if ( I != index() )
 		return std::move(Base::Data).template get<I>();
 	}
@@ -155,7 +155,7 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 	template<std::size_t I>
 	constexpr decltype(auto) get(void) const && {
 		if ( I != index() ) {
-			throw std::bad_variant_access{};
+			details::throwBadVariantAccess();
 		} //if ( I != index() )
 		return std::move(Base::Data).template get<I>();
 	}
