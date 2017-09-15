@@ -705,7 +705,7 @@ struct VariantBase : public VariantStorage<TrivialDestructible, Types...> {
 	
 	template<typename AssignT, typename InputT>
 	constexpr void convertAssign(InputT&& t)
-			noexcept(std::is_nothrow_assignable_v<AssignT, InputT&&> &&
+			noexcept(std::is_nothrow_assignable_v<AssignT&, InputT&&> &&
 			         (!(std::is_nothrow_constructible_v<AssignT, InputT> ||
 			            !std::is_nothrow_move_constructible_v<AssignT>) ||
 			          noexcept(std::declval<Storage&>().template emplace<TypeIndex<AssignT, Types...>::value, AssignT>(
