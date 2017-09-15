@@ -379,6 +379,34 @@ struct variant_size<constexprStd::variant<Types...>> : std::variant_size<std::va
 template<std::size_t I, typename... Types>
 struct variant_alternative<I, constexprStd::variant<Types...>> : std::variant_alternative<I, std::variant<Types...>> {};
 
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, const constexprStd::variant<Types...>> :
+	std::variant_alternative<I, const std::variant<Types...>> {};
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, volatile constexprStd::variant<Types...>> :
+	std::variant_alternative<I, volatile std::variant<Types...>> {};
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, const volatile constexprStd::variant<Types...>> :
+	std::variant_alternative<I, const volatile std::variant<Types...>> {};
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, constexprStd::variant<Types...>&> :
+	std::variant_alternative<I, std::variant<Types...>> {};
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, const constexprStd::variant<Types...>&> :
+	std::variant_alternative<I, const std::variant<Types...>> {};
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, volatile constexprStd::variant<Types...>&> :
+	std::variant_alternative<I, volatile std::variant<Types...>> {};
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, const volatile constexprStd::variant<Types...>&> :
+	std::variant_alternative<I, const volatile std::variant<Types...>> {};
+
 template<std::size_t I, typename Variant,
          std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
 constexpr decltype(auto) get(Variant&& v) {
