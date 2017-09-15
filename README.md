@@ -13,6 +13,20 @@ Projects based on Qt can `include(constexprStd/constexprStd.pri)` in their proje
 And then you use the library just like the STL.  
 Instead of `#include <algorithm>` you write `#include <constexprStd/algorithm>` and the content is in the namespace `constexprStd::` instead of `std::`.
 
+## Noteable differences to `std::`
+### General
+I've added conditional noexcept statements to nearly all (member) functions.
+So what can be noexcept should also be marked as such.
+I've only omited the statements when a throw is actually used in its body.
+
+### constexprStd::variant
+Using types with a non trivial destructor is not possible in `constexpr` context, so they can't be used in `constexrStd::variant` either.
+But all other types can be used, even `emplace` and the assignment operator, which are not `constexpr` in their `std::` incarnation.
+This comes at the cost, that the implementation does not meet all requirements.
+When emplacing a new type, the value is not direct initialized, but move assigned to the storage where another type was before.
+This means that some types are not save to be used in `constexprStd::variant`.
+If you want to use such a type and need direct initialization, add a non trivial destructor to it and the variant behaves like `std::variant`.
+
 ## Implementation
 ### [Algorihms library](http://en.cppreference.com/w/cpp/algorithm)
 The execution policies and the overloads for the algorithms are not implemented, because as far as I know, there is no chance of performing paralell computations in `constexpr`.
@@ -192,7 +206,10 @@ These can be used directly from the `std::` namespace.
 
 ### [Utility library](http://en.cppreference.com/w/cpp/utility)
 #### optional, variant and any
-Will be handled seperately
+- [ ] optional
+- [X] variant
+- [ ] any
+- [X] in_place*: These can be used directly from the `std::` namespace.
 
 #### Pairs and tuples
 Is mostly `constexpr`, so nothing to do here

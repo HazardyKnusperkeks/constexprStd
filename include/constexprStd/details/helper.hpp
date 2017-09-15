@@ -44,6 +44,116 @@ struct IsRaIter : std::conditional_t<IsIter<Iter>::value,
                                      std::is_same<std::experimental::detected_or_t<std::void_t<>, IsIterType, Iter>,
                                                   std::random_access_iterator_tag>,
                                      std::false_type> { };
+
+template<typename Type, typename... Types>
+struct Count : std::integral_constant<std::size_t, 0> { };
+
+template<typename Type, typename First, typename... Rest>
+struct Count<Type, First, Rest...> : std::integral_constant<std::size_t, Count<Type, Rest...>::value +
+	std::conditional_t<std::is_same_v<Type, First>, std::integral_constant<std::size_t, 1>,
+	                   std::integral_constant<std::size_t, 0>>::value> { };
+
+template<typename Type, typename... Types>
+constexpr inline auto CountV = Count<Type, Types...>::value;
+
+template<std::size_t I, typename Type, typename... Types>
+struct TypeIndexImpl : std::integral_constant<std::size_t, static_cast<std::size_t>(-1)> { };
+
+template<std::size_t I, typename Type, typename First, typename... Types>
+struct TypeIndexImpl<I, Type, First, Types...> : std::conditional_t<std::is_same_v<Type, First>,
+                                                                    std::integral_constant<std::size_t, I>,
+                                                                    TypeIndexImpl<I + 1, Type, Types...>> { };
+
+template<typename Type, typename... Types>
+struct TypeIndex : TypeIndexImpl<0, Type, Types...> { };
+
+struct EnableDefaultCtorTag {
+	explicit constexpr EnableDefaultCtorTag(void) = default;
+};
+
+template<bool Condition, typename For>
+struct EnableDefaultCtor {
+	constexpr EnableDefaultCtor(void) = default;
+	explicit constexpr EnableDefaultCtor(const EnableDefaultCtorTag) noexcept { return; }
+};
+
+template<typename For>
+struct EnableDefaultCtor<false, For> {
+	EnableDefaultCtor(void) = delete;
+	explicit constexpr EnableDefaultCtor(const EnableDefaultCtorTag) noexcept { return; }
+};
+
+template<bool Condition, typename For>
+struct EnableCopyCtor {
+	constexpr EnableCopyCtor(void) = default;
+	constexpr EnableCopyCtor(const EnableCopyCtor&) = default;
+	constexpr EnableCopyCtor(EnableCopyCtor&&) = default;
+	constexpr EnableCopyCtor& operator=(const EnableCopyCtor&) = default;
+	constexpr EnableCopyCtor& operator=(EnableCopyCtor&&) = default;
+};
+
+template<typename For>
+struct EnableCopyCtor<false, For> {
+	constexpr EnableCopyCtor(void) = default;
+	constexpr EnableCopyCtor(const EnableCopyCtor&) = delete;
+	constexpr EnableCopyCtor(EnableCopyCtor&&) = default;
+	constexpr EnableCopyCtor& operator=(const EnableCopyCtor&) = default;
+	constexpr EnableCopyCtor& operator=(EnableCopyCtor&&) = default;
+};
+
+template<bool Condition, typename For>
+struct EnableMoveCtor {
+	constexpr EnableMoveCtor(void) = default;
+	constexpr EnableMoveCtor(const EnableMoveCtor&) = default;
+	constexpr EnableMoveCtor(EnableMoveCtor&&) = default;
+	constexpr EnableMoveCtor& operator=(const EnableMoveCtor&) = default;
+	constexpr EnableMoveCtor& operator=(EnableMoveCtor&&) = default;
+};
+
+template<typename For>
+struct EnableMoveCtor<false, For> {
+	constexpr EnableMoveCtor(void) = default;
+	constexpr EnableMoveCtor(const EnableMoveCtor&) = default;
+	constexpr EnableMoveCtor(EnableMoveCtor&&) = delete;
+	constexpr EnableMoveCtor& operator=(const EnableMoveCtor&) = default;
+	constexpr EnableMoveCtor& operator=(EnableMoveCtor&&) = default;
+};
+
+template<bool Condition, typename For>
+struct EnableCopyAssign {
+	constexpr EnableCopyAssign(void) = default;
+	constexpr EnableCopyAssign(const EnableCopyAssign&) = default;
+	constexpr EnableCopyAssign(EnableCopyAssign&&) = default;
+	constexpr EnableCopyAssign& operator=(const EnableCopyAssign&) = default;
+	constexpr EnableCopyAssign& operator=(EnableCopyAssign&&) = default;
+};
+
+template<typename For>
+struct EnableCopyAssign<false, For> {
+	constexpr EnableCopyAssign(void) = default;
+	constexpr EnableCopyAssign(const EnableCopyAssign&) = default;
+	constexpr EnableCopyAssign(EnableCopyAssign&&) = default;
+	constexpr EnableCopyAssign& operator=(const EnableCopyAssign&) noexcept = delete;
+	constexpr EnableCopyAssign& operator=(EnableCopyAssign&&) = default;
+};
+
+template<bool Condition, typename For>
+struct EnableMoveAssign {
+	constexpr EnableMoveAssign(void) = default;
+	constexpr EnableMoveAssign(const EnableMoveAssign&) = default;
+	constexpr EnableMoveAssign(EnableMoveAssign&&) = default;
+	constexpr EnableMoveAssign& operator=(const EnableMoveAssign&) = default;
+	constexpr EnableMoveAssign& operator=(EnableMoveAssign&&) = default;
+};
+
+template<typename For>
+struct EnableMoveAssign<false, For> {
+	constexpr EnableMoveAssign(void) = default;
+	constexpr EnableMoveAssign(const EnableMoveAssign&) = default;
+	constexpr EnableMoveAssign(EnableMoveAssign&&) = default;
+	constexpr EnableMoveAssign& operator=(const EnableMoveAssign&) = default;
+	constexpr EnableMoveAssign& operator=(EnableMoveAssign&&) noexcept = delete;
+};
 } //namespace constexprStd::details
 
 #endif

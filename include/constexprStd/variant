@@ -1,0 +1,420 @@
+/**
+ ** This file is part of the constexprStd project.
+ ** Copyright 2017 Björn Schäpers <bjoern@hazardy.de>.
+ **
+ ** This program is free software: you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as
+ ** published by the Free Software Foundation, either version 3 of the
+ ** License, or (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU Lesser General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+/**
+ * @file
+ * @brief Contains the constexpr variants of <variant>
+ */
+
+#ifndef CONSTEXPRSTD_VARIANT
+#define CONSTEXPRSTD_VARIANT
+
+#include <type_traits>
+#include <utility>
+#include <variant>
+
+#include <constexprStd/utility>
+
+#include "details/helper.hpp"
+#include "details/variant.hpp"
+
+namespace constexprStd {
+template<typename... Types>
+class variant : private details::VariantBase<std::conjunction_v<std::is_trivially_destructible<Types>...>, Types...>,
+                private details::EnableDefaultCtor<std::is_default_constructible_v<std::variant_alternative_t<0, variant<Types...>>>, variant<Types...>>,
+                private details::EnableCopyCtor<std::conjunction_v<std::is_copy_constructible<Types>...>, variant<Types...>>,
+                private details::EnableMoveCtor<std::conjunction_v<std::is_move_constructible<Types>...>, variant<Types...>>,
+                private details::EnableCopyAssign<std::conjunction_v<std::is_copy_assignable<Types>..., std::is_copy_constructible<Types>...>, variant<Types...>>,
+                private details::EnableMoveAssign<std::conjunction_v<std::is_move_assignable<Types>..., std::is_move_constructible<Types>...>, variant<Types...>> {
+	private:
+	static_assert(sizeof...(Types) > 0, "The variant must not be empty!");
+	static_assert(std::negation_v<std::disjunction<std::is_reference<Types>...>>,
+	              "The variant can not store references!");
+	static_assert(std::negation_v<std::disjunction<std::is_void<Types>     ...>>,
+	              "The variant can not store void!");
+	
+	using Base = details::VariantBase<std::conjunction_v<std::is_trivially_destructible<Types>...>, Types...>;
+	
+	template<std::size_t I>
+	using Type = std::variant_alternative_t<I, variant>;
+	
+	template<typename T>
+	using TypeIndex = details::TypeIndex<T, Types...>;
+	
+	using DefaultCtor = details::EnableDefaultCtor<std::is_nothrow_default_constructible_v<Type<0>>, variant>;
+	
+	template<typename T>
+	using CompatibleTypeIndex = details::CompatibleTypeIndex<T, Types...>;
+	
+	template<typename T>
+	using CompatbileType = Type<CompatibleTypeIndex<T>::value>;
+	
+	template<typename T>
+	using Count = details::Count<T, Types...>;
+	
+	public:
+	//Constructors:
+	
+	//(1) default, disabled if the first type has no default constrcutor.
+	constexpr variant(void) = default;
+	
+	//(2) copy and (3) move constrcutor are compiler generated
+	
+	//(4)
+	template<typename T, std::enable_if_t<std::conjunction_v<std::negation<std::is_same<std::decay_t<T>, variant>>,
+	                                                         std::is_constructible<CompatbileType<T>, T&&>>>* = nullptr>
+	constexpr variant(T&& t) noexcept(std::is_nothrow_constructible_v<CompatbileType<T>, T&&>) :
+			variant{std::in_place_index<CompatibleTypeIndex<T>::value>, std::forward<T>(t)} {
+		static_assert(Count<CompatbileType<T>>::value == 1, "Type index is not unique!");
+		return;
+	}
+	
+	//(5)
+	template<typename T, typename... Args, std::enable_if_t<std::is_constructible_v<T, Args...> &&
+	                                                        Count<T>::value == 1>* = nullptr>
+	constexpr explicit variant(const std::in_place_type_t<T>, Args&&... args)
+			noexcept(std::is_nothrow_constructible_v<T, Args...>) :
+			variant(std::in_place_index<TypeIndex<T>::value>, std::forward<Args>(args)...) {
+		return;
+	}
+	
+	//(6)
+	template<typename T, typename U, typename... Args,
+	         std::enable_if_t<std::is_constructible_v<T, std::initializer_list<U>&, Args...> &&
+	                          Count<T>::value == 1>* = nullptr>
+	constexpr explicit variant(const std::in_place_type_t<T>, std::initializer_list<U> il, Args&&... args)
+			noexcept(std::is_nothrow_constructible_v<T, std::initializer_list<U>&, Args...>) :
+			variant(std::in_place_index<TypeIndex<T>::value>, il, std::forward<Args>(args)...) {
+		return;
+	}
+	
+	//(7)
+	template<std::size_t I, typename... Args, std::enable_if_t<std::is_constructible_v<Type<I>, Args...>>* = nullptr>
+	constexpr explicit variant(const std::in_place_index_t<I> idx, Args&&... args)
+			noexcept(noexcept(std::is_nothrow_constructible_v<Type<I>, Args...>)) :
+			Base{idx, std::forward<Args>(args)...}, DefaultCtor{details::EnableDefaultCtorTag{}} {
+		return;
+	}
+	
+	//(8)
+	template<std::size_t I, typename U, typename... Args,
+	         std::enable_if_t<std::is_constructible_v<Type<I>, std::initializer_list<U>&, Args...>>* = nullptr>
+	constexpr explicit variant(const std::in_place_index_t<I> idx, std::initializer_list<U> il, Args&&... args)
+			noexcept(std::is_nothrow_constructible_v<Type<I>, std::initializer_list<U>&, Args...>) :
+			Base{idx, il, std::forward<Args>(args)...}, DefaultCtor{details::EnableDefaultCtorTag{}} {
+		return;
+	}
+	
+	constexpr std::size_t index(void) const noexcept {
+		return Base::Index;
+	}
+	
+	constexpr bool valueless_by_exception(void) const noexcept {
+		return !Base::valid();
+	}
+	
+	template<std::size_t I>
+	constexpr decltype(auto) get(void) & {
+		if ( I != index() ) {
+			throw std::bad_variant_access{};
+		} //if ( I != index() )
+		return Base::Data.template get<I>();
+	}
+	
+	template<std::size_t I>
+	constexpr decltype(auto) get(void) const & {
+		if ( I != index() ) {
+			throw std::bad_variant_access{};
+		} //if ( I != index() )
+		return Base::Data.template get<I>();
+	}
+	
+	template<std::size_t I>
+	constexpr decltype(auto) get(void) && {
+		if ( I != index() ) {
+			throw std::bad_variant_access{};
+		} //if ( I != index() )
+		return std::move(Base::Data).template get<I>();
+	}
+	
+	template<std::size_t I>
+	constexpr decltype(auto) get(void) const && {
+		if ( I != index() ) {
+			throw std::bad_variant_access{};
+		} //if ( I != index() )
+		return std::move(Base::Data).template get<I>();
+	}
+	
+	template<typename T>
+	constexpr bool holds_alternative(void) const noexcept {
+		return index() == TypeIndex<T>::value;
+	}
+	
+	constexpr void swap(variant& that) noexcept(std::conjunction_v<std::is_nothrow_move_constructible<Types>...,
+	                                                               std::is_nothrow_swappable<Types>...>) {
+		const auto idx = index();
+		if ( idx == that.index() ) {
+			Base::Data.swap(idx, that.Data);
+		} //if ( idx == that.index() )
+		else {
+			constexprStd::swap(static_cast<Base&>(*this), static_cast<Base&>(that));
+		} //else -> if ( idx == that.index() )
+		return;
+	}
+	
+	template<typename T, typename... Args,
+	         std::enable_if_t<std::is_constructible_v<T, Args...> && Count<T>::value == 1>* = nullptr>
+	constexpr T& emplace(Args&&... args)
+			noexcept(noexcept(std::declval<variant>().
+			                  template emplace<TypeIndex<T>::value>(std::forward<Args>(args)...))) {
+		return emplace<TypeIndex<T>::value>(std::forward<Args>(args)...);
+	}
+	
+	template<typename T, typename U, typename... Args,
+	         std::enable_if_t<std::is_constructible_v<T, std::initializer_list<U>, Args...> &&
+	                          Count<T>::value == 1>* = nullptr>
+	constexpr T& emplace(std::initializer_list<U> il, Args&&... args)
+			noexcept(noexcept(std::declval<variant>().
+			                  template emplace<TypeIndex<T>::value>(il, std::forward<Args>(args)...))) {
+		return emplace<TypeIndex<T>::value>(il, std::forward<Args>(args)...);
+	}
+	
+	template<std::size_t I, typename... Args,
+	         std::enable_if_t<std::is_constructible_v<Type<I>, Args...>>* = nullptr>
+	constexpr Type<I>& emplace(Args&&... args)
+			noexcept(noexcept(std::declval<Base>().template emplace<I, Type<I>>(std::forward<Args>(args)...))) {
+		return Base::template emplace<I, Type<I>>(std::forward<Args>(args)...);
+	}
+	
+	template<std::size_t I, typename U, typename... Args,
+	         std::enable_if_t<std::is_constructible_v<Type<I>, std::initializer_list<U>, Args...>>* = nullptr>
+	constexpr Type<I>& emplace(std::initializer_list<U> il, Args&&... args)
+			noexcept(noexcept(std::declval<Base>().template emplace<I, Type<I>>(il, std::forward<Args>(args)...))) {
+		return Base::template emplace<I, Type<I>>(il, std::forward<Args>(args)...);
+	}
+	
+	template<typename T, std::enable_if_t<std::conjunction_v<std::negation<std::is_same<std::decay_t<T>, variant>>,
+	                                                         std::is_constructible<CompatbileType<T>, T&&>>>* = nullptr>
+	constexpr variant& operator=(T&& t)
+			noexcept(noexcept(std::declval<Base&>().template convertAssign<CompatbileType<T>>(std::forward<T>(t)))) {
+		Base::template convertAssign<CompatbileType<T>>(std::forward<T>(t));
+		return *this;
+	}
+	
+	friend constexpr bool operator==(const variant& v, const variant& w) noexcept(noexcept(v.compareEqual(w))) {
+		if ( v.index() != w.index() ) {
+			return false;
+		} //if ( v.index() != w.index() )
+		
+		if ( v.valueless_by_exception() ) {
+			return true;
+		} //if ( v.valueless_by_exception() )
+		
+		return v.compareEqual(w);
+	}
+	
+	friend constexpr bool operator!=(const variant& v, const variant& w) noexcept(noexcept(v == w)) {
+		return !(v == w);
+	}
+	
+	friend constexpr bool operator<(const variant& v, const variant& w) noexcept(noexcept(v.compareLess(w))) {
+		if ( w.valueless_by_exception() ) {
+			return false;
+		} //if ( w.valueless_by_exception() )
+		
+		if ( v.valueless_by_exception() ) {
+			return true;
+		} //if ( v.valueless_by_exception() )
+		
+		const auto vIndex = v.index();
+		const auto wIndex = w.index();
+		if ( vIndex < wIndex ) {
+			return true;
+		} //if ( vIndex < wIndex )
+		
+		if ( vIndex > wIndex ) {
+			return false;
+		} //if ( vIndex > wIndex )
+		
+		return v.compareLess(w);
+	}
+	
+	friend constexpr bool operator>(const variant& v, const variant& w) noexcept(noexcept(w < v)) {
+		return w < v;
+	}
+	
+	friend constexpr bool operator<=(const variant& v, const variant& w) noexcept(noexcept(v > w)) {
+		return !(v > w);
+	}
+	
+	friend constexpr bool operator>=(const variant& v, const variant& w) noexcept(noexcept(v < w)) {
+		return !(v < w);
+	}
+};
+
+using monostate = std::monostate;
+
+template<typename T>
+using variant_size = std::variant_size<T>;
+
+template<typename T>
+inline constexpr auto variant_size_v = std::variant_size_v<T>;
+
+template<std::size_t I, typename T>
+using variant_alternative = std::variant_alternative<I, T>;
+
+template<std::size_t I, typename T>
+using variant_alternative_t = std::variant_alternative_t<I, T>;
+
+inline constexpr auto variant_npos = std::variant_npos;
+
+template<typename T, typename... Types>
+constexpr bool holds_alternative(const constexprStd::variant<Types...>& v) noexcept {
+	return v.template holds_alternative<T>();
+}
+
+template<std::size_t I, typename... Types>
+constexpr decltype(auto) get(constexprStd::variant<Types...>& v) {
+	return v.template get<I>();
+}
+
+template<std::size_t I, typename... Types>
+constexpr decltype(auto) get(const constexprStd::variant<Types...>& v) {
+	return v.template get<I>();
+}
+
+template<std::size_t I, typename... Types>
+constexpr decltype(auto) get(constexprStd::variant<Types...>&& v) {
+	return std::move(v).template get<I>();
+}
+
+template<std::size_t I, typename... Types>
+constexpr decltype(auto) get(const constexprStd::variant<Types...>&& v) {
+	return std::move(v).template get<I>();
+}
+
+template<typename T, typename... Types>
+constexpr decltype(auto) get(constexprStd::variant<Types...>& v) {
+	return v.template get<details::TypeIndex<T, Types...>::value>();
+}
+
+template<typename T, typename... Types>
+constexpr decltype(auto) get(const constexprStd::variant<Types...>& v) {
+	return v.template get<details::TypeIndex<T, Types...>::value>();
+}
+
+template<typename T, typename... Types>
+constexpr decltype(auto) get(constexprStd::variant<Types...>&& v) {
+	return std::move(v).template get<details::TypeIndex<T, Types...>::value>();
+}
+
+template<typename T, typename... Types>
+constexpr decltype(auto) get(const constexprStd::variant<Types...>&& v) {
+	return std::move(v).template get<details::TypeIndex<T, Types...>::value>();
+}
+
+template<std::size_t I, typename... Types>
+constexpr std::add_pointer_t<std::variant_alternative_t<I, std::variant<Types...>>>
+		get_if(constexprStd::variant<Types...> *v) noexcept {
+	if ( v->index() == I ) {
+		return &v->template get<I>();
+	} //if ( v->index() == I )
+	return nullptr;
+}
+
+template<std::size_t I, typename... Types>
+constexpr std::add_pointer_t<std::add_const_t<std::variant_alternative_t<I, std::variant<Types...>>>>
+		get_if(const constexprStd::variant<Types...> *v) noexcept {
+	if ( v->index() == I ) {
+		return &v->template get<I>();
+	} //if ( v->index() == I )
+	return nullptr;
+}
+
+template<typename T, typename... Types>
+constexpr std::add_pointer_t<T> get_if(constexprStd::variant<Types...> *v) noexcept {
+	if ( constexprStd::holds_alternative<T>(*v) ) {
+		return &constexprStd::get<T>(*v);
+	} //if ( constexprStd::holds_alternative<T>(*v) )
+	return nullptr;
+}
+
+template<typename T, typename... Types>
+constexpr std::add_pointer_t<std::add_const_t<T>> get_if(const constexprStd::variant<Types...> *v) noexcept {
+	if ( constexprStd::holds_alternative<T>(*v) ) {
+		return &constexprStd::get<T>(*v);
+	} //if ( constexprStd::holds_alternative<T>(*v) )
+	return nullptr;
+}
+
+template<typename... Types,
+         std::enable_if_t<std::conjunction_v<std::is_move_constructible<Types>...,
+                                             std::is_swappable<Types>...>>* = nullptr>
+constexpr void swap(constexprStd::variant<Types...>& v1, constexprStd::variant<Types...>& v2)
+		noexcept(noexcept(v1.swap(v2))) {
+	v1.swap(v2);
+	return;
+}
+} //namespace constexprStd
+
+namespace std {
+template<typename... Types>
+struct variant_size<constexprStd::variant<Types...>> : std::variant_size<std::variant<Types...>> { };
+
+template<std::size_t I, typename... Types>
+struct variant_alternative<I, constexprStd::variant<Types...>> : std::variant_alternative<I, std::variant<Types...>> {};
+
+template<std::size_t I, typename Variant,
+         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
+constexpr decltype(auto) get(Variant&& v) {
+	return constexprStd::get<I>(std::forward<Variant>(v));
+}
+
+template<typename T, typename Variant,
+         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
+constexpr decltype(auto) get(Variant&& v) {
+	return constexprStd::get<T>(std::forward<Variant>(v));
+}
+
+template<std::size_t I, typename... Types>
+constexpr decltype(auto) get_if(constexprStd::variant<Types...> *v) noexcept {
+	return constexprStd::get_if<I>(v);
+}
+
+template<std::size_t I, typename... Types>
+constexpr decltype(auto) get_if(const constexprStd::variant<Types...> *v) noexcept {
+	return constexprStd::get_if<I>(v);
+}
+
+template<typename T, typename... Types>
+constexpr decltype(auto) get_if(constexprStd::variant<Types...> *v) noexcept {
+	return constexprStd::get_if<T>(v);
+}
+
+template<typename T, typename... Types>
+constexpr decltype(auto) get_if(const constexprStd::variant<Types...> *v) noexcept {
+	return constexprStd::get_if<T>(v);
+}
+
+template<typename T, typename... Types>
+constexpr bool holds_alternative(const constexprStd::variant<Types...>& v) noexcept {
+	return constexprStd::holds_alternative<T>(v);
+}
+} //namespace std
+
+#endif
