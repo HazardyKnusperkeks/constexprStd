@@ -50,9 +50,10 @@ constexpr auto count_if(InputIter first, const InputIter last, const UnaryPredic
 }
 
 template<typename Container, typename UnaryPredicate>
-constexpr auto count_if(const Container& c, const UnaryPredicate pred)
-		noexcept(noexcept(constexprStd::count_if(std::begin(c), std::end(c), pred))) {
-	return constexprStd::count_if(std::begin(c), std::end(c), pred);
+constexpr auto count_if(Container&& c, const UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::count_if(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)), pred))) {
+	return constexprStd::count_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), pred);
 }
 
 template<typename InputIter, typename T>
@@ -62,9 +63,10 @@ constexpr auto count(const InputIter first, const InputIter last, const T& t)
 }
 
 template<typename Container, typename T>
-constexpr auto count(const Container& c, const T& t)
-		noexcept(noexcept(constexprStd::count(std::begin(c), std::end(c), t))) {
-	return constexprStd::count(std::begin(c), std::end(c), t);
+constexpr auto count(Container&& c, const T& t)
+		noexcept(noexcept(constexprStd::count(std::begin(std::forward<Container>(c)),
+		                                      std::end(std::forward<Container>(c)), t))) {
+	return constexprStd::count(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), t);
 }
 
 template<typename IterT1, typename IterT2, typename BinaryPredicate>
@@ -85,15 +87,18 @@ constexpr bool equal(const IterT1 first1, const IterT1 last1, const IterT2 first
 }
 
 template<typename Container, typename IterT2, typename BinaryPredicate>
-constexpr bool equal(const Container& c, const IterT2 first2, const BinaryPredicate pred)
-		noexcept(noexcept(constexprStd::equal(std::begin(c), std::end(c), first2, pred))) {
-	return constexprStd::equal(std::begin(c), std::end(c), first2, pred);
+constexpr bool equal(Container&& c, const IterT2 first2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::equal(std::begin(std::forward<Container>(c)),
+		                                      std::end(std::forward<Container>(c)), first2, pred))) {
+	return constexprStd::equal(std::begin(std::forward<Container>(c)),
+	                           std::end(std::forward<Container>(c)), first2, pred);
 }
 
 template<typename Container, typename IterT2, std::enable_if_t<details::IsIterV<IterT2>>* = nullptr>
-constexpr bool equal(const Container& c, const IterT2 first2)
-		noexcept(noexcept(constexprStd::equal(std::begin(c), std::end(c), first2))) {
-	return constexprStd::equal(std::begin(c), std::end(c), first2);
+constexpr bool equal(Container&& c, const IterT2 first2)
+		noexcept(noexcept(constexprStd::equal(std::begin(std::forward<Container>(c)),
+		                                      std::end(std::forward<Container>(c)), first2))) {
+	return constexprStd::equal(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), first2);
 }
 
 template<typename IterT1, typename IterT2, typename BinaryPredicate>
@@ -110,16 +115,24 @@ constexpr bool equal(const IterT1 first1, const IterT1 last1, const IterT2 first
 }
 
 template<typename Container1, typename Container2, typename BinaryPredicate>
-constexpr bool equal(const Container1& c1, const Container2& c2, const BinaryPredicate pred)
-		noexcept(noexcept(constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), pred))) {
-	return constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), pred);
+constexpr bool equal(Container1&& c1, Container2&& c2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::equal(std::begin(std::forward<Container1>(c1)),
+		                                      std::end(std::forward<Container1>(c1)),
+		                                      std::begin(std::forward<Container2>(c2)),
+		                                      std::end(std::forward<Container2>(c2)), pred))) {
+	return constexprStd::equal(std::begin(std::forward<Container1>(c1)), std::end(std::forward<Container1>(c1)),
+	                           std::begin(std::forward<Container2>(c2)), std::end(std::forward<Container2>(c2)), pred);
 }
 
 template<typename Container1, typename Container2,
          std::enable_if_t<std::negation_v<details::IsIter<Container2>>>* = nullptr>
-constexpr bool equal(const Container1& c1, const Container2& c2)
-		noexcept(noexcept(constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2)))) {
-	return constexprStd::equal(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2));
+constexpr bool equal(Container1&& c1, Container2&& c2)
+		noexcept(noexcept(constexprStd::equal(std::begin(std::forward<Container1>(c1)),
+		                                      std::end(std::forward<Container1>(c1)),
+		                                      std::begin(std::forward<Container2>(c2)),
+		                                      std::end(std::forward<Container2>(c2))))) {
+	return constexprStd::equal(std::begin(std::forward<Container1>(c1)), std::end(std::forward<Container1>(c1)),
+	                           std::begin(std::forward<Container2>(c2)), std::end(std::forward<Container2>(c2)));
 }
 
 template<typename InputIter, typename UnaryPredicate>
@@ -132,9 +145,10 @@ constexpr InputIter find_if(InputIter first, const InputIter last, const UnaryPr
 }
 
 template<typename Container, typename UnaryPredicate>
-constexpr auto find_if(const Container& c, const UnaryPredicate pred)
-		noexcept(noexcept(constexprStd::find_if(std::begin(c), std::end(c), pred))) {
-	return constexprStd::find_if(std::begin(c), std::end(c), pred);
+constexpr auto find_if(Container&& c, const UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_if(std::begin(std::forward<Container>(c)),
+		                                        std::end(std::forward<Container>(c)), pred))) {
+	return constexprStd::find_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), pred);
 }
 
 template<typename InputIter, typename T>
@@ -144,9 +158,10 @@ constexpr InputIter find(const InputIter first, const InputIter last, const T& t
 }
 
 template<typename Container, typename T>
-constexpr auto find(const Container& c, const T& t)
-		noexcept(noexcept(constexprStd::find(std::begin(c), std::end(c), t))) {
-	return constexprStd::find(std::begin(c), std::end(c), t);
+constexpr auto find(Container&& c, const T& t)
+		noexcept(noexcept(constexprStd::find(std::begin(std::forward<Container>(c)),
+		                                     std::end(std::forward<Container>(c)), t))) {
+	return constexprStd::find(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), t);
 }
 
 template<typename InputIter, typename UnaryPredicate>
@@ -156,9 +171,11 @@ constexpr InputIter find_if_not(const InputIter first, const InputIter last, Una
 }
 
 template<typename Container, typename UnaryPredicate>
-constexpr auto find_if_not(const Container& c, const UnaryPredicate pred)
-		noexcept(noexcept(constexprStd::find_if_not(std::begin(c), std::end(c), pred))) {
-	return constexprStd::find_if_not(std::begin(c), std::end(c), pred);
+constexpr auto find_if_not(Container&& c, const UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_if_not(std::begin(std::forward<Container>(c)),
+		                                            std::end(std::forward<Container>(c)), pred))) {
+	return constexprStd::find_if_not(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                 pred);
 }
 
 /*****                                       Modifying sequence operations                                        *****/
@@ -174,9 +191,10 @@ constexpr OutputIterator copy(InputIterator sourceFirst, const InputIterator sou
 }
 
 template<typename Container, typename OutputIterator>
-constexpr OutputIterator copy(const Container& container, OutputIterator destination)
-		noexcept(noexcept(copy(std::begin(container), std::end(container), destination))) {
-	return copy(std::begin(container), std::end(container), destination);
+constexpr OutputIterator copy(Container&& c, OutputIterator destination)
+		noexcept(noexcept(copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+		                       destination))) {
+	return copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination);
 }
 
 /*****                                               Permutations                                                 *****/
@@ -258,10 +276,15 @@ constexpr bool is_permutation(ForwardIter1 first1, const ForwardIter1 last1,
 
 template<typename Container1, typename Container2, typename BinaryPredicate,
          std::enable_if_t<std::negation_v<details::IsIter<Container2>>>* = nullptr>
-constexpr bool is_permutation(const Container1& c1, const Container2& c2, const BinaryPredicate pred)
-		noexcept(noexcept(constexprStd::is_permutation(std::begin(c1), std::end(c1),
-		                                               std::begin(c2), std::end(c2), pred))) {
-	return constexprStd::is_permutation(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), pred);
+constexpr bool is_permutation(Container1&& c1, Container2&& c2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::is_permutation(std::begin(std::forward<Container1>(c1)),
+		                                               std::end(std::forward<Container1>(c1)),
+		                                               std::begin(std::forward<Container2>(c2)),
+		                                               std::end(std::forward<Container2>(c2)), pred))) {
+	return constexprStd::is_permutation(std::begin(std::forward<Container1>(c1)),
+	                                    std::end(std::forward<Container1>(c1)),
+	                                    std::begin(std::forward<Container2>(c2)),
+	                                    std::end(std::forward<Container2>(c2)), pred);
 }
 
 template<typename ForwardIter1, typename ForwardIter2>
@@ -273,9 +296,15 @@ constexpr bool is_permutation(const ForwardIter1 first1, const ForwardIter1 last
 
 template<typename Container1, typename Container2,
          std::enable_if_t<std::negation_v<details::IsIter<Container2>>>* = nullptr>
-constexpr bool is_permutation(const Container1& c1, const Container2& c2)
-		noexcept(noexcept(constexprStd::is_permutation(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2)))) {
-	return constexprStd::is_permutation(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2));
+constexpr bool is_permutation(Container1&& c1, Container2&& c2)
+		noexcept(noexcept(constexprStd::is_permutation(std::begin(std::forward<Container1>(c1)),
+		                                               std::end(std::forward<Container1>(c1)),
+		                                               std::begin(std::forward<Container2>(c2)),
+		                                               std::end(std::forward<Container2>(c2))))) {
+	return constexprStd::is_permutation(std::begin(std::forward<Container1>(c1)),
+	                                    std::end(std::forward<Container1>(c1)),
+	                                    std::begin(std::forward<Container2>(c2)),
+	                                    std::end(std::forward<Container2>(c2)));
 }
 
 template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
@@ -292,9 +321,11 @@ constexpr bool is_permutation(const ForwardIter1 first1, const ForwardIter1 last
 
 template<typename Container, typename ForwardIter2, typename BinaryPredicate,
          std::enable_if_t<details::IsIterV<ForwardIter2>>* = nullptr>
-constexpr bool is_permutation(const Container& c, const ForwardIter2 first2, const BinaryPredicate pred)
-		noexcept(noexcept(constexprStd::is_permutation(std::begin(c), std::end(c), first2, pred))) {
-	return constexprStd::is_permutation(std::begin(c), std::end(c), first2, pred);
+constexpr bool is_permutation(Container&& c, const ForwardIter2 first2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::is_permutation(std::begin(std::forward<Container>(c)),
+		                                               std::end(std::forward<Container>(c)), first2, pred))) {
+	return constexprStd::is_permutation(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                    first2, pred);
 }
 
 template<typename ForwardIter1, typename ForwardIter2, std::enable_if_t<details::IsIterV<ForwardIter1>>* = nullptr>
@@ -304,9 +335,11 @@ constexpr bool is_permutation(const ForwardIter1 first1, const ForwardIter1 last
 }
 
 template<typename Container, typename ForwardIter2, std::enable_if_t<details::IsIterV<ForwardIter2>>* = nullptr>
-constexpr bool is_permutation(const Container& c, const ForwardIter2 first2)
-		noexcept(noexcept(constexprStd::is_permutation(std::begin(c), std::end(c), first2))) {
-	return constexprStd::is_permutation(std::begin(c), std::end(c), first2);
+constexpr bool is_permutation(Container&& c, const ForwardIter2 first2)
+		noexcept(noexcept(constexprStd::is_permutation(std::begin(std::forward<Container>(c)),
+		                                               std::end(std::forward<Container>(c)), first2))) {
+	return constexprStd::is_permutation(std::begin(std::forward<Container>(c)),
+	                                    std::end(std::forward<Container>(c)), first2);
 }
 } //namespace constexprStd
 
