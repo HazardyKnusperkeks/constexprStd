@@ -26,6 +26,7 @@
 
 #include <array>
 #include <cassert>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -37,6 +38,14 @@
 namespace constexprStd {
 template<typename...>
 class variant;
+
+class BadVariantAssignment : public std::domain_error {
+	public:
+	BadVariantAssignment(void) :
+			std::domain_error("Current type hold by right hand side is not applicable on the left hand side") {
+		return;
+	}
+};
 
 namespace details {
 template<typename... Types>
@@ -788,6 +797,66 @@ template<typename... Types1>
 CompareVariant(const variant<Types1...>&) -> CompareVariant<Types1...>;
 
 #pragma GCC diagnostic pop
+
+[[noreturn]] inline void throwBadVariantAssignment(void) {
+	throw BadVariantAssignment{};
+}
+
+template<typename... Types1>
+struct AssignVariant {
+	variant<Types1...>& V1;
+	
+	template<typename T>
+	static constexpr bool checkType(void) noexcept {
+		if constexpr ( CountV<T, Types1...> == 1 ) {
+			return noexcept(V1 = std::declval<const T&>());
+		} //if constexpr ( CountV<T, Types1...> == 1 )
+		return false;
+	}
+	
+	template<typename... Types2>
+	using CanNoexceptCopyAllTypes = std::bool_constant<(checkType<Types2>() && ...)>;
+	
+	template<std::size_t I, typename... Types2>
+	static constexpr void assign(variant<Types1...>& v1, const variant<Types2...>& v2)
+			noexcept(CanNoexceptCopyAllTypes<Types2...>::value) {
+		using T = std::decay_t<std::variant_alternative_t<I, decltype(v2)>>;
+		if constexpr ( CountV<T, Types1...> == 1 ) {
+			v1 = std::get<I>(v2);
+		} //if constexpr ( CountV<T, Types1...> == 1 )
+		//The else case never gets called.
+		return;
+	}
+	
+	template<typename... Types2>
+	using AssignType = std::conditional_t<CanNoexceptCopyAllTypes<Types2...>::value,
+	                                      void (*)(variant<Types1...>&, const variant<Types2...>&) noexcept,
+	                                      void (*)(variant<Types1...>&, const variant<Types2...>&)>;
+	
+	template<typename... Types2>
+	static constexpr std::array<AssignType<Types2...>, sizeof...(Types2)>
+		Assign{&AssignVariant::assign<TypeIndex<Types2, Types2...>::value, Types2...>...};
+	
+	template<typename... Types2>
+	constexpr void operator()(const variant<Types2...>& v2) noexcept(CanNoexceptCopyAllTypes<Types2...>::value) {
+		if ( v2.valueless_by_exception() ) {
+			V1.reset();
+			return;
+		} //if ( v2.valueless_by_exception() )
+		
+		constexpr std::array canHoldType{(CountV<Types2, Types1...> == 1)...};
+		const auto v2Index = v2.index();
+		if ( !canHoldType[v2Index] ) {
+			throwBadVariantAssignment();
+		} //if ( !canHoldType[v2Index] )
+		
+		Assign<Types2...>[v2Index](V1, v2);
+		return;
+	}
+};
+
+template<typename... Types1>
+AssignVariant(const variant<Types1...>&) -> AssignVariant<Types1...>;
 
 [[noreturn]] inline void throwBadVariantAccess(void) {
 	throw std::bad_variant_access{};

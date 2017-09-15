@@ -216,6 +216,13 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 		return *this;
 	}
 	
+	template<typename... Types2, std::enable_if_t<Count<variant<Types2...>>::value == 0>* = nullptr>
+	constexpr variant& operator=(const variant<Types2...>& that)
+			noexcept(noexcept(details::AssignVariant{std::declval<variant&>()}(that))) {
+		details::AssignVariant{*this}(that);
+		return *this;
+	}
+	
 	friend constexpr bool operator==(const variant& v, const variant& w) noexcept(noexcept(v.compareEqual(w))) {
 		if ( v.index() != w.index() ) {
 			return false;
@@ -265,6 +272,8 @@ class variant : private details::VariantBase<std::conjunction_v<std::is_triviall
 	friend constexpr bool operator>=(const variant& v, const variant& w) noexcept(noexcept(v < w)) {
 		return !(v < w);
 	}
+	
+	friend struct details::AssignVariant<Types...>;
 };
 
 template<typename... Types1, typename... Types2>

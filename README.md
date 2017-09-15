@@ -30,6 +30,7 @@ If you want to use such a type and need direct initialization, add a non trivial
 
 #### Additions
 - It is possible to (un-)equal compare different types of variant. They only compare as equal, iff both hold the same type and the equal comparison of this type returns true.
+- It is possible to assign the content of diffrent types of variant. But only if the currently hold alternative of the right hand side is also an alternative of the left hand side, or the right hand side is valueless. In any other case a `constexprStd::BadVariantAssignment` exception is thrown.
 
 ## Implementation
 ### [Algorihms library](http://en.cppreference.com/w/cpp/algorithm)

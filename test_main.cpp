@@ -342,6 +342,7 @@ class TestConstexprStd : public QObject {
 	
 	//Variant extension
 	void testDifferentVariantCompare(void) const noexcept;
+	void testDifferentVariantAssign(void) const noexcept;
 	
 	//Swap, forward and move
 	void testExchange(void) const noexcept;
@@ -2762,6 +2763,120 @@ void TestConstexprStd::testDifferentVariantCompare(void ) const noexcept {
 	v2 = true;
 	QVERIFY(!(v2 == v1));
 	QVERIFY( (v2 != v1));
+	return;
+}
+
+void TestConstexprStd::testDifferentVariantAssign(void) const noexcept {
+	using V1 = constexprStd::variant<int, bool, unsigned long long, LiteralThrows>;
+	using V2 = constexprStd::variant<char, int, bool, double, LiteralThrows>;
+	V1 v1{7};
+	V2 v2{9};
+	
+	static_assert(!noexcept(v1 = v2));
+	
+	static_assert(noexcept(std::declval<constexprStd::variant<int, double>>() =
+	                       std::declval<constexprStd::variant<double, int>>()));
+	
+	//Same type
+	v1 = v2;
+	QCOMPARE(std::get<int>(v1), 9);
+	static_assert(std::get<int>(V1{7} = V2{9}) == 9);
+	
+	//Different type, contained
+	v2 = true;
+	v1 = v2;
+	QCOMPARE(std::get<bool>(v1), true);
+	static_assert(std::get<bool>(V1{9} = V2{true}) == true);
+	
+	//Different type, not contained
+	v2 = 7.9;
+	try {
+		v1 = v2;
+		QVERIFY(false);
+	} //try
+	catch ( const constexprStd::BadVariantAssignment& ) {
+		QVERIFY(true);
+	} //catch ( const constexprStd::BadVariantAssignment& )
+	QVERIFY(!v1.valueless_by_exception());
+	
+	//Lefthand side valueless, not contained type
+	try { v1.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v1.valueless_by_exception());
+	try {
+		v1 = v2;
+		QVERIFY(false);
+	} //try
+	catch ( const constexprStd::BadVariantAssignment& ) {
+		QVERIFY(true);
+	} //catch ( const constexprStd::BadVariantAssignment& )
+	QVERIFY(v1.valueless_by_exception());
+	
+	//Lefthand side valueless, contained type
+	v2 = 9;
+	v1 = v2;
+	QCOMPARE(std::get<int>(v1), 9);
+	
+	//Righthand side valueless
+	try { v2.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v2.valueless_by_exception());
+	v1 = v2;
+	QVERIFY(v1.valueless_by_exception());
+	
+	//Both valueless
+	v1 = v2;
+	QVERIFY(v1.valueless_by_exception());
+	
+	//The other way around
+	//Same type
+	v1 = 9;
+	v2 = 7;
+	v2 = v1;
+	QCOMPARE(std::get<int>(v2), 9);
+	static_assert(std::get<int>(V2{7} = V1{9}) == 9);
+	
+	//Different type, contained
+	v1 = true;
+	v2 = v1;
+	QCOMPARE(std::get<bool>(v2), true);
+	static_assert(std::get<bool>(V2{9} = V1{true}) == true);
+	
+	//Different type, not contained
+	v1 = 9ull;
+	try {
+		v2 = v1;
+		QVERIFY(false);
+	} //try
+	catch ( const constexprStd::BadVariantAssignment& ) {
+		QVERIFY(true);
+	} //catch ( const constexprStd::BadVariantAssignment& )
+	QVERIFY(!v2.valueless_by_exception());
+	
+	//Lefthand side valueless, not contained type
+	try { v2.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v2.valueless_by_exception());
+	try {
+		v2 = v1;
+		QVERIFY(false);
+	} //try
+	catch ( const constexprStd::BadVariantAssignment& ) {
+		QVERIFY(true);
+	} //catch ( const constexprStd::BadVariantAssignment& )
+	QVERIFY(v2.valueless_by_exception());
+	
+	//Lefthand side valueless, contained type
+	v1 = 9;
+	v2 = v1;
+	QCOMPARE(std::get<int>(v2), 9);
+	
+	//Righthand side valueless
+	try { v1.emplace<LiteralThrows>(.3); } catch ( ... ) { }
+	QVERIFY(v1.valueless_by_exception());
+	v2 = v1;
+	QVERIFY(v2.valueless_by_exception());
+	
+	//Both valueless
+	v2 = v1;
+	QVERIFY(v2.valueless_by_exception());
 	return;
 }
 
