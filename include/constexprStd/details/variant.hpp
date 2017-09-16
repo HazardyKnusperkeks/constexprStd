@@ -119,6 +119,11 @@ union VarUnion<First, Rest...> {
 	constexpr VarUnion(const std::in_place_index_t<0>, Args&&... args)
 			noexcept(std::is_nothrow_constructible_v<Uninitialized<First>, Args...>) :
 			Element{std::forward<Args>(args)...} {
+		if constexpr ( sizeof...(Args) == 0 ) {
+			/* If args is empty we call the default ctor of Uninitialized, that for non trivially destructible types
+			 * doesn't initialize, so we have to do it manually. */
+			Element.defaultInit();
+		} //if constexpr ( sizeof...(Args) == 0 )
 		return;
 	}
 	
@@ -166,6 +171,46 @@ union VarUnion<First, Rest...> {
 		} //if constexpr ( I == 0 )
 		else {
 			return std::move(Other).template get<I-1>();
+		} //else -> if constexpr ( I == 0 )
+	}
+	
+	template<std::size_t I, typename... Args>
+	static constexpr bool isEmplaceNoexcept(void) {
+		if constexpr ( I == 0 ) {
+			return noexcept(Element.init(std::declval<Args&&>()...));
+		} //if constexpr ( I == 0 )
+		else {
+			return noexcept(Other.template emplace<I-1>(std::declval<Args&&>()...));
+		} //else -> if constexpr ( I == 0 )
+	}
+	
+	template<std::size_t I, typename... Args>
+	constexpr decltype(auto) emplace(Args&&... args) noexcept(isEmplaceNoexcept<I, Args&&...>()) {
+		if constexpr ( I == 0 ) {
+			return Element.init(std::forward<Args>(args)...);
+		} //if constexpr ( I == 0 )
+		else {
+			return Other.template emplace<I-1>(std::forward<Args>(args)...);
+		} //else -> if constexpr ( I == 0 )
+	}
+	
+	template<std::size_t I>
+	static constexpr bool isDeinitNoexcept(void) {
+		if constexpr ( I == 0 ) {
+			return noexcept(Element.deinit());
+		} //if constexpr ( I == 0 )
+		else {
+			return noexcept(Other.template deinit<I-1>());
+		} //else -> if constexpr ( I == 0 )
+	}
+	
+	template<std::size_t I>
+	constexpr decltype(auto) deinit(void) noexcept(isDeinitNoexcept<I>()) {
+		if constexpr ( I == 0 ) {
+			return Element.deinit();
+		} //if constexpr ( I == 0 )
+		else {
+			return Other.template deinit<I-1>();
 		} //else -> if constexpr ( I == 0 )
 	}
 	
@@ -283,8 +328,7 @@ struct VariantStorage {
 			noexcept(std::conjunction_v<std::is_nothrow_constructible<T, Args...>,
 			                            std::is_nothrow_move_assignable<T>>) {
 		reset();
-		T& ret = Data.template get<I>();
-		ret = T{std::forward<Args>(args)...};
+		T& ret = Data.template emplace<I>(std::forward<Args>(args)...);
 		Index = I;
 		return ret;
 	}
@@ -294,8 +338,7 @@ struct VariantStorage {
 			noexcept(std::conjunction_v<std::is_nothrow_constructible<T, std::initializer_list<U>, Args...>,
 			                            std::is_nothrow_move_assignable<T>>) {
 		reset();
-		T& ret = Data.template get<I>();
-		ret = T{il, std::forward<Args>(args)...};
+		T& ret = Data.template emplace<I>(il, std::forward<Args>(args)...);
 		Index = I;
 		return ret;
 	}
@@ -319,7 +362,7 @@ struct VariantStorage<false, Types...> {
 	void elementCopyCtor(const VariantStorage& that) noexcept(NothrowCopyCtor::value) {
 		using Type = std::decay_t<std::variant_alternative_t<I, std::variant<Types...>>>;
 		static_assert(std::is_copy_constructible_v<Type>);
-		::new (&Data) Type{that.Data.template get<I>()};
+		Data.template emplace<I>(that.Data.template get<I>());
 		return;
 	}
 	
@@ -327,15 +370,13 @@ struct VariantStorage<false, Types...> {
 	void elementMoveCtor(VariantStorage&& that) noexcept(NothrowMoveCtor::value) {
 		using Type = std::decay_t<std::variant_alternative_t<I, std::variant<Types...>>>;
 		static_assert(std::is_move_constructible_v<Type>);
-		::new (&Data) Type{std::move(that.Data.template get<I>())};
+		Data.template emplace<I>(std::move(that.Data.template get<I>()));
 		return;
 	}
 	
 	template<std::size_t I>
 	void elementDtor(void) noexcept(NothrowDtor::value) {
-		auto& element = Data.template get<I>();
-		using Type = std::decay_t<decltype(element)>;
-		element.~Type();
+		Data.template deinit<I>();
 		return;
 	}
 	
@@ -463,8 +504,7 @@ struct VariantStorage<false, Types...> {
 	template<std::size_t I, typename T, typename... Args>
 	T& emplace(Args&&... args) noexcept(NothrowDtor::value && std::is_nothrow_constructible_v<T, Args...>) {
 		reset();
-		T& ret = Data.template get<I>();
-		::new (std::addressof(ret)) T{std::forward<Args>(args)...};
+		T& ret = Data.template emplace<I>(std::forward<Args>(args)...);
 		Index = I;
 		return ret;
 	}
@@ -473,8 +513,7 @@ struct VariantStorage<false, Types...> {
 	T& emplace(std::initializer_list<U> il, Args&&... args)
 			noexcept(NothrowDtor::value && std::is_nothrow_constructible_v<T, std::initializer_list<U>, Args...>) {
 		reset();
-		T& ret = Data.template get<I>();
-		::new (std::addressof(ret)) T{il, std::forward<Args>(args)...};
+		T& ret = Data.template emplace<I>(il, std::forward<Args>(args)...);
 		Index = I;
 		return ret;
 	}

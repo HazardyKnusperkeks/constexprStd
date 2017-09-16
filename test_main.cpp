@@ -296,6 +296,9 @@ static bool qCompare(const CountInstances<T1>& t1, const T2& t2, const char *act
 class TestConstexprStd : public QObject {
 	Q_OBJECT
 	private slots:
+	//Internals
+	void testUninitialized(void) const noexcept;
+	
 	//Algorithm lib
 	//Non-modifying sequence operations
 	void testCount(void) const noexcept;
@@ -331,7 +334,6 @@ class TestConstexprStd : public QObject {
 	
 	//Utility lib
 	//Variant
-	void testUninitialized(void) const noexcept;
 	void testVariantStaticAsserts(void) const noexcept;
 	void testVariantConstructor(void) const noexcept;
 	void testVariantDestructor(void) const noexcept;
@@ -353,6 +355,79 @@ class TestConstexprStd : public QObject {
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr) : QObject(parent) { return; }
 };
+
+void TestConstexprStd::testUninitialized(void) const noexcept {
+	using constexprStd::details::Uninitialized;
+	
+	//Test the literal variant
+	static_assert(std::is_trivially_destructible_v<TestContainer>);
+	static_assert(std::is_literal_type_v<TestContainer>);
+	
+	constexpr Uninitialized<TestContainer> cc1, cc2{7, 8, 9};
+	static_assert(cc1.get().at(4) == 5);
+	static_assert(cc2.get().at(1) == 8);
+	static_assert(Uninitialized<TestContainer>{}.get().at(1) == 2);
+	static_assert([]{Uninitialized<TestContainer> c{}; return c.get().at(1); }() == 2);
+	
+	Uninitialized<TestContainer> rc1, rc2{9, 8, 7};
+	QCOMPARE(cc1.get().at(4), 5);
+	QCOMPARE(cc2.get().at(1), 8);
+	QCOMPARE(Uninitialized<TestContainer>{}.get().at(1), 2);
+	QCOMPARE([]{Uninitialized<TestContainer> c{}; return c.get().at(1); }(), 2);
+	
+	//Test the non literal variant
+	static_assert(!std::is_trivially_destructible_v<CountInstances<std::string>>);
+	static_assert(!std::is_literal_type_v<CountInstances<std::string>>);
+	
+	using UninitString = Uninitialized<CountInstances<std::string>>;
+	
+	auto count = [](void) -> int& {
+			return CountInstances<std::string>::Instances;
+		};
+	
+	count() = 0;
+	
+	/* Basicly we leak the content of the strings, because their destructor never get called. But the strings will most
+	 * likely be on the stack, because of the short string optimization. But even if they are not, the leak is only in
+	 * this test. The correct usage is to manually call the destructor, like in our last temp. */
+	UninitString s1;
+	QCOMPARE(count(), 0);
+	
+	s1.init();
+	QCOMPARE(count(), 1);
+	QCOMPARE(s1.get(), emptyString);
+	
+	const UninitString s2{barString};
+	QCOMPARE(s2.get(), barString);
+	QCOMPARE(count(), 2);
+	
+	{
+		UninitString temp{fooString};
+		QCOMPARE(temp.get(), fooString);
+		QCOMPARE(count(), 3);
+		
+		QCOMPARE(UninitString{barString}.get(), barString);
+		QCOMPARE(count(), 4);
+	}
+	
+	//The objects didn't get destroied!
+	QCOMPARE(count(), 4);
+	
+	{
+		UninitString temp{longString};
+		QCOMPARE(count(), 5);
+		temp.get().~CountInstances<std::string>();
+		QCOMPARE(count(), 4);
+	}
+	QCOMPARE(count(), 4);
+	
+	s1.deinit();
+	QCOMPARE(count(), 3);
+	
+	//Reset for future tests
+	count() = 0;
+	return;
+}
 
 void TestConstexprStd::testCount(void) const noexcept {
 	constexpr TestContainer c;
@@ -1289,72 +1364,6 @@ void TestConstexprStd::testPrev(void) const noexcept {
 	
 	QCOMPARE(*citer, 6);
 	QCOMPARE(*siter, 6);
-	return;
-}
-
-void TestConstexprStd::testUninitialized(void) const noexcept {
-	using constexprStd::details::Uninitialized;
-	
-	//Test the literal variant
-	static_assert(std::is_trivially_destructible_v<TestContainer>);
-	static_assert(std::is_literal_type_v<TestContainer>);
-	
-	constexpr Uninitialized<TestContainer> cc1, cc2{7, 8, 9};
-	static_assert(cc1.get().at(4) == 5);
-	static_assert(cc2.get().at(1) == 8);
-	static_assert(Uninitialized<TestContainer>{}.get().at(1) == 2);
-	static_assert([]{Uninitialized<TestContainer> c{}; return c.get().at(1); }() == 2);
-	
-	Uninitialized<TestContainer> rc1, rc2{9, 8, 7};
-	QCOMPARE(cc1.get().at(4), 5);
-	QCOMPARE(cc2.get().at(1), 8);
-	QCOMPARE(Uninitialized<TestContainer>{}.get().at(1), 2);
-	QCOMPARE([]{Uninitialized<TestContainer> c{}; return c.get().at(1); }(), 2);
-	
-	//Test the non literal variant
-	static_assert(!std::is_trivially_destructible_v<CountInstances<std::string>>);
-	static_assert(!std::is_literal_type_v<CountInstances<std::string>>);
-	
-	using UninitString = Uninitialized<CountInstances<std::string>>;
-	
-	auto count = [](void) -> int& {
-			return CountInstances<std::string>::Instances;
-		};
-	
-	count() = 0;
-	
-	/* Basicly we leak the content of the strings, because their destructor never get called. But the strings will most
-	 * likely be on the stack, because of the short string optimization. But even if they are not, the leak is only in
-	 * this test. The correct usage is to manually call the destructor, like in our last temp. */
-	UninitString s1;
-	QCOMPARE(s1.get(), emptyString);
-	
-	const UninitString s2{barString};
-	QCOMPARE(s2.get(), barString);
-	QCOMPARE(count(), 2);
-	
-	{
-		UninitString temp{fooString};
-		QCOMPARE(temp.get(), fooString);
-		QCOMPARE(count(), 3);
-		
-		QCOMPARE(UninitString{barString}.get(), barString);
-		QCOMPARE(count(), 4);
-	}
-	
-	//The objects didn't get destroied!
-	QCOMPARE(count(), 4);
-	
-	{
-		UninitString temp{longString};
-		QCOMPARE(count(), 5);
-		temp.get().~CountInstances<std::string>();
-		QCOMPARE(count(), 4);
-	}
-	QCOMPARE(count(), 4);
-	
-	//Reset for future tests
-	count() = 0;
 	return;
 }
 

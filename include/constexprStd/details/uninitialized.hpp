@@ -46,6 +46,21 @@ struct Uninitialized<T, true> {
 		return;
 	}
 	
+	template<typename... Args>
+	constexpr T& init(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...> &&
+	                                           std::is_nothrow_move_assignable_v<T>) {
+		Storage = T{std::forward<Args>(args)...};
+		return Storage;
+	}
+	
+	constexpr void defaultInit(void) noexcept {
+		return;
+	}
+	
+	constexpr void deinit(void) noexcept {
+		return;
+	}
+	
 	constexpr T& get(void) & noexcept {
 		return Storage;
 	}
@@ -67,9 +82,29 @@ template<typename T>
 struct Uninitialized<T, false> {
 	std::aligned_storage_t<sizeof(T), alignof(T)> Storage;
 	
+	Uninitialized(void) noexcept {
+		return;
+	}
+	
 	template<typename... Args>
 	Uninitialized(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
+		init(std::forward<Args>(args)...);
+		return;
+	}
+	
+	template<typename... Args>
+	T& init(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
 		::new (&Storage) T{std::forward<Args>(args)...};
+		return get();
+	}
+	
+	void defaultInit(void) noexcept(noexcept(std::declval<Uninitialized&>().init())) {
+		init();
+		return;
+	}
+	
+	void deinit(void) noexcept(std::is_nothrow_destructible_v<T>) {
+		get().~T();
 		return;
 	}
 	
