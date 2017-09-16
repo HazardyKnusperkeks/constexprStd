@@ -204,7 +204,7 @@ Are actually defined as `constexpr`, but as stated earlier there are bugs in the
 - [X] advance
 - [X] distance
 - [X] next
-- [ ] prev
+- [X] prev
 
 #### Range access & Container access
 These can be used directly from the `std::` namespace.

@@ -109,6 +109,14 @@ constexpr InputIterator next(InputIterator iter,
 	return iter;
 }
 
+template<typename BidiIterator>
+constexpr BidiIterator prev(BidiIterator iter,
+                            const typename std::iterator_traits<BidiIterator>::difference_type n = 1)
+                            noexcept(noexcept(constexprStd::advance(iter, -n))) {
+	constexprStd::advance(iter, -n);
+	return iter;
+}
+
 } //namespace constexprStd
 
 #endif

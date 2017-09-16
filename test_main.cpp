@@ -327,6 +327,7 @@ class TestConstexprStd : public QObject {
 	void testAdvance(void) const noexcept;
 	void testDistance(void) const noexcept;
 	void testNext(void) const noexcept;
+	void testPrev(void) const noexcept;
 	
 	//Utility lib
 	//Variant
@@ -1268,6 +1269,23 @@ void TestConstexprStd::testNext(void) const noexcept {
 	TestContainer c;
 	auto citer = constexprStd::next(c.begin(), 5);
 	auto siter =          std::next(c.begin(), 5);
+	
+	QCOMPARE(*citer, 6);
+	QCOMPARE(*siter, 6);
+	return;
+}
+
+void TestConstexprStd::testPrev(void) const noexcept {
+	auto l = []{
+			TestContainer ret;
+			auto iter = constexprStd::prev(ret.end(), 3);
+			return *iter;
+		};
+	static_assert(l() == 8);
+	
+	TestContainer c;
+	auto citer = constexprStd::prev(c.end(), 5);
+	auto siter =          std::prev(c.end(), 5);
 	
 	QCOMPARE(*citer, 6);
 	QCOMPARE(*siter, 6);
