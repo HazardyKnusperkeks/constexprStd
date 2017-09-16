@@ -34,6 +34,7 @@
 #include <constexprStd/utility>
 
 #include "helper.hpp"
+#include "uninitialized.hpp"
 
 namespace constexprStd {
 template<typename...>
@@ -99,68 +100,8 @@ template<typename Type, typename... Types>
 using CompatibleTypeIndex = std::integral_constant<std::size_t, sizeof...(Types) - 1 -
 	decltype(OverloadSet<Types...>::function(std::declval<Type>()))::value>;
 
-template<typename T, bool = std::is_trivially_destructible_v<T>>
-struct Uninitialized;
-
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#pragma GCC diagnostic ignored "-Wnarrowing"
-#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-
-template<typename T>
-struct Uninitialized<T, true> {
-	T Storage;
-	
-	template<typename... Args>
-	constexpr Uninitialized(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) :
-			Storage{std::forward<Args>(args)...} {
-		return;
-	}
-	
-	constexpr T& get(void) & noexcept {
-		return Storage;
-	}
-	
-	constexpr const T& get(void) const & noexcept {
-		return Storage;
-	}
-	
-	constexpr T&& get(void) && noexcept {
-		return std::move(Storage);
-	}
-	
-	constexpr const T&& get(void) const && noexcept {
-		return std::move(Storage);
-	}
-};
-
-template<typename T>
-struct Uninitialized<T, false> {
-	std::aligned_storage_t<sizeof(T), alignof(T)> Storage;
-	
-	template<typename... Args>
-	Uninitialized(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
-		::new (&Storage) T{std::forward<Args>(args)...};
-		return;
-	}
-	
-	T& get(void) & noexcept {
-		return *reinterpret_cast<T*>(&Storage);
-	}
-	
-	const T& get(void) const & noexcept {
-		return *reinterpret_cast<const T*>(&Storage);
-	}
-	
-	T&& get(void) && noexcept {
-		return std::move(*reinterpret_cast<T*>(&Storage));
-	}
-	
-	const T&& get(void) const && noexcept {
-		return std::move(*reinterpret_cast<const T*>(&Storage));
-	}
-};
 
 template<typename... Types>
 union VarUnion { };
