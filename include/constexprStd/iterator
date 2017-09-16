@@ -81,6 +81,13 @@ class insert_iterator {
 	}
 };
 
+template<typename Container>
+constexpr insert_iterator<Container> inserter(Container& c, const typename Container::iterator iter)
+		noexcept(std::is_nothrow_constructible_v<insert_iterator<Container>, Container&,
+		                                         const typename Container::iterator>) {
+	return {c, iter};
+}
+
 template<typename InputIterator, typename Distance>
 constexpr void advance(InputIterator& i, const Distance n)
 		noexcept(noexcept(details::advanceImpl(i, n, details::iteratorCategory<InputIterator>))) {
@@ -94,11 +101,12 @@ constexpr auto distance(const InputIterator first, const InputIterator last)
 	return details::distanceImpl(first, last, details::iteratorCategory<InputIterator>);
 }
 
-template<typename Container>
-constexpr insert_iterator<Container> inserter(Container& c, const typename Container::iterator iter)
-		noexcept(std::is_nothrow_constructible_v<insert_iterator<Container>, Container&,
-		                                         const typename Container::iterator>) {
-	return {c, iter};
+template<typename InputIterator>
+constexpr InputIterator next(InputIterator iter,
+                             const typename std::iterator_traits<InputIterator>::difference_type n = 1)
+                             noexcept(noexcept(constexprStd::advance(iter, n))) {
+	constexprStd::advance(iter, n);
+	return iter;
 }
 
 } //namespace constexprStd

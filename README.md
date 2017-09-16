@@ -203,7 +203,7 @@ Has to be checked if there are actually `constexpr` streams.
 Are actually defined as `constexpr`, but as stated earlier there are bugs in the GCC implementation, so we provide them too.
 - [X] advance
 - [X] distance
-- [ ] next
+- [X] next
 - [ ] prev
 
 #### Range access & Container access
