@@ -27,10 +27,9 @@
 #include <iterator>
 #include <type_traits>
 
-#include <constexprStd/functional>
-#include <constexprStd/iterator>
-
 #include "details/algorithm.hpp"
+#include "functional"
+#include "iterator"
 
 namespace constexprStd {
 /*****                                     Non-modifying sequence operations                                      *****/
