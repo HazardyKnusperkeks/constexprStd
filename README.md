@@ -210,6 +210,8 @@ Are actually defined as `constexpr`, but as stated earlier there are bugs in the
 These can be used directly from the `std::` namespace.
 
 ### [Utility library](http://en.cppreference.com/w/cpp/utility)
+- [X] bitset
+
 #### optional, variant and any
 - [ ] optional
 - [X] variant

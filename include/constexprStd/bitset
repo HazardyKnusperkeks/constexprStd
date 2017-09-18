@@ -1,0 +1,525 @@
+/**
+ ** This file is part of the constexprStd project.
+ ** Copyright 2017 Björn Schäpers <bjoern@hazardy.de>.
+ **
+ ** This program is free software: you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as
+ ** published by the Free Software Foundation, either version 3 of the
+ ** License, or (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU Lesser General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+/**
+ * @file
+ * @brief Contains the constexpr variants of <bitset>
+ */
+
+#ifndef CONSTEXPRSTD_BITSET
+#define CONSTEXPRSTD_BITSET
+
+#include <cmath>
+#include <cstddef>
+#include <cstring>
+#include <istream>
+#include <limits>
+#include <locale>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+
+namespace constexprStd {
+template<std::size_t N>
+class bitset {
+	public:
+	class reference {
+		private:
+		bitset& Bitset;
+		const std::size_t Bit;
+		
+		constexpr reference(bitset& set, const std::size_t bit) noexcept : Bitset(set), Bit(bit) {
+			return;
+		}
+		
+		public:
+		constexpr reference& operator=(const bool b) noexcept {
+			if ( b ) {
+				Bitset.setBit(Bit);
+			} //if ( b )
+			else {
+				Bitset.resetBit(Bit);
+			} //else -> if ( b )
+			return *this;
+		}
+		
+		constexpr reference& operator=(const reference& that) noexcept {
+			return operator=(that.operator bool());
+		}
+		
+		constexpr operator bool(void) const noexcept {
+			return Bitset.readBit(Bit);
+		}
+		
+		constexpr bool operator~(void) const noexcept {
+			return !operator bool();
+		}
+		
+		constexpr reference& flip(void) noexcept {
+			Bitset.flipBit(Bit);
+			return *this;
+		}
+		
+		friend class bitset;
+	};
+	
+	private:
+	struct Position {
+		std::size_t Byte;
+		std::size_t Bit;
+	};
+	
+	static constexpr auto BitsInByte        = std::numeric_limits<unsigned char>::digits;
+	static constexpr int NumberOfBytes      = std::ceil(static_cast<double>(N) / static_cast<double>(BitsInByte));
+	static constexpr int FirstBitOfLastByte = (NumberOfBytes - 1) * BitsInByte;
+	static constexpr std::byte LastByteMask = (~std::byte{0}) >> (BitsInByte - N % BitsInByte);
+	
+	std::byte Bytes[NumberOfBytes] = {};
+	
+	[[nodiscard]] constexpr reference getReference(const std::size_t pos) noexcept {
+		return {*this, pos};
+	}
+	
+	[[nodiscard]] constexpr bool readBit(const std::size_t bit) const noexcept {
+		const auto pos = positionOfBit(bit);
+		return std::to_integer<bool>(Bytes[pos.Byte] & static_cast<std::byte>(1 << pos.Bit));
+	}
+	
+	constexpr void setBit(const std::size_t bit) noexcept {
+		const auto pos = positionOfBit(bit);
+		Bytes[pos.Byte] |= static_cast<std::byte>(1 << pos.Bit);
+		return;
+	}
+	
+	constexpr void resetBit(const std::size_t bit) noexcept {
+		const auto pos = positionOfBit(bit);
+		Bytes[pos.Byte] &= ~static_cast<std::byte>(1 << pos.Bit);
+		return;
+	}
+	
+	constexpr void flipBit(const std::size_t bit) noexcept {
+		const auto pos = positionOfBit(bit);
+		Bytes[pos.Byte] ^= static_cast<std::byte>(1 << pos.Bit);
+		return;
+	}
+	
+	constexpr void leftShiftWithBitOffset(const std::size_t byteOffset, const std::size_t bitOffset) noexcept {
+		for ( std::size_t byte = 0; byte < NumberOfBytes - byteOffset; ++byte ) {
+			auto& destByte = Bytes[byte];
+			auto& srcByte  = Bytes[byte + byteOffset];
+			
+			destByte = srcByte << bitOffset;
+			if ( byte < NumberOfBytes - byteOffset - 1 ) {
+				auto& srcByte2 = Bytes[byte + byteOffset + 1];
+				destByte |= (srcByte2 >> (BitsInByte - bitOffset));
+			} //if ( byte < NumberOfBytes - byteOffset - 1 )
+		} //for ( std::size_t byte = 0; byte < NumberOfBytes - byteOffset; ++byte )
+		return;
+	}
+	
+	constexpr void leftShiftWithoutBitOffset(const std::size_t byteOffset) noexcept {
+		for ( std::size_t byte = 0; byte < NumberOfBytes - byteOffset; ++byte ) {
+			Bytes[byte] = Bytes[byte + byteOffset];
+		} //for ( std::size_t byte = 0; byte < NumberOfBytes - byteOffset; ++byte )
+		return;
+	}
+	
+	constexpr void rightShiftWithBitOffset(const std::size_t byteOffset, const std::size_t bitOffset) noexcept {
+		for ( std::size_t byte = NumberOfBytes - byteOffset - 1; byte != static_cast<std::size_t>(-1); --byte ) {
+			auto& destByte = Bytes[byte + byteOffset];
+			auto& srcByte  = Bytes[byte];
+			
+			destByte = srcByte >> bitOffset;
+			if ( byte > 0 ) {
+				auto& srcByte2 = Bytes[byte - 1];
+				destByte |= (srcByte2 << (BitsInByte - bitOffset));
+			} //if ( byte > 0 )
+		} //for ( std::size_t byte = NumberOfBytes - byteOffset - 1; byte != static_cast<std::size_t>(-1); --byte )
+		return;
+	}
+	
+	constexpr void rightShiftWithoutBitOffset(const std::size_t byteOffset) noexcept {
+		for ( std::size_t byte = NumberOfBytes - byteOffset - 1; byte != static_cast<std::size_t>(-1); --byte ) {
+			Bytes[byte + byteOffset] = Bytes[byte];
+		} //for ( std::size_t byte = NumberOfBytes - byteOffset - 1; byte != static_cast<std::size_t>(-1); --byte )
+		return;
+	}
+	
+	template<typename T>
+	[[nodiscard]] constexpr T toInt(void) const {
+		using U = std::make_unsigned_t<T>;
+		
+		T ret = 0;
+		U mask = 0b1;
+		
+		/* We do not use size() here, because we want it to be constexpr for the if, and this is not constexpr. But the
+		 * size is a constant expression, because it only depends on the template argument. */
+		constexpr auto size = N;
+		constexpr auto end = std::min<std::size_t>(size, std::numeric_limits<U>::digits);
+		for ( std::size_t bit = 0; bit < end; ++bit, mask <<= 1 ) {
+			if ( readBit(bit) ) {
+				ret |= mask;
+			} //if ( readBit(bit) )
+		} //for ( std::size_t bit = 0; bit < end; ++bit, mask <<= 1 )
+		
+		if constexpr ( end != size ) {
+			auto throwOverflow = []{
+					throw std::overflow_error{"constexprStd::bitset: Overflow while converting to integral"};
+				};
+			
+			auto bit = end;
+			while ( bit < size && bit % BitsInByte != 0 ) {
+				if ( readBit(bit) ) {
+					throwOverflow();
+				} //if ( readBit(bit) )
+			} //while ( bit < size && bit % BitsInByte != 0 )
+			
+			if ( bit < size ) {
+				for ( int byte = static_cast<int>(NumberOfBytes - 1 - bit / BitsInByte); byte >= 0; --byte ) {
+					if ( std::to_integer<bool>(Bytes[byte]) ) {
+						throwOverflow();
+					} //if ( std::to_integer<bool>(Bytes[byte]) )
+				} //for ( int byte = static_cast<int>(NumberOfBytes - 1 - bit / BitsInByte); byte >= 0; --byte )
+			} //if ( bit < size )
+		} //if constexpr ( end != size )
+		return ret;
+	}
+	
+	[[nodiscard]] static constexpr Position positionOfBit(const std::size_t n) noexcept {
+		return {NumberOfBytes - 1 - n / BitsInByte, n % BitsInByte};
+	}
+	
+	static constexpr void checkBounds(const std::size_t pos) {
+		if ( pos >= N ) {
+			throw std::out_of_range{"constexprStd::bitset: Out of bounds access"};
+		} //if ( pos >= N )
+		return;
+	}
+	
+	public:
+	constexpr bitset(void) noexcept = default;
+	
+	constexpr bitset(const unsigned long long val) noexcept {
+		constexpr std::size_t copyBytes = std::min<std::size_t>(sizeof(val), NumberOfBytes);
+		
+		unsigned long long mask = 0b1;
+		for ( std::size_t bit = 0; bit < N && bit < copyBytes * BitsInByte && mask <= val; ++bit, mask <<= 1 ) {
+			if ( val & mask ) {
+				setBit(bit);
+			} //if ( val & mask )
+		} //for ( std::size_t bit = 0; bit < N && bit < copyBytes * BitsInByte && mask <= val; ++bit, mask <<= 1 )
+		return;
+	}
+	
+	template<typename CharT, typename Traits, typename Alloc>
+	explicit bitset(const std::basic_string<CharT, Traits, Alloc>& str,
+	                const typename std::basic_string<CharT, Traits, Alloc>::size_type pos = 0,
+	                typename std::basic_string<CharT, Traits, Alloc>::size_type n =
+	                	std::basic_string<CharT, Traits, Alloc>::npos,
+	                const CharT zero = CharT{'0'}, const CharT one = CharT{'1'}) {
+		if ( pos > str.size() ) {
+			throw std::out_of_range{"constexprStd::bitset::bitset: String positon is after string end"};
+		} //if ( pos > str.size() )
+		
+		if ( n == std::basic_string<CharT, Traits, Alloc>::npos ) {
+			n = str.size() - pos;
+		} //if ( n == std::basic_string<CharT, Traits, Alloc>::npos )
+		else {
+			n = std::min(n, str.size() - pos);
+		} //else -> if ( n == std::basic_string<CharT, Traits, Alloc>::npos )
+		
+		for ( std::size_t bit = 0; bit < N && n > pos; ++bit ) {
+			const CharT& c = str[--n];
+			if ( Traits::eq(c, one) ) {
+				setBit(bit);
+			} //if ( Traits::eq(c, one) )
+			else if ( !Traits::eq(c, zero) ) {
+				throw std::invalid_argument{
+					"constexprStd::bitset::bitset: String contains other symbols than zero or one"};
+			} //else if ( !Traits::eq(c, zero) )
+		} //for ( std::size_t bit = 0; bit < N && n > pos; ++bit )
+		return;
+	}
+	
+	template<typename CharT>
+	explicit bitset(const CharT *str,
+	                const typename std::basic_string<CharT>::size_type n = std::basic_string<CharT>::npos,
+	                const CharT zero = CharT{'0'}, const CharT one = CharT{'1'}) :
+	                bitset(n == std::basic_string<CharT>::npos ? std::basic_string<CharT>{str} :
+	                                                             std::basic_string<CharT>{str, n}, 0, n, zero, one) {
+		return;
+	}
+	
+	[[nodiscard]] constexpr bool operator==(const bitset& that) const noexcept {
+		return std::memcmp(Bytes, that.Bytes, NumberOfBytes) == 0;
+	}
+	
+	[[nodiscard]] constexpr bool operator!=(const bitset& that) const noexcept {
+		return !(*this == that);
+	}
+	
+	[[nodiscard]] constexpr bool operator[](const std::size_t pos) const noexcept {
+		return readBit(pos);
+	}
+	
+	[[nodiscard]] constexpr reference operator[](const std::size_t pos) noexcept {
+		return getReference(pos);
+	}
+	
+	[[nodiscard]] constexpr bool test(const std::size_t pos) const {
+		checkBounds(pos);
+		return operator[](pos);
+	}
+	
+	[[nodiscard]] constexpr bool all(void) const noexcept {
+		for ( int byte = NumberOfBytes - 1; byte > 0; --byte ) {
+			if ( Bytes[byte] != ~std::byte{0} ) {
+				return false;
+			} //if ( Bytes[byte] != ~std::byte{0} )
+		} //for ( int byte = NumberOfBytes - 1; byte > 0; --byte )
+		return Bytes[0] == LastByteMask;
+	}
+	
+	[[nodiscard]] constexpr bool any(void) const noexcept {
+		for ( int byte = NumberOfBytes - 1; byte >= 0; --byte ) {
+			if ( Bytes[byte] != std::byte{0} ) {
+				return true;
+			} //if ( Bytes[byte] != std::byte{0} )
+		} //for ( int byte = NumberOfBytes - 1; byte >= 0; --byte )
+		return false;
+	}
+	
+	[[nodiscard]] constexpr bool none(void) const noexcept {
+		return !any();
+	}
+	
+	[[nodiscard]] constexpr std::size_t count(void) const noexcept {
+		std::size_t ret = 0;
+		for ( std::size_t bit = 0; bit < size(); ++bit ) {
+			if ( test(bit) ) {
+				++ret;
+			} //if ( test(bit) )
+		} //for ( std::size_t bit = 0; bit < size(); ++bit )
+		return ret;
+	}
+	
+	[[nodiscard]] constexpr std::size_t size(void) const noexcept {
+		return N;
+	}
+	
+	constexpr bitset& operator&=(const bitset& that) noexcept {
+		for ( int byte = NumberOfBytes - 1; byte >= 0; --byte ) {
+			Bytes[byte] &= that.Bytes[byte];
+		} //for ( int byte = NumberOfBytes - 1; byte >= 0; --byte )
+		return *this;
+	}
+	
+	constexpr bitset& operator|=(const bitset& that) noexcept {
+		for ( int byte = NumberOfBytes - 1; byte >= 0; --byte ) {
+			Bytes[byte] |= that.Bytes[byte];
+		} //for ( int byte = NumberOfBytes - 1; byte >= 0; --byte )
+		return *this;
+	}
+	
+	constexpr bitset& operator^=(const bitset& that) noexcept {
+		for ( int byte = NumberOfBytes - 1; byte >= 0; --byte ) {
+			Bytes[byte] ^= that.Bytes[byte];
+		} //for ( int byte = NumberOfBytes - 1; byte >= 0; --byte )
+		return *this;
+	}
+	
+	[[nodiscard]] constexpr bitset operator~(void) const noexcept {
+		return bitset{*this}.flip();
+	}
+	
+	[[nodiscard]] constexpr bitset operator<<(const std::size_t pos) const & noexcept {
+		return bitset{*this} <<= pos;
+	}
+	
+	constexpr bitset& operator<<(const std::size_t pos) && noexcept {
+		return operator<<=(pos);
+	}
+	
+	constexpr bitset& operator<<=(const std::size_t pos) noexcept {
+		const std::size_t byteOffset = pos / BitsInByte;
+		const std::size_t bitOffset  = pos % BitsInByte;
+		
+		if ( bitOffset ) {
+			leftShiftWithBitOffset(byteOffset, bitOffset);
+		} //if ( bitOffset )
+		else {
+			leftShiftWithoutBitOffset(byteOffset);
+		} //else -> if ( bitOffset )
+		
+		for ( int byte = static_cast<int>(NumberOfBytes - byteOffset); byte < NumberOfBytes; ++byte ) {
+			Bytes[byte] = std::byte{0};
+		} //for ( int byte = static_cast<int>(NumberOfBytes - byteOffset); byte < NumberOfBytes; ++byte )
+		//Nullify all not used bits, this is excpected by many other functions
+		Bytes[0] &= LastByteMask;
+		return *this;
+	}
+	
+	[[nodiscard]] constexpr bitset operator>>(const std::size_t pos) const & noexcept {
+		return bitset{*this} >>= pos;
+	}
+	
+	constexpr bitset& operator>>(const std::size_t pos) && noexcept {
+		return operator>>=(pos);
+	}
+	
+	constexpr bitset& operator>>=(const std::size_t pos) noexcept {
+		const std::size_t byteOffset = pos / BitsInByte;
+		const std::size_t bitOffset  = pos % BitsInByte;
+		
+		if ( bitOffset ) {
+			rightShiftWithBitOffset(byteOffset, bitOffset);
+		} //if ( bitOffset )
+		else {
+			rightShiftWithoutBitOffset(byteOffset);
+		} //else -> if ( bitOffset )
+		
+		for ( int byte = 0; byte < static_cast<int>(byteOffset); ++byte ) {
+			Bytes[byte] = std::byte{0};
+		} //for ( int byte = 0; byte < static_cast<int>(byteOffset); ++byte )
+		return *this;
+	}
+	
+	constexpr bitset& set(void) noexcept {
+		Bytes[0] = LastByteMask;
+		for ( int byte = 1; byte < static_cast<int>(NumberOfBytes); ++byte ) {
+			Bytes[byte] = ~std::byte{0};
+		} //for ( int byte = 1; byte < static_cast<int>(NumberOfBytes); ++byte )
+		return *this;
+	}
+	
+	constexpr bitset& set(const std::size_t pos, const bool value = true) {
+		checkBounds(pos);
+		if ( value ) {
+			setBit(pos);
+		} //if ( value )
+		else {
+			resetBit(pos);
+		} //else -> if ( value )
+		return *this;
+	}
+	
+	constexpr bitset& reset(void) noexcept {
+		for ( int byte = 0; byte < static_cast<int>(NumberOfBytes); ++byte ) {
+			Bytes[byte] = std::byte{0};
+		} //for ( int byte = 0; byte < static_cast<int>(NumberOfBytes); ++byte )
+		return *this;
+	}
+	
+	constexpr bitset& reset(const std::size_t pos) {
+		checkBounds(pos);
+		resetBit(pos);
+		return *this;
+	}
+	
+	constexpr bitset& flip(void) noexcept {
+		for ( int byte = NumberOfBytes - 1; byte > 0; --byte ) {
+			Bytes[byte] = ~Bytes[byte];
+		} //for ( int byte = NumberOfBytes - 1; byte > 0; --byte )
+		for ( std::size_t bit = FirstBitOfLastByte; bit < size(); ++bit ) {
+			flipBit(bit);
+		} //for ( std::size_t bit = FirstBitOfLastByte; bit < size(); ++bit )
+		return *this;
+	}
+	
+	constexpr bitset& flip(const std::size_t pos) {
+		checkBounds(pos);
+		flipBit(pos);
+		return *this;
+	}
+	
+	template<typename CharT = char, typename Traits = std::char_traits<CharT>,
+	         typename Allocator = std::allocator<CharT>>
+	[[nodiscard]] std::basic_string<CharT, Traits, Allocator> to_string(const CharT zero = CharT{'0'},
+	                                                                    const CharT one = CharT{'1'}) const {
+		std::basic_string<CharT, Traits, Allocator> ret(size(), zero);
+		auto iter = ret.rbegin();
+		for ( std::size_t bit = 0; bit < size(); ++bit, ++iter ) {
+			if ( readBit(bit) ) {
+				*iter = one;
+			} //if ( readBit(bit) )
+		} //for ( std::size_t bit = 0; bit < size(); ++bit, ++iter )
+		return ret;
+	}
+	
+	[[nodiscard]] constexpr unsigned long to_ulong(void) const {
+		return toInt<unsigned long>();
+	}
+	
+	[[nodiscard]] constexpr unsigned long long to_ullong(void) const {
+		return toInt<unsigned long long>();
+	}
+};
+
+template<std::size_t N>
+[[nodiscard]] bitset<N> operator&(bitset<N> lhs, const bitset<N>& rhs) noexcept {
+	return lhs &= rhs;
+}
+
+template<std::size_t N>
+[[nodiscard]] bitset<N> operator|(bitset<N> lhs, const bitset<N>& rhs) noexcept {
+	return lhs |= rhs;
+}
+
+template<std::size_t N>
+[[nodiscard]] bitset<N> operator^(bitset<N> lhs, const bitset<N>& rhs) noexcept {
+	return lhs ^= rhs;
+}
+
+template<typename CharT, typename Traits, std::size_t N>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& os, const bitset<N>& set) {
+	return os<<set.template to_string<CharT, Traits>(os.widen('0'), os.widen('1'));
+}
+
+template<typename CharT, typename Traits, std::size_t N>
+std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>& is, bitset<N>& set) {
+	std::array<CharT, N + 1> temp;
+	const auto zero = is.widen('0');
+	const auto one  = is.widen('1');
+	const auto loc  = is.getloc();
+	
+	CharT peeked;
+	while ( (peeked = static_cast<CharT>(is.peek())) != Traits::eof() && std::isspace(peeked, loc) ) {
+		is.get();
+	} //while ( (peeked = static_cast<CharT>(is.peek())) != Traits::eof() && std::isspace(peeked, loc) )
+	
+	auto valid = [&zero,&one](const CharT peek) noexcept {
+			return peek != Traits::eof() && (peek == zero || peek == one);
+		};
+	
+	std::size_t bit = 0;
+	for ( ; bit < N && valid(static_cast<CharT>(is.peek())); ++bit ) {
+		temp[bit] = static_cast<CharT>(is.get());
+	} //for ( ; bit < N && valid(static_cast<CharT>(is.peek())); ++bit )
+	
+	if ( bit == 0 ) {
+		is.setstate(std::ios_base::failbit);
+	} //if ( bit == 0 )
+	else {
+		temp[bit] = '\0';
+		set = bitset<N>{temp.data()};
+	} //else -> if ( bit == 0 )
+	return is;
+}
+} //namespace constexprStd
+
+#endif
