@@ -16,10 +16,20 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "test.hpp"
+#ifndef TEST_CONSTANTS_HPP
+#define TEST_CONSTANTS_HPP
 
-TestConstexprStd::TestConstexprStd(QObject *parent) : QObject(parent) {
-	return;
-}
+#include <string>
 
-QTEST_APPLESS_MAIN(TestConstexprStd)
+constexpr inline const char *fooString    = "foo";
+constexpr inline const char *barString    = "bar";
+constexpr inline const char *bazString    = "baz";
+constexpr inline const char *emptyString  = "";
+constexpr inline const char *longString   = "This is a long string, to be allocated on the heap!";
+const     inline std::string fooStrings   = fooString;
+const     inline std::string barStrings   = barString;
+const     inline std::string bazStrings   = bazString;
+const     inline std::string emptyStrings = emptyString;
+const     inline std::string longStrings  = longString;
+
+#endif

@@ -16,10 +16,12 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "test.hpp"
+#ifndef TEST_HELPER_FUNCTIONS_HPP
+#define TEST_HELPER_FUNCTIONS_HPP
 
-TestConstexprStd::TestConstexprStd(QObject *parent) : QObject(parent) {
-	return;
-}
+constexpr bool isLessThanEleven(const int i) noexcept { return i < 11; }
+constexpr bool isMultipleOfFive(const int i) noexcept { return i %  5 == 0; }
+constexpr bool isMultipleOfEleven(const int i) noexcept { return i % 11 == 0; }
+constexpr bool isOdd(const int i) noexcept { return i % 2 == 1; }
 
-QTEST_APPLESS_MAIN(TestConstexprStd)
+#endif
