@@ -24,7 +24,6 @@
 #ifndef CONSTEXPRSTD_BITSET
 #define CONSTEXPRSTD_BITSET
 
-#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <istream>
@@ -85,7 +84,7 @@ class bitset {
 	};
 	
 	static constexpr auto BitsInByte        = std::numeric_limits<unsigned char>::digits;
-	static constexpr int NumberOfBytes      = std::ceil(static_cast<double>(N) / static_cast<double>(BitsInByte));
+	static constexpr int NumberOfBytes      = N / BitsInByte + (N % BitsInByte ? 1 : 0);
 	static constexpr int FirstBitOfLastByte = (NumberOfBytes - 1) * BitsInByte;
 	static constexpr std::byte LastByteMask = (~std::byte{0}) >> (BitsInByte - N % BitsInByte);
 	
