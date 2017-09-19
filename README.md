@@ -72,9 +72,9 @@ The execution policies and the overloads for the algorithms are not implemented,
 But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(), dest)` you can call `copy(c, dest)`.
 
 #### Non-modifying sequence operations
-- [ ] all_of
-- [ ] any_of
-- [ ] none_of
+- [X] all_of
+- [X] any_of
+- [X] none_of
 - [ ] for_each
 - [ ] for_each_n
 - [X] count

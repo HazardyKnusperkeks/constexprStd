@@ -31,6 +31,7 @@ class TestConstexprStd : public QObject {
 	
 	//Algorithm lib
 	//Non-modifying sequence operations
+	void testAllAnyNone(void) const noexcept;
 	void testCount(void) const noexcept;
 	void testCountIf(void) const noexcept;
 	void testEqual(void) const noexcept;

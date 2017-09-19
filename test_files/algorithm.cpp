@@ -34,6 +34,56 @@
 
 #include <QTest>
 
+void TestConstexprStd::testAllAnyNone(void) const noexcept {
+	//We do not test constexprness, because we only use functions which are constexpr
+	TestContainer allOdd{1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
+	TestContainer allEven{2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+	TestContainer mixed;
+	
+	QVERIFY( constexprStd::all_of( allOdd,                         isOdd));
+	QVERIFY(          std::all_of( allOdd.begin(),  allOdd.end(),  isOdd));
+	QVERIFY( constexprStd::any_of( allOdd,                         isOdd));
+	QVERIFY(          std::any_of( allOdd.begin(),  allOdd.end(),  isOdd));
+	QVERIFY(!constexprStd::none_of(allOdd,                         isOdd));
+	QVERIFY(!         std::none_of(allOdd.begin(),  allOdd.end(),  isOdd));
+	
+	QVERIFY(!constexprStd::all_of( allEven,                        isOdd));
+	QVERIFY(!         std::all_of( allEven.begin(), allEven.end(), isOdd));
+	QVERIFY(!constexprStd::any_of( allEven,                        isOdd));
+	QVERIFY(!         std::any_of( allEven.begin(), allEven.end(), isOdd));
+	QVERIFY( constexprStd::none_of(allEven,                        isOdd));
+	QVERIFY(          std::none_of(allEven.begin(), allEven.end(), isOdd));
+	
+	QVERIFY(!constexprStd::all_of( mixed,                          isOdd));
+	QVERIFY(!         std::all_of( mixed.begin(),   mixed.end(),   isOdd));
+	QVERIFY( constexprStd::any_of( mixed,                          isOdd));
+	QVERIFY(          std::any_of( mixed.begin(),   mixed.end(),   isOdd));
+	QVERIFY(!constexprStd::none_of(mixed,                          isOdd));
+	QVERIFY(!         std::none_of(mixed.begin(),   mixed.end(),   isOdd));
+	
+	QVERIFY(!constexprStd::all_of( allOdd,                         isLessThanEleven));
+	QVERIFY(!         std::all_of( allOdd.begin(),  allOdd.end(),  isLessThanEleven));
+	QVERIFY( constexprStd::any_of( allOdd,                         isLessThanEleven));
+	QVERIFY(          std::any_of( allOdd.begin(),  allOdd.end(),  isLessThanEleven));
+	QVERIFY(!constexprStd::none_of(allOdd,                         isLessThanEleven));
+	QVERIFY(!         std::none_of(allOdd.begin(),  allOdd.end(),  isLessThanEleven));
+	
+	QVERIFY(!constexprStd::all_of( allEven,                        isLessThanEleven));
+	QVERIFY(!         std::all_of( allEven.begin(), allEven.end(), isLessThanEleven));
+	QVERIFY( constexprStd::any_of( allEven,                        isLessThanEleven));
+	QVERIFY(          std::any_of( allEven.begin(), allEven.end(), isLessThanEleven));
+	QVERIFY(!constexprStd::none_of(allEven,                        isLessThanEleven));
+	QVERIFY(!         std::none_of(allEven.begin(), allEven.end(), isLessThanEleven));
+	
+	QVERIFY( constexprStd::all_of( mixed,                          isLessThanEleven));
+	QVERIFY(          std::all_of( mixed.begin(),   mixed.end(),   isLessThanEleven));
+	QVERIFY( constexprStd::any_of( mixed,                          isLessThanEleven));
+	QVERIFY(          std::any_of( mixed.begin(),   mixed.end(),   isLessThanEleven));
+	QVERIFY(!constexprStd::none_of(mixed,                          isLessThanEleven));
+	QVERIFY(!         std::none_of(mixed.begin(),   mixed.end(),   isLessThanEleven));
+	return;
+}
+
 void TestConstexprStd::testCount(void) const noexcept {
 	constexpr TestContainer c;
 	static_assert(constexprStd::count(c.begin(), c.end(), 2) == 1);
