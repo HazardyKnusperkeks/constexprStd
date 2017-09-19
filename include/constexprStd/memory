@@ -195,7 +195,7 @@ class allocator {
 		return getPointer(pos + offset);
 	}
 	
-	constexpr void dealloate(const pointer ptr, const size_type n) noexcept {
+	constexpr void deallocate(const pointer ptr, const size_type n) noexcept {
 		const auto pos = findPtrPos(ptr);
 		if ( pos != npos ) {
 			markDeallocated(pos, n);

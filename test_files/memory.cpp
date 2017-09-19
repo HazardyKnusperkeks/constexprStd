@@ -47,7 +47,7 @@ void TestConstexprStd::testAllocator(void) const noexcept {
 			DummyT *third  = a.allocate(3);
 			auto t1 = std::tuple{constexprStd::distance(first, second), constexprStd::distance(second, third)};
 			
-			a.dealloate(second, 5);
+			a.deallocate(second, 5);
 			second = a.allocate(7);
 			DummyT *fourth = a.allocate(2);
 			
@@ -83,7 +83,7 @@ void TestConstexprStd::testAllocator(void) const noexcept {
 	QCOMPARE(constexprStd::distance(first,  second), 1);
 	QCOMPARE(constexprStd::distance(second, third),  5);
 	
-	a.dealloate(second, 5);
+	a.deallocate(second, 5);
 	second = a.allocate(7);
 	QCOMPARE(constexprStd::distance(third, second),  3);
 	
