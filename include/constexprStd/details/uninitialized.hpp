@@ -47,9 +47,15 @@ struct Uninitialized<T, true> {
 	}
 	
 	template<typename... Args>
-	constexpr T& init(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...> &&
+	constexpr T& init(Args&&... args) noexcept((!std::is_constructible_v<T, Args...> ||
+	                                            std::is_nothrow_constructible_v<T, Args...>) &&
 	                                           std::is_nothrow_move_assignable_v<T>) {
-		Storage = T{std::forward<Args>(args)...};
+		if constexpr ( std::is_constructible_v<T, Args...> ) {
+			Storage = T(std::forward<Args>(args)...);
+		} //if constexpr ( std::is_constructible_v<T, Args...> )
+		else {
+			Storage = T{std::forward<Args>(args)...};
+		} //else -> if constexpr ( std::is_constructible_v<T, Args...> )
 		return Storage;
 	}
 	
@@ -93,8 +99,14 @@ struct Uninitialized<T, false> {
 	}
 	
 	template<typename... Args>
-	T& init(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args...>) {
-		::new (&Storage) T{std::forward<Args>(args)...};
+	T& init(Args&&... args) noexcept(!std::is_constructible_v<T, Args...> ||
+	                                 std::is_nothrow_constructible_v<T, Args...>) {
+		if constexpr ( std::is_constructible_v<T, Args...> ) {
+			::new (&Storage) T(std::forward<Args>(args)...);
+		} //if constexpr ( std::is_constructible_v<T, Args...> )
+		else {
+			::new (&Storage) T{std::forward<Args>(args)...};
+		} //else -> if constexpr ( std::is_constructible_v<T, Args...> )
 		return get();
 	}
 	
