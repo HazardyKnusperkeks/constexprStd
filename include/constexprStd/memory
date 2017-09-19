@@ -1,0 +1,242 @@
+/**
+ ** This file is part of the constexprStd project.
+ ** Copyright 2017 Björn Schäpers <bjoern@hazardy.de>.
+ **
+ ** This program is free software: you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as
+ ** published by the Free Software Foundation, either version 3 of the
+ ** License, or (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU Lesser General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+/**
+ * @file
+ * @brief Contains the constexpr variants of <memory>
+ */
+
+#ifndef CONSTEXPRSTD_MEMORY
+#define CONSTEXPRSTD_MEMORY
+
+#include <array>
+#include <memory>
+
+#include "bitset"
+#include "details/uninitialized.hpp"
+#include "iterator"
+
+namespace constexprStd {
+template<typename T, std::size_t N>
+class allocator {
+	public:
+	using value_type         = T;
+	using pointer            = value_type*;
+	using const_pointer      = typename std::pointer_traits<pointer>::template rebind<const value_type>;
+	using const_void_pointer = typename std::pointer_traits<pointer>::template rebind<const void>;
+	using size_type          = std::size_t;
+	
+	using propagate_on_container_copy_assignment = std::true_type;
+	using propagate_on_container_move_assignment = std::false_type;
+	using propagate_on_container_swap            = std::false_type;
+	
+	private:
+	using ArrayType = std::array<details::Uninitialized<T>, N>;
+	
+	ArrayType Memory{};
+	constexprStd::bitset<N> Allocated;
+	std::size_t FreeCount = N;
+	std::size_t FirstFree = 0;
+	
+	static constexpr std::size_t npos = static_cast<std::size_t>(-1);
+	
+	struct FindData {
+		const_pointer Ptr;
+		std::size_t Pos;
+		
+		constexpr FindData& next(void) noexcept {
+			++Ptr;
+			++Pos;
+			return *this;
+		}
+	};
+	
+	[[nodiscard]] constexpr std::size_t findPtrPos(const const_pointer ptr, const std::size_t hint = 0) const noexcept {
+		/* We have to do a linear search here, because the constant or log(N) approaches have proven not to be constexpr
+		 * for all valid inputs. The compiler is not happy about the pointer arithmethic needed for the better
+		 * approaches. */
+		      const_pointer begin = getPointer(0);
+		const const_pointer end   = getPointer(N);
+		if ( ptr >= begin && ptr < end ) {
+			constexprStd::advance(begin, hint);
+			for ( std::size_t pos = hint; pos < N; ++pos, ++begin ) {
+				if ( begin == ptr ) {
+					return pos;
+				} //if ( begin == ptr )
+			} //for ( std::size_t pos = hint; pos < N; ++pos, ++begin )
+			begin = getPointer(0);
+			for ( std::size_t pos = 0; pos < hint; ++pos, ++begin ) {
+				if ( begin == ptr ) {
+					return pos;
+				} //if ( begin == ptr )
+			} //for ( std::size_t pos = 0; pos < hint; ++pos, ++begin )
+		} //if ( ptr >= begin && ptr < end )
+		return npos;
+	}
+	
+	[[nodiscard]] constexpr pointer getPointer(const std::size_t pos) noexcept {
+		return std::addressof(Memory[pos].get());
+	}
+	
+	[[nodiscard]] constexpr const_pointer getPointer(const std::size_t pos) const noexcept {
+		return std::addressof(Memory[pos].get());
+	}
+	
+	[[nodiscard]] constexpr std::size_t findFreePos(const size_type n) noexcept {
+		if ( FreeCount < n ) {
+			return npos;
+		} //if ( FreeCount < n )
+		
+		auto pos = FirstFree;
+		const auto nMinusOne = n - 1;
+		const auto upperBound = N - nMinusOne;
+		
+		auto check = [&](void) constexpr noexcept {
+				using IType = std::make_signed_t<std::size_t>;
+				std::size_t checkPos = pos + nMinusOne;
+				for ( IType i = static_cast<IType>(nMinusOne); i >= 0; --i, --checkPos ) {
+					if ( Allocated[checkPos] ) {
+						//We found a blocked space, skip ahead and return false
+						pos = checkPos + 1;
+						return false;
+					} //if ( Allocated[checkPos] )
+				} //for ( IType i = static_cast<IType>(nMinusOne); i >= 0; --i, --checkPos )
+				return true;
+			};
+		
+		while ( pos < upperBound ) {
+			if ( check() ) {
+				return pos;
+			} //if ( check() )
+		} //while ( pos < upperBound )
+		return npos;
+	}
+	
+	[[nodiscard]] constexpr pointer markAllocated(std::size_t pos, size_type n) noexcept {
+		pointer ret = getPointer(pos);
+		FreeCount -= n;
+		
+		if ( FirstFree == pos ) {
+			FirstFree += n;
+		} //if ( FirstFree == pos )
+		
+		while ( n-- ) {
+			Allocated[pos++] = true;
+		} //while ( n-- )
+		return ret;
+	}
+	
+	constexpr void markDeallocated(std::size_t pos, size_type n) noexcept {
+		FreeCount += n;
+		
+		if ( pos < FirstFree ) {
+			FirstFree = pos;
+		} //if ( pos < FirstFree )
+		
+		while ( n-- ) {
+			Allocated[pos++] = false;
+		} //while ( n-- )
+		return;
+	}
+	
+	public:
+	constexpr allocator(void) noexcept {
+		return;
+	}
+	
+	//We can not be copied, or copy
+	allocator(const allocator&) = delete;
+	allocator(allocator&&) = delete;
+	allocator& operator=(const allocator&) = delete;
+	allocator& operator=(allocator&&) = delete;
+	
+	//Especially not for another type
+	template<typename U, std::size_t M>
+	allocator(const allocator<U, M>&) = delete;
+	template<typename U, std::size_t M>
+	allocator(allocator<U, M>&&) = delete;
+	
+	template<typename U, std::size_t M>
+	allocator& operator=(const allocator<U, M>&) = delete;
+	template<typename U, std::size_t M>
+	allocator& operator=(allocator<U, M>&&) = delete;
+	
+	[[nodiscard]] constexpr pointer allocate(const size_type n, const const_void_pointer cvptr = nullptr) {
+		auto pos = findFreePos(n);
+		
+		if ( pos == npos ) {
+			return std::allocator<T>{}.allocate(n, cvptr);
+		} //if ( pos == npos )
+		
+		return markAllocated(pos, n);
+	}
+	
+	[[nodiscard]] constexpr pointer getPointer(const pointer ptr, const std::size_t offset,
+	                                           const std::size_t hint = 0) noexcept {
+		auto pos = findPtrPos(ptr, hint);
+		if ( pos == npos ) {
+			return ptr + offset;
+		} //if ( pos == npos )
+		return getPointer(pos + offset);
+	}
+	
+	constexpr void dealloate(const pointer ptr, const size_type n) noexcept {
+		const auto pos = findPtrPos(ptr);
+		if ( pos != npos ) {
+			markDeallocated(pos, n);
+		} //if ( pos != npos )
+		else {
+			std::allocator<T>{}.deallocate(ptr, n);
+		} //else -> if ( pos != npos )
+		return;
+	}
+	
+	[[nodiscard]] constexpr bool operator==(const allocator& that) const noexcept {
+		return this == &that;
+	}
+	
+	[[nodiscard]] constexpr bool operator!=(const allocator& that) const noexcept {
+		return !(*this == that);
+	}
+	
+	template<typename... Args>
+	constexpr void construct(const pointer ptr, Args&&... args) {
+		const auto pos = findPtrPos(ptr);
+		if ( pos == npos ) {
+			std::allocator<T>{}.construct(ptr, std::forward<Args>(args)...);
+		} //if ( pos == npos )
+		else {
+			Memory[pos].init(std::forward<Args>(args)...);
+		} //else -> if ( pos == npos )
+		return;
+	}
+	
+	constexpr void destroy(const pointer ptr) {
+		const auto pos = findPtrPos(ptr);
+		if ( pos == npos ) {
+			std::allocator<T>{}.destroy(ptr);
+		} //if ( pos == npos )
+		else {
+			Memory[pos].deinit();
+		} //else -> if ( pos == npos )
+		return;
+	}
+};
+} //namespace constexprStd
+
+#endif

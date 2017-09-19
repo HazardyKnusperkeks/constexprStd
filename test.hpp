@@ -62,6 +62,10 @@ class TestConstexprStd : public QObject {
 	void testNext(void) const noexcept;
 	void testPrev(void) const noexcept;
 	
+	//Dynamic memory management
+	//Allocators
+	void testAllocator(void) const noexcept;
+	
 	//Utility lib
 	void testBitset(void) const noexcept;
 	

@@ -19,6 +19,40 @@ I've added conditional noexcept statements to nearly all (member) functions.
 So what can be noexcept should also be marked as such.
 I've only omited the statements when a throw is actually used in its body.
 
+### Allocator
+Since we can neither use placement new, nor reinterpret_cast at compile time, the allocator does not fulfill the [allocator concept](http://en.cppreference.com/w/cpp/concept/Allocator) and can probably not be used for `std::` containers.
+
+It lacks the copy/move construction and assignment.
+The equality operator tests if it is the same object.
+And rebinding is not possible.
+
+When allocating multiple elements you can not easyly construct them in constexpr context.
+```C++
+Allocator<T, N> a;
+T *singleElement = a.allocate(1);
+T *multipleElements = a.allocate(3);
+
+a.construct(singleElement, ...); //This is fine
+a.construct(multipleElements, ...); //This also, initializes the first element
+a.constrcut(&multipleElements[0], ...); //Works also
+a.constrcut(&multipleElements[1], ...); //Does not work in a constexpr context, does work at runtime
+
+//What you have to do is:
+T *multiSecondElement = a.getPointer(multipleElements, 1); //This is a operation in O(N), so use sparely
+//                                   ^^                ^
+//                            base pointer of array    offset to the pointer, here multipleElements[1]
+a.construct(multiSecondElement, ...);
+
+//But you can provide a hint, so it is faster
+T *multiThirdElement = a.getPointer(multipleElements, 2, static_cast<std::size_t>(constexprStd::distance(singleElement, multipleElements)));
+//                                  ^^^^^^^^^^^^^^^^^^^  ^^                              ^^^^^^^^^^^^^^^^
+//                                  both as before       cast if you use -Wconversion    the actual hint, the difference from the first element to the base pointer
+a.construct(multiThirdElement, ...);
+```
+
+Even if you provide a hint which is after the actual base pointer the algorithm is correct and complete, but the runtime is as bad as it can get.
+If you do not have access to the very first element, you can use what ever you have, that is before our base pointer, everything helps.
+
 ### `constexprStd::variant`
 #### Incompatibilites to `std::variant`
 Using types with a non trivial destructor is not possible in `constexpr` context, so they can't be used in `constexrStd::variant` either.
@@ -208,6 +242,10 @@ Are actually defined as `constexpr`, but as stated earlier there are bugs in the
 
 #### Range access & Container access
 These can be used directly from the `std::` namespace.
+
+### ["Dynamic" memory management](http://en.cppreference.com/w/cpp/memory)
+#### Allocators
+- [X] allocator
 
 ### [Utility library](http://en.cppreference.com/w/cpp/utility)
 - [X] bitset
