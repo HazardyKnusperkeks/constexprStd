@@ -219,8 +219,8 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 These can be used directly from the `std::` namespace.
 
 #### Iterator adaptors
-- [ ] reverse_iterator
-- [ ] make_reverse_iterator
+- [X] reverse_iterator: This can be used directly from the `std::` namespace.
+- [X] make_reverse_iterator: This can be used directly from the `std::` namespace.
 - [ ] move_iterator
 - [ ] make_move_iterator
 - [ ] back_insert_iterator
