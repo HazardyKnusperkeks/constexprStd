@@ -19,6 +19,7 @@
 #ifndef TEST_COUNT_INSTANCES_HPP
 #define TEST_COUNT_INSTANCES_HPP
 
+#include <type_traits>
 #include <utility>
 
 #include <QTest>
@@ -28,7 +29,8 @@ struct CountInstances : public T {
 	static inline int Instances = 0;
 	
 	template<typename... Args>
-	CountInstances(Args&&... args) : T{std::forward<Args>(args)...} {
+	CountInstances(Args&&... args) noexcept(std::is_nothrow_constructible_v<T, Args&&...>) :
+			T{std::forward<Args>(args)...} {
 		++Instances;
 		return;
 	}
@@ -38,7 +40,7 @@ struct CountInstances : public T {
 	CountInstances& operator=(const CountInstances&) = default;
 	CountInstances& operator=(CountInstances&&) = default;
 	
-	~CountInstances(void) noexcept {
+	~CountInstances(void) noexcept(std::is_nothrow_destructible_v<T>) {
 		--Instances;
 		return;
 	}
