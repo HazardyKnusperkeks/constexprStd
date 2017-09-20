@@ -1,0 +1,251 @@
+/**
+ ** This file is part of the constexprStd project.
+ ** Copyright 2017 Björn Schäpers <bjoern@hazardy.de>.
+ **
+ ** This program is free software: you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as
+ ** published by the Free Software Foundation, either version 3 of the
+ ** License, or (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU Lesser General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+/**
+ * @file
+ * @brief Contains the constexpr variants of <map>
+ */
+
+#ifndef CONSTEXPRSTD_MAP
+#define CONSTEXPRSTD_MAP
+
+#include <iterator>
+#include <memory>
+
+#include "details/map.hpp"
+#include "memory"
+
+namespace constexprStd {
+template<typename Key, typename Value, std::size_t N, typename Compare,
+         template<typename, std::size_t> typename Allocator,
+         typename NodeType = details::MapNode<Key, Value>, std::size_t AllocN = N>
+class map_base {
+	public:
+	using key_type               = Key;
+	using mapped_type            = Value;
+	using value_type             = std::pair<const Key, Value>;
+	using AllocatedValueType     = std::pair<Key, Value>;
+	using iterator               = details::NodeIterator<Key, Value, false>;
+	using const_iterator         = details::NodeIterator<Key, Value, true>;
+	using size_type              = std::size_t;
+	using difference_type        = std::ptrdiff_t;
+	using key_compare            = Compare;
+	using allocator_type         = Allocator<NodeType, AllocN>;
+	using reference              = value_type&;
+	using const_reference        = const value_type&;
+	using pointer                = value_type*;
+	using const_pointer          = const value_type*;
+	using reverse_iterator       = std::reverse_iterator<iterator>;
+	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+	
+	using CmpIsNoexcept       = std::bool_constant<noexcept(std::declval<Compare&>()(std::declval<const key_type&>(),
+	                                                                                 std::declval<const key_type&>()))>;
+	using AllocIsNoexcept     = std::bool_constant<noexcept(std::declval<allocator_type&>().allocate(1))>;
+	using DestroyIsNoexcept   = std::bool_constant<
+		noexcept(std::declval<allocator_type&>().destroy(std::declval<NodeType*>()))>;
+	template<typename... Args>
+	using CreateIsNoexcept = std::bool_constant<
+		noexcept(std::declval<allocator_type&>().construct(std::declval<NodeType*>(), std::declval<Args&&>()...))>;
+	
+	class value_compare {
+		protected:
+		Compare Cmp;
+		
+		constexpr value_compare(Compare cmp) noexcept : Cmp(std::move(cmp)) {
+			return;
+		}
+		
+		public:
+		[[nodiscard]] constexpr bool operator()(const value_type& lhs, const value_type& rhs) const
+				noexcept(CmpIsNoexcept::value) {
+			return Cmp(lhs.first, rhs.first);
+		}
+		
+		[[nodiscard]] constexpr bool operator()(const AllocatedValueType& lhs, const value_type& rhs) const
+		noexcept(CmpIsNoexcept::value) {
+			return Cmp(lhs.first, rhs.first);
+		}
+		
+		[[nodiscard]] constexpr bool operator()(const value_type& lhs, const AllocatedValueType& rhs) const
+		noexcept(CmpIsNoexcept::value) {
+			return Cmp(lhs.first, rhs.first);
+		}
+		
+		friend class map_base;
+	};
+	
+	private:
+	allocator_type& Alloc;
+	NodeType End{};
+	NodeType *Root = &End;
+	size_type Nodes = 0;
+	value_compare Cmp;
+	
+	template<typename T1, typename T2>
+	[[nodiscard]] constexpr bool isEqual(const T1& lhs, const T2& rhs) const
+			noexcept(CmpIsNoexcept::value) {
+		return !Cmp(lhs, rhs) && !Cmp(rhs, lhs);
+	}
+	
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(value_type& value) const
+			noexcept(CmpIsNoexcept::value) {
+		if ( Nodes == 0 ) {
+			return {Root, false};
+		} //if ( Nodes == 0 )
+		return findBestNode(Root, value);
+	}
+	
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(NodeType *node, const value_type& value) const
+			noexcept(CmpIsNoexcept::value) {
+		if ( isEqual(*node->Content, value) ) {
+			return {node, true};
+		} //if ( isEqual(*node->Content, value) )
+		return Cmp(*node->Content, value) ? findBestNodeLeft(node, value) : findBestNodeRight(node, value);
+	}
+	
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeLeft(NodeType *node, const value_type& value)
+			const noexcept(CmpIsNoexcept::value) {
+		if ( !node->LeftChild ) {
+			return {node, false};
+		} //if ( !node->LeftChild )
+		return findBestNode(node->LeftChild, value);
+	}
+	
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeRight(NodeType *node, const value_type& value)
+			const noexcept(CmpIsNoexcept::value) {
+		if ( !node->RightChild ) {
+			return {node, false};
+		} //if ( !node->RightChild )
+		return findBestNode(node->RightChild, value);
+	}
+	
+	template<typename... Args>
+	[[nodiscard]] constexpr NodeType* createNode(details::NodeTag tag, Args&&... args)
+			noexcept(AllocIsNoexcept::value && CreateIsNoexcept<details::NodeTag, Args&&...>::value) {
+		NodeType *ret = Alloc.allocate(1);
+		Alloc.construct(ret, tag, std::forward<Args>(args)...);
+		return ret;
+	}
+	
+	constexpr void destroyNodeRecursive(NodeType *node) noexcept(DestroyIsNoexcept::value) {
+		if ( node == nullptr ) {
+			return;
+		} //if ( node == nullptr )
+		destroyNodeRecursive(node->LeftChild);
+		destroyNodeRecursive(node->RightChild);
+		destroyNode(node);
+		return;
+	}
+	
+	constexpr void destroyNode(NodeType *node) noexcept(DestroyIsNoexcept::value) {
+		if ( !node->PastEnd ) {
+			node->InternalContent.deinit();
+		} //if ( !node->PastEnd )
+		Alloc.destroy(node);
+		Alloc.deallocate(node, 1);
+		return;
+	}
+	
+	public:
+	explicit constexpr map_base(allocator_type& alloc) noexcept : map_base{Compare{}, alloc} {
+		return;
+	}
+	
+	explicit constexpr map_base(Compare cmp, allocator_type& alloc) noexcept : Alloc{alloc}, Cmp{std::move(cmp)} {
+		End.Red = false;
+		return;
+	}
+	
+	[[nodiscard]] constexpr bool empty(void) const noexcept {
+		return Nodes == 0;
+	}
+	
+	constexpr void clear(void) noexcept(DestroyIsNoexcept::value) {
+		if ( empty() ) {
+			return;
+		} //if ( empty() )
+		End.markForAdoption();
+		destroyNodeRecursive(Root);
+		Root = &End;
+		return;
+	}
+	
+	constexpr std::pair<iterator, bool> insert(const value_type& value)
+			noexcept(CmpIsNoexcept::value &&
+		         noexcept(std::declval<map_base&>().createNode(std::declval<details::NodeTag>(), value))) {
+		if ( empty() ) {
+			Root = createNode(details::NodeTag{}, value);
+			Root->adoptRight(&End);
+			Root->Red = false;
+			Nodes = 1;
+			return {{Root}, true};
+		} //if ( empty() )
+		
+//		std::pair<NodeType*, bool> result = findBestNode(value);
+//		NodeType*& node = result.first;
+//		if ( result.second ) {
+//			return {node, false};
+//		} //if ( result.second )
+		
+//		if ( Cmp(*node->Content, value) ) {
+			
+//		} //if ( Cmp(*node->Content, value) )
+//		else {
+			
+//		} //else -> if ( Cmp(*node->Content, value) )
+//		return {{node}, true};
+	}
+};
+
+template<typename Key, typename Value, std::size_t N, typename Compare = std::less<Key>,
+         template<typename, std::size_t> typename Allocator = constexprStd::allocator>
+class map : public map_base<Key, Value, N, Compare, Allocator> {
+	private:
+	using Base = map_base<Key, Value, N, Compare, Allocator>;
+	
+	typename Base::allocator_type Alloc;
+	
+	public:
+	constexpr map(void) noexcept : Base{Alloc} {
+		return;
+	}
+};
+
+template<typename Key, typename Value, std::size_t N, typename Compare = std::less<Key>,
+         template<typename, std::size_t> typename Allocator = constexprStd::allocator>
+class mapDestroy : public map<Key, Value, N, Compare, Allocator> {
+	private:
+	using Base = map<Key, Value, N, Compare, Allocator>;
+	
+	public:
+	constexpr mapDestroy(void) noexcept = default;
+	
+	template<typename... Args>
+	explicit constexpr mapDestroy(Args&&... args) noexcept(std::is_nothrow_constructible_v<Base, Args&&...>) :
+			Base{std::forward<Args>(args)...} {
+		return;
+	}
+	
+	~mapDestroy(void) noexcept(noexcept(std::declval<Base&>().clear())) {
+		Base::clear();
+		return;
+	}
+};
+} //namespace constexprStd
+
+#endif
