@@ -52,7 +52,8 @@ HEADERS		 = test.hpp\
 			   test_files/test_constants.hpp\
 			   test_files/test_container.hpp\
 			   test_files/test_count_instances.hpp\
-			   test_files/test_helper_functions.hpp
+			   test_files/test_helper_functions.hpp\
+			   test_files/test_move_int.hpp
 
 OTHER_FILES	+= constexprStd.pri\
 			   LICENSE\
