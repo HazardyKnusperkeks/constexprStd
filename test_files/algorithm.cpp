@@ -34,6 +34,12 @@
 
 #include <QTest>
 
+template<typename T>
+static constexpr void doubleValue(T& t) noexcept(noexcept(t += t)) {
+	t += t;
+	return;
+}
+
 void TestConstexprStd::testAllAnyNone(void) const noexcept {
 	//We do not test constexprness, because we only use functions which are constexpr
 	TestContainer allOdd{1, 3, 5, 7, 9, 11, 13, 15, 17, 19};
@@ -81,6 +87,58 @@ void TestConstexprStd::testAllAnyNone(void) const noexcept {
 	QVERIFY(          std::any_of( mixed.begin(),   mixed.end(),   isLessThanEleven));
 	QVERIFY(!constexprStd::none_of(mixed,                          isLessThanEleven));
 	QVERIFY(!         std::none_of(mixed.begin(),   mixed.end(),   isLessThanEleven));
+	return;
+}
+
+void TestConstexprStd::testForEach(void) const noexcept {
+	auto l1 = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::for_each(c, *doubleValue<int>);
+			return c;
+		};
+	
+	static_assert(l1() == TestContainer{2, 4, 6, 8, 10, 12, 14, 16, 18, 20});
+	
+	auto l2 = [](void) constexpr noexcept {
+			const TestContainer c;
+			int sum = 0;
+			auto sumUp = [&sum](const int i) constexpr noexcept { sum += i; return; };
+			constexprStd::for_each(c, sumUp);
+			return sum;
+		};
+	
+	static_assert(l2() == 55);
+	
+	using ArrayType = std::array<std::string, 6>;
+	
+	ArrayType ca{fooString, barString, bazString, emptyString, "a", "b"};
+	ArrayType sa{ca};
+	const ArrayType cmp{fooStrings + fooString, barStrings + barString, bazStrings + bazString, "", "aa", "bb"};
+	
+	constexprStd::for_each(ca.begin(), ca.end(), *doubleValue<std::string>);
+	         std::for_each(sa.begin(), sa.end(), *doubleValue<std::string>);
+	
+	QCOMPARE(ca, cmp);
+	QCOMPARE(sa, cmp);
+	
+	int ccount = 0;
+	int scount = 0;
+	
+	auto createCount = [](int& count) noexcept {
+			return [&count](const std::string& s) noexcept {
+					auto pos = s.find_first_of("aeiou");
+					for ( ; pos != std::string::npos; pos = s.find_first_of("aeiou", pos + 1) ) {
+						++count;
+					} //for ( ; pos != std::string::npos; pos = s.find_first_of("aeiou", pos + 1) )
+					return;
+				};
+		};
+	
+	constexprStd::for_each(ca.begin(), ca.end(), createCount(ccount));
+	         std::for_each(sa.begin(), sa.end(), createCount(scount));
+	
+	QCOMPARE(ccount, 10);
+	QCOMPARE(scount, 10);
 	return;
 }
 

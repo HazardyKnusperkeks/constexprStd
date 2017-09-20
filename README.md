@@ -75,7 +75,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] all_of
 - [X] any_of
 - [X] none_of
-- [ ] for_each
+- [X] for_each
 - [ ] for_each_n
 - [X] count
 - [X] count_if

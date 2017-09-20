@@ -33,6 +33,23 @@
 
 namespace constexprStd {
 /*****                                     Non-modifying sequence operations                                      *****/
+template<typename InputIter, typename UnaryFunction>
+constexpr UnaryFunction for_each(InputIter first, const InputIter last, UnaryFunction f)
+		noexcept(noexcept(first != last) && noexcept(++first) && noexcept(f(*first))) {
+	for ( ; first != last; ++first ) {
+		f(*first);
+	} //for ( ; first != last; ++first )
+	return std::move(f);
+}
+
+template<typename Container, typename UnaryFunction>
+constexpr UnaryFunction for_each(Container&& c, UnaryFunction f)
+		noexcept(noexcept(constexprStd::for_each(std::forward<Container>(c).begin(), std::forward<Container>(c).end(),
+		                                         std::move(f)))) {
+	return std::move(constexprStd::for_each(std::forward<Container>(c).begin(), std::forward<Container>(c).end(),
+	                                        std::move(f)));
+}
+
 template<typename InputIter, typename UnaryPredicate>
 constexpr auto count_if(InputIter first, const InputIter last, const UnaryPredicate pred)
 		noexcept(std::is_nothrow_constructible_v<typename std::iterator_traits<InputIter>::difference_type,
