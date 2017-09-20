@@ -35,8 +35,15 @@ struct CountInstances : public T {
 		return;
 	}
 	
-	CountInstances(const CountInstances&) = default;
-	CountInstances(CountInstances&&) = default;
+	CountInstances(const CountInstances& that) noexcept(std::is_nothrow_copy_constructible_v<T>) : T{that} {
+		++Instances;
+		return;
+	}
+	
+	CountInstances(CountInstances&& that) noexcept(std::is_nothrow_move_constructible_v<T>) : T{std::move(that)} {
+		++Instances;
+	}
+	
 	CountInstances& operator=(const CountInstances&) = default;
 	CountInstances& operator=(CountInstances&&) = default;
 	
