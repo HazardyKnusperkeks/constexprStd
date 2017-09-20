@@ -36,7 +36,7 @@ namespace constexprStd {
 template<typename InputIter, typename UnaryPredicate>
 constexpr auto count_if(InputIter first, const InputIter last, const UnaryPredicate pred)
 		noexcept(std::is_nothrow_constructible_v<typename std::iterator_traits<InputIter>::difference_type,
-                                                 decltype(0)> &&
+		                                         decltype(0)> &&
 		         noexcept(first != last) && noexcept(++first) && noexcept(pred(*first)) &&
 		         noexcept(++std::declval<typename std::iterator_traits<InputIter>::difference_type&>())) {
 	typename std::iterator_traits<InputIter>::difference_type ret = 0;
