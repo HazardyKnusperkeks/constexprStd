@@ -66,6 +66,9 @@ If you want to use such a type and need direct initialization, add a non trivial
 - It is possible to (un-)equal compare different types of variant. They only compare as equal, iff both hold the same type and the equal comparison of this type returns true.
 - It is possible to assign the content of diffrent types of variant. But only if the currently hold alternative of the right hand side is also an alternative of the left hand side, or the right hand side is valueless. In any other case a `constexprStd::BadVariantAssignment` exception is thrown.
 
+### `constexprStd::pair`
+The default constructor is never explicit.
+
 ## Implementation
 ### [Algorihms library](http://en.cppreference.com/w/cpp/algorithm)
 The execution policies and the overloads for the algorithms are not implemented, because as far as I know, there is no chance of performing paralell computations in `constexpr`.
@@ -257,7 +260,13 @@ These can be used directly from the `std::` namespace.
 - [X] in_place*: These can be used directly from the `std::` namespace.
 
 #### Pairs and tuples
-Is mostly `constexpr`, so nothing to do here
+- [X] pair
+- [ ] tuple
+- [X] apply: This can be used directly from the `std::` namespace.
+- [X] make_from_tuple: This can be used directly from the `std::` namespace.
+- [X] piecewise_construct_t: This can be used directly from the `std::` namespace.
+- [X] piecewise_construct: This can be used directly from the `std::` namespace.
+- [X] integer_sequence: This can be used directly from the `std::` namespace.
 
 #### Swap, forward and move
 - [X] swap

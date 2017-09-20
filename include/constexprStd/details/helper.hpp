@@ -29,6 +29,16 @@
 
 #include <experimental/type_traits>
 
+namespace std {
+template<typename T1, typename T2>
+struct pair;
+} //namespace std
+
+namespace constexprStd {
+template<typename T1, typename T2>
+struct pair;
+} //namespace constexprStd
+
 namespace constexprStd::details {
 template<typename Iter>
 using IsIterType = typename std::iterator_traits<Iter>::iterator_category;
@@ -66,6 +76,15 @@ struct TypeIndexImpl<I, Type, First, Types...> : std::conditional_t<std::is_same
 
 template<typename Type, typename... Types>
 struct TypeIndex : TypeIndexImpl<0, Type, Types...> { };
+
+template<typename T>
+struct IsPair : std::false_type { };
+
+template<typename T1, typename T2>
+struct IsPair<std::pair<T1, T2>> : std::true_type { };
+
+template<typename T1, typename T2>
+struct IsPair<constexprStd::pair<T1, T2>> : std::true_type { };
 
 struct EnableDefaultCtorTag {
 	explicit constexpr EnableDefaultCtorTag(void) = default;

@@ -86,6 +86,9 @@ class TestConstexprStd : public QObject {
 	void testDifferentVariantCompare(void) const noexcept;
 	void testDifferentVariantAssign(void) const noexcept;
 	
+	//Pairs and tuples
+	void testPair(void) const noexcept;
+	
 	//Swap, forward and move
 	void testExchange(void) const noexcept;
 	void testSwap(void) const noexcept;

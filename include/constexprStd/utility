@@ -24,9 +24,145 @@
 #ifndef CONSTEXPRSTD_UTILITY
 #define CONSTEXPRSTD_UTILITY
 
+#include <tuple>
+#include <type_traits>
 #include <utility>
 
+#include "details/helper.hpp"
+
 namespace constexprStd {
+template<typename T1, typename T2>
+struct pair {
+	private:
+	template<std::size_t... I1s, typename... Args1, std::size_t... I2s, typename... Args2>
+	constexpr pair(const std::index_sequence<I1s...>, std::tuple<Args1...> t1,
+	               const std::index_sequence<I2s...>, std::tuple<Args2...> t2)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, Args1...>,
+			                            std::is_nothrow_constructible<T2, Args2...>>) :
+			first{std::forward<Args1>(std::get<I1s>(t1))...}, second{std::forward<Args2>(std::get<I2s>(t2))...} {
+		return;
+	}
+	
+	public:
+	using first_type  = T1;
+	using second_type = T2;
+	
+	first_type first   = T1{};
+	second_type second = T2{};
+	
+	template<std::enable_if_t<std::conjunction_v<std::is_default_constructible<T1>,
+	                                             std::is_default_constructible<T2>>>* = nullptr>
+	constexpr pair(void)
+			noexcept(std::conjunction_v<std::is_nothrow_default_constructible<T1>,
+			                            std::is_nothrow_default_constructible<T2>>) {
+		return;
+	}
+	
+	template<std::enable_if_t<std::conjunction_v<std::is_copy_constructible<T1>,
+	                                             std::is_copy_constructible<T2>>>* = nullptr>
+	constexpr pair(const T1& f, const T2& s)
+			noexcept(std::conjunction_v<std::is_nothrow_copy_constructible<T1>,
+	                 std::is_nothrow_copy_constructible<T2>>) : first{f}, second{s} {
+		return;
+	}
+	
+	template<typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<std::is_constructible<T1, U1&&>, std::is_constructible<T2, U2&&>,
+	                                             std::is_convertible<U1&&, T1>,
+	                                             std::is_convertible<U2&&, T2>>>* = nullptr>
+	constexpr pair(U1&& u1, U2&& u2)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, U1&&>,
+			                            std::is_nothrow_constructible<T2, U2&&>>) : first{std::forward<U1>(u1)},
+			                                                                        second{std::forward<U2>(u2)} {
+		return;
+	}
+	
+	template<typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<std::is_constructible<T1, U1&&>, std::is_constructible<T2, U2&&>,
+	                                             std::disjunction<std::negation<std::is_convertible<U1&&, T1>>,
+	                                                              std::negation<std::is_convertible<U2&&, T2>>>>>* =
+	         nullptr>
+	explicit constexpr pair(U1&& u1, U2&& u2)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, U1&&>,
+			                            std::is_nothrow_constructible<T2, U2&&>>) : first{std::forward<U1>(u1)},
+			                                                                        second{std::forward<U2>(u2)} {
+		return;
+	}
+	
+	template<template<typename, typename> typename Pair, typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<details::IsPair<Pair<U1, U2>>,
+	                                             std::is_constructible<T1, const U1&>,
+	                                             std::is_constructible<T2, const U2&>,
+	                                             std::is_convertible<const U1&, T1>,
+	                                             std::is_convertible<const U2&, T2>>>* = nullptr>
+	constexpr pair(const Pair<U1, U2>& that)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, const U1&>,
+			                            std::is_nothrow_constructible<T2, const U2&>>) : first{that.first},
+			                                                                             second{that.second} {
+		return;
+	}
+	
+	template<template<typename, typename> typename Pair, typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<details::IsPair<Pair<U1, U2>>,
+	                                             std::is_constructible<T1, const U1&>,
+	                                             std::is_constructible<T2, const U2&>,
+	                                             std::disjunction<std::negation<std::is_convertible<const U1&, T1>>,
+	                                                              std::negation<std::is_convertible<const U2&, T2>>>>>*
+	         = nullptr>
+	explicit constexpr pair(const Pair<U1, U2>& that)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, const U1&>,
+			                            std::is_nothrow_constructible<T2, const U2&>>) : first{that.first},
+			                                                                             second{that.second} {
+		return;
+	}
+	
+	template<template<typename, typename> typename Pair, typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<details::IsPair<Pair<U1, U2>>,
+	                                             std::is_constructible<T1, U1&&>,
+	                                             std::is_constructible<T2, U2&&>,
+	                                             std::is_convertible<U1&&, T1>,
+	                                             std::is_convertible<U2&&, T2>>>* = nullptr>
+	constexpr pair(Pair<U1, U2>&& that)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, U1&&>,
+			                            std::is_nothrow_constructible<T2, U2&&>>) : first{std::forward<U1>(that.first)},
+			                                                                     second{std::forward<U2>(that.second)} {
+		return;
+	}
+	
+	template<template<typename, typename> typename Pair, typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<details::IsPair<Pair<U1, U2>>,
+	                                             std::is_constructible<T1, U1&&>,
+	                                             std::is_constructible<T2, U2&&>,
+	                                             std::disjunction<std::negation<std::is_convertible<U1&&, T1>>,
+	                                                              std::negation<std::is_convertible<U2&&, T2>>>>>*
+	         = nullptr>
+	explicit constexpr pair(Pair<U1, U2>&& that)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, U1&&>,
+			                            std::is_nothrow_constructible<T2, U2&&>>) : first{std::forward<U1>(that.first)},
+			                                                                     second{std::forward<U2>(that.second)} {
+		return;
+	}
+	
+	template<typename... Args1, typename... Args2>
+	constexpr pair(const std::piecewise_construct_t, std::tuple<Args1...> first_args,
+	               std::tuple<Args2...> second_args)
+			noexcept(std::conjunction_v<std::is_nothrow_constructible<T1, Args1...>,
+			                            std::is_nothrow_constructible<T2, Args2...>>) :
+			pair(std::index_sequence_for<Args1...>{}, std::move(first_args),
+			     std::index_sequence_for<Args2...>{}, std::move(second_args)) {
+		return;
+	}
+	
+	constexpr std::pair<T1, T2> to_std(void) const
+			noexcept(std::is_nothrow_constructible_v<std::pair<T1, T2>, const T1&, const T2&>) {
+		return {first, second};
+	}
+	
+	constexpr operator std::pair<T1, T2>(void) const noexcept(noexcept(std::declval<pair&>().to_std())) {
+		return to_std();
+	}
+};
+
 template<typename T, typename U = T>
 constexpr T exchange(T& object, U&& newValue)
 		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_assignable<T&, U&&>>){
