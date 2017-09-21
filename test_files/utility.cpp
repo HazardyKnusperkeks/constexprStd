@@ -59,12 +59,12 @@ void TestConstexprStd::testPair(void) const noexcept {
 			pair p8{std::move(df)};
 			std::tuple t8{std::tuple_cat(p8.to_std(), std::tuple{df.first.Moved}, df.to_std())};
 			
-			std::pair<MoveInt, int> sp{17, 20};
-			pair p9{sp};
-			std::tuple t9{std::tuple_cat(p9.to_std(), std::tuple{sp.first.Moved})};
+			std::pair<MoveInt, int> sdp{17, 20};
+			pair p9{sdp};
+			std::tuple t9{std::tuple_cat(p9.to_std(), std::tuple{sdp.first.Moved})};
 			
-			pair p10{std::move(sp)};
-			std::tuple t10{std::tuple_cat(p10.to_std(), std::tuple{sp.first.Moved}, sp)};
+			pair p10{std::move(sdp)};
+			std::tuple t10{std::tuple_cat(p10.to_std(), std::tuple{sdp.first.Moved}, sdp)};
 			
 			constexprStd::pair<std::tuple<int, int>, double> pp{std::piecewise_construct, std::tuple{5, 4.3},
 			                                                    std::tuple{3.}};
@@ -82,14 +82,29 @@ void TestConstexprStd::testPair(void) const noexcept {
 			p2 = std::move(df);
 			std::tuple t14{std::tuple_cat(p2.to_std(), std::tuple{df.first.Moved}, df.to_std())};
 			
-			sp.first = 17;
-			p1 = sp;
+			sdp.first = 17;
+			p1 = sdp;
 			std::tuple t15{p1.to_std()};
 			
-			p2 = std::move(sp);
-			std::tuple t16{std::tuple_cat(p2.to_std(), std::tuple{sp.first.Moved}, sp)};
+			p2 = std::move(sdp);
+			std::tuple t16{std::tuple_cat(p2.to_std(), std::tuple{sdp.first.Moved}, sdp)};
 			
-			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, pp.to_std(), t11, t12, t13, t14, t15, t16);
+			std::pair<int, MoveInt> sp{45, 23};
+			p3.swap(sp);
+			std::tuple t17{std::tuple_cat(p3.to_std(), sp)};
+			
+			constexprStd::swap(p3, p2);
+			std::tuple t18{std::tuple_cat(p3.to_std(), p2.to_std())};
+			
+			std::swap(p2, p3);
+			std::tuple t19{std::tuple_cat(p3.to_std(), p2.to_std())};
+			
+			using constexprStd::swap;
+			swap(p2, p3);
+			std::tuple t20{std::tuple_cat(p3.to_std(), p2.to_std())};
+			
+			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, pp.to_std(), t11, t12, t13, t14, t15, t16,
+			                      t17, t18, t19, t20);
 		};
 	
 	//                              t1--  t2--  t3---------  t4--------  t5---------  t6--------------
@@ -98,8 +113,8 @@ void TestConstexprStd::testPair(void) const noexcept {
 	                                42, 66, false, 42, 66, true, 0, 66, 17, 20, false, 17, 20, true, 0, 20,
 	//                              pp------------------  t11-  t12-------------  t13--  t14---------------  t15---
 	                                std::tuple{5, 4}, 3., 3, 4, 3, 4, true, 3, 0, 9, 66, 9, 66, true, 0, 66, 17, 20,
-	//                              t16----------------
-	                                17, 20, true, 0, 20});
+	//                              t16----------------  t17---------  t18-----------  t19-----------  t20-----------
+	                                17, 20, true, 0, 20, 45, 23, 3, 0, 17, 20, 45, 23, 45, 23, 17, 20, 17, 20, 45, 23});
 	
 	using cpair = constexprStd::pair<int, std::string>;
 	using spair =          std::pair<int, std::string>;

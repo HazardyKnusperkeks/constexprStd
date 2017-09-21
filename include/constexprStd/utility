@@ -194,6 +194,16 @@ struct pair {
 		return *this;
 	}
 	
+	template<template<typename, typename> typename Pair,
+	         std::enable_if_t<std::conjunction_v<std::is_swappable<T1>, std::is_swappable<T2>>>* = nullptr>
+	constexpr void swap(Pair<T1, T2>& that)
+			noexcept(std::conjunction_v<std::is_nothrow_swappable<T1>, std::is_nothrow_swappable<T2>>) {
+		using constexprStd::swap;
+		swap(first,  that.first);
+		swap(second, that.second);
+		return;
+	}
+	
 	constexpr std::pair<T1, T2> to_std(void) const
 			noexcept(std::is_nothrow_constructible_v<std::pair<T1, T2>, const T1&, const T2&>) {
 		return {first, second};
@@ -203,6 +213,20 @@ struct pair {
 		return to_std();
 	}
 };
+
+template<typename T1, typename T2>
+constexpr void swap(pair<T1, T2>& p1, pair<T1, T2>& p2) noexcept(noexcept(p1.swap(p2))) {
+	p1.swap(p2);
+	return;
+}
 } //namespace constexprStd
+
+namespace std {
+template<typename T1, typename T2>
+constexpr void swap(constexprStd::pair<T1, T2>& p1, constexprStd::pair<T1, T2>& p2) noexcept(noexcept(p1.swap(p2))) {
+	p1.swap(p2);
+	return;
+}
+} //namespace std
 
 #endif
