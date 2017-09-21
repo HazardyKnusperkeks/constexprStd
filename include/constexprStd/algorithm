@@ -50,6 +50,16 @@ constexpr UnaryFunction for_each(Container&& c, UnaryFunction f)
 	                                        std::move(f)));
 }
 
+template<typename InputIter, typename Size, typename UnaryFunction>
+constexpr InputIter for_each_n(InputIter first, const Size n, UnaryFunction f)
+		noexcept(std::is_nothrow_constructible_v<Size, int> && noexcept(std::declval<Size&>() < n) &&
+		         noexcept(++std::declval<Size&>(), ++first) && noexcept(f(*first))) {
+	for ( Size i = 0; i < n; ++i, ++first ) {
+		f(*first);
+	} //for ( Size i = 0; i < n; ++i, ++first )
+	return first;
+}
+
 template<typename InputIter, typename UnaryPredicate>
 constexpr auto count_if(InputIter first, const InputIter last, const UnaryPredicate pred)
 		noexcept(std::is_nothrow_constructible_v<typename std::iterator_traits<InputIter>::difference_type,

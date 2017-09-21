@@ -33,6 +33,7 @@ class TestConstexprStd : public QObject {
 	//Non-modifying sequence operations
 	void testAllAnyNone(void) const noexcept;
 	void testForEach(void) const noexcept;
+	void testForEachN(void) const noexcept;
 	void testCount(void) const noexcept;
 	void testCountIf(void) const noexcept;
 	void testEqual(void) const noexcept;

@@ -142,6 +142,63 @@ void TestConstexprStd::testForEach(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testForEachN(void) const noexcept {
+	auto l1 = [](void) constexpr noexcept {
+		TestContainer c;
+		constexprStd::for_each_n(c.begin(), 5, *doubleValue<int>);
+		return c;
+	};
+	
+	static_assert(l1() == TestContainer{2, 4, 6, 8, 10, 6, 7, 8, 9, 10});
+	
+	auto l2 = [](void) constexpr noexcept {
+		const TestContainer c;
+		int sum = 0;
+		auto sumUp = [&sum](const int i) constexpr noexcept { sum += i; return; };
+		constexprStd::for_each_n(c.begin(), 5, sumUp);
+		return sum;
+	};
+	
+	static_assert(l2() == 15);
+	
+	using ArrayType = std::array<std::string, 6>;
+	
+	//No std::for_each_n, at least on GCC 7.1
+	
+	ArrayType ca{fooString, barString, bazString, emptyString, "a", "b"};
+	//ArrayType sa{ca};
+	const ArrayType cmp{fooStrings + fooString, barStrings + barString, bazStrings + bazString, "", "a", "b"};
+	
+	auto cthree = constexprStd::for_each_n(ca.begin(), 3, *doubleValue<std::string>);
+	//auto sthree =          std::for_each_n(sa.begin(), 3, *doubleValue<std::string>);
+	
+	QCOMPARE(ca, cmp);
+	//QCOMPARE(sa, cmp);
+	
+	QCOMPARE(cthree, ca.begin() + 3);
+	//QCOMPARE(sthree, sa.begin() + 3);
+	
+	int ccount = 0;
+	//int scount = 0;
+	
+	auto createCount = [](int& count) noexcept {
+		return [&count](const std::string& s) noexcept {
+			auto pos = s.find_first_of("aeiou");
+			for ( ; pos != std::string::npos; pos = s.find_first_of("aeiou", pos + 1) ) {
+				++count;
+			} //for ( ; pos != std::string::npos; pos = s.find_first_of("aeiou", pos + 1) )
+			return;
+		};
+	};
+	
+	constexprStd::for_each_n(ca.begin(), 2, createCount(ccount));
+	//         std::for_each_n(sa.begin(), 2, createCount(scount));
+	
+	QCOMPARE(ccount, 6);
+	//QCOMPARE(scount, 6);
+	return;
+}
+
 void TestConstexprStd::testCount(void) const noexcept {
 	constexpr TestContainer c;
 	static_assert(constexprStd::count(c.begin(), c.end(), 2) == 1);
