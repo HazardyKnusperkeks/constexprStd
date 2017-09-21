@@ -36,46 +36,70 @@ void TestConstexprStd::testPair(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			using pair = constexprStd::pair<int, MoveInt>;
 			pair p1{};
+			std::tuple t1{p1.to_std()};
 			
 			MoveInt mv{4};
 			
 			pair p2{1, 2};
-			std::tuple t1{p2.to_std()};
+			std::tuple t2{p2.to_std()};
 			pair p3(3, mv);
-			std::tuple t2{mv.Moved};
+			std::tuple t3{std::tuple_cat(p3.to_std(), std::tuple{mv.Moved})};
 			mv = 6;
 			pair p4(5, std::move(mv));
-			std::tuple t3{mv.Moved};
+			std::tuple t4{std::tuple_cat(p4.to_std(), std::tuple{mv.Moved})};
 			pair p5{p2};
-			std::tuple t4{p2.second.Moved};
+			std::tuple t5{std::tuple_cat(p5.to_std(), std::tuple{p2.second.Moved})};
 			pair p6{std::move(p2)};
-			std::tuple t5{p2.second.Moved};
+			std::tuple t6{std::tuple_cat(p6.to_std(), std::tuple{p2.second.Moved}, p2.to_std())};
 			
 			constexprStd::pair<MoveInt, int> df{42, 66};
 			pair p7{df};
-			std::tuple t6{df.first.Moved};
+			std::tuple t7{std::tuple_cat(p7.to_std(), std::tuple{df.first.Moved})};
 			
 			pair p8{std::move(df)};
-			std::tuple t7{df.first.Moved};
+			std::tuple t8{std::tuple_cat(p8.to_std(), std::tuple{df.first.Moved}, df.to_std())};
 			
 			std::pair<MoveInt, int> sp{17, 20};
 			pair p9{sp};
-			std::tuple t8{sp.first.Moved};
+			std::tuple t9{std::tuple_cat(p9.to_std(), std::tuple{sp.first.Moved})};
 			
 			pair p10{std::move(sp)};
-			std::tuple t9{sp.first.Moved};
+			std::tuple t10{std::tuple_cat(p10.to_std(), std::tuple{sp.first.Moved}, sp)};
 			
 			constexprStd::pair<std::tuple<int, int>, double> pp{std::piecewise_construct, std::tuple{5, 4.3},
 			                                                    std::tuple{3.}};
 			
-			return std::tuple_cat(p1.to_std(), t1, p3.to_std(), t2, p4.to_std(), t3, p5.to_std(), t4, p6.to_std(), t5,
-			                      p2.to_std(), p7.to_std(), t6, p8.to_std(), t7, df.to_std(), p9.to_std(), t8,
-			                      p10.to_std(), t9, pp.to_std());
+			p1 = p3;
+			std::tuple t11{p1.to_std()};
+			
+			p2 = std::move(p3);
+			std::tuple t12{std::tuple_cat(p2.to_std(), std::tuple{p3.second.Moved}, p3.to_std())};
+			
+			df.first = 9;
+			p1 = df;
+			std::tuple t13{p1.to_std()};
+			
+			p2 = std::move(df);
+			std::tuple t14{std::tuple_cat(p2.to_std(), std::tuple{df.first.Moved}, df.to_std())};
+			
+			sp.first = 17;
+			p1 = sp;
+			std::tuple t15{p1.to_std()};
+			
+			p2 = std::move(sp);
+			std::tuple t16{std::tuple_cat(p2.to_std(), std::tuple{sp.first.Moved}, sp)};
+			
+			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, pp.to_std(), t11, t12, t13, t14, t15, t16);
 		};
 	
-	static_assert(l() == std::tuple{0, 0, 1, 2, 3, 4, false, 5, 6, true, 1, 2, false, 1, 2, true, 1, 0, 42, 66, false,
-	                                42, 66, true, 0, 66, 17, 20, false, 17, 20, true, std::tuple{5, 4}, 3.});
-//	l();
+	//                              t1--  t2--  t3---------  t4--------  t5---------  t6--------------
+	static_assert(l() == std::tuple{0, 0, 1, 2, 3, 4, false, 5, 6, true, 1, 2, false, 1, 2, true, 1, 0,
+	//                              t7-----------  t8-----------------  t9-----------  t10----------------
+	                                42, 66, false, 42, 66, true, 0, 66, 17, 20, false, 17, 20, true, 0, 20,
+	//                              pp------------------  t11-  t12-------------  t13--  t14---------------  t15---
+	                                std::tuple{5, 4}, 3., 3, 4, 3, 4, true, 3, 0, 9, 66, 9, 66, true, 0, 66, 17, 20,
+	//                              t16----------------
+	                                17, 20, true, 0, 20});
 	
 	using cpair = constexprStd::pair<int, std::string>;
 	using spair =          std::pair<int, std::string>;
@@ -156,6 +180,46 @@ void TestConstexprStd::testPair(void) const noexcept {
 	         std::pair<std::tuple<int, bool, char>, std::tuple<bool, bool, double>> spp{std::piecewise_construct,
 	                                                                                    std::tuple{4, false, 'h'},
 	                                                                                    std::tuple{true, false, 2.3}};
+	
+	//Assignment
+	//Normal copy
+	cp1 = cp3;
+	sp1 = sp3;
+	CMP(cp1, sp1);
+	
+	//Move
+	cp2 = std::move(cp3);
+	sp2 = std::move(sp3);
+	CMP(cp2, sp2);
+	QCOMPARE(cp3.second, emptyString);
+	QCOMPARE(sp3.second, emptyString);
+	
+	//Copy from different type
+	cdf.first = 13;
+	sdf.first = 13;
+	cp1 = cdf;
+	sp1 = sdf;
+	CMP(cp1, sp1);
+	CMP(cdf, sdf);
+	
+	//Move from different type
+	cp2 = std::move(cdf);
+	sp2 = std::move(sdf);
+	CMP(cp2, sp2);
+	CMP(cdf, sdf);
+	QVERIFY(cdf.first.Moved);
+	QVERIFY(sdf.first.Moved);
+	
+	//Copy from std
+	sdf.first = 97;
+	cp1 = sdf;
+	CMP(cp1, sdf);
+	
+	//Move from std
+	cp2 = std::move(sdf);
+	CMP(cp1, cp2);
+	QVERIFY(sdf.first.Moved);
+	
 	CMP(cpp, spp);
 	
 	#undef CMP

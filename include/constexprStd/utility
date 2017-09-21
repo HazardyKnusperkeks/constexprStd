@@ -31,6 +31,23 @@
 #include "details/helper.hpp"
 
 namespace constexprStd {
+template<typename T, typename U = T>
+constexpr T exchange(T& object, U&& newValue)
+		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_assignable<T&, U&&>>){
+	T ret{std::move(object)};
+	object = std::forward<U>(newValue);
+	return ret;
+}
+
+template<typename T>
+constexpr void swap(T& t1, T& t2)
+		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_move_assignable<T>>) {
+	T temp{std::move(t1)};
+	t1 = std::move(t2);
+	t2 = std::move(temp);
+	return;
+}
+
 template<typename T1, typename T2>
 struct pair {
 	private:
@@ -153,6 +170,30 @@ struct pair {
 		return;
 	}
 	
+	template<template<typename, typename> typename Pair, typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<details::IsPair<Pair<U1, U2>>,
+	                                             std::is_assignable<T1&, const U1&>,
+	                                             std::is_assignable<T2&, const U2&>>>* = nullptr>
+	constexpr pair& operator=(const Pair<U1, U2>& that)
+			noexcept(std::conjunction_v<std::is_nothrow_assignable<T1&, const U1&>,
+			                            std::is_nothrow_assignable<T2&, const U2&>>)  {
+		first  = that.first;
+		second = that.second;
+		return *this;
+	}
+	
+	template<template<typename, typename> typename Pair, typename U1, typename U2,
+	         std::enable_if_t<std::conjunction_v<details::IsPair<Pair<U1, U2>>,
+	                                             std::is_assignable<T1&, U1&&>,
+	                                             std::is_assignable<T2&, U2&&>>>* = nullptr>
+	constexpr pair& operator=(Pair<U1, U2>&& that)
+			noexcept(std::conjunction_v<std::is_nothrow_assignable<T1&, U1&&>,
+			                            std::is_nothrow_assignable<T2&, U2&&>>)  {
+		first  = std::forward<U1>(that.first);
+		second = std::forward<U2>(that.second);
+		return *this;
+	}
+	
 	constexpr std::pair<T1, T2> to_std(void) const
 			noexcept(std::is_nothrow_constructible_v<std::pair<T1, T2>, const T1&, const T2&>) {
 		return {first, second};
@@ -162,23 +203,6 @@ struct pair {
 		return to_std();
 	}
 };
-
-template<typename T, typename U = T>
-constexpr T exchange(T& object, U&& newValue)
-		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_assignable<T&, U&&>>){
-	T ret{std::move(object)};
-	object = std::forward<U>(newValue);
-	return ret;
-}
-
-template<typename T>
-constexpr void swap(T& t1, T& t2)
-		noexcept(std::conjunction_v<std::is_nothrow_move_constructible<T>, std::is_nothrow_move_assignable<T>>) {
-	T temp{std::move(t1)};
-	t1 = std::move(t2);
-	t2 = std::move(temp);
-	return;
-}
 } //namespace constexprStd
 
 #endif
