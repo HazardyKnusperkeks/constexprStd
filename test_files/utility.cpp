@@ -267,6 +267,44 @@ void TestConstexprStd::testPair(void) const noexcept {
 	return;
 }
 
+using cpair = constexprStd::pair<int, std::string>;
+Q_DECLARE_METATYPE(cpair)
+
+void TestConstexprStd::testPairComparison(void) const noexcept {
+	QFETCH(cpair, lhs);
+	QFETCH(cpair, rhs);
+	
+	QTEST(lhs == rhs, "equal");
+	QTEST(lhs != rhs, "unequal");
+	QTEST(lhs <  rhs, "less");
+	QTEST(lhs <= rhs, "lessEqual");
+	QTEST(lhs >  rhs, "greater");
+	QTEST(lhs >= rhs, "greaterEqual");
+	return;
+}
+
+void TestConstexprStd::testPairComparison_data(void) const noexcept {
+	QTest::addColumn<cpair>("lhs");
+	QTest::addColumn<cpair>("rhs");
+	QTest::addColumn<bool>("equal");
+	QTest::addColumn<bool>("unequal");
+	QTest::addColumn<bool>("less");
+	QTest::addColumn<bool>("lessEqual");
+	QTest::addColumn<bool>("greater");
+	QTest::addColumn<bool>("greaterEqual");
+	
+	QTest::newRow("1")<<cpair{0, bazString}<<cpair{ 0, bazString}<<true <<false<<false<<true <<false<<true ;
+	QTest::newRow("2")<<cpair{0, bazString}<<cpair{ 1, bazString}<<false<<true <<true <<true <<false<<false;
+	QTest::newRow("3")<<cpair{0, bazString}<<cpair{-1, bazString}<<false<<true <<false<<false<<true <<true ;
+	QTest::newRow("4")<<cpair{0, bazString}<<cpair{ 0, fooString}<<false<<true <<true <<true <<false<<false;
+	QTest::newRow("5")<<cpair{0, bazString}<<cpair{ 1, fooString}<<false<<true <<true <<true <<false<<false;
+	QTest::newRow("6")<<cpair{0, bazString}<<cpair{-1, fooString}<<false<<true <<false<<false<<true <<true ;
+	QTest::newRow("7")<<cpair{0, bazString}<<cpair{ 0, barString}<<false<<true <<false<<false<<true <<true ;
+	QTest::newRow("8")<<cpair{0, bazString}<<cpair{ 1, barString}<<false<<true <<true <<true <<false<<false;
+	QTest::newRow("9")<<cpair{0, bazString}<<cpair{-1, barString}<<false<<true <<false<<false<<true <<true ;
+	return;
+}
+
 void TestConstexprStd::testExchange(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](int i) constexpr noexcept {

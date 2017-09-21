@@ -214,6 +214,44 @@ struct pair {
 };
 
 template<typename T1, typename T2>
+constexpr bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+		noexcept(noexcept(lhs.first == rhs.first && lhs.second == rhs.second)) {
+	return lhs.first == rhs.first && lhs.second == rhs.second;
+}
+
+template<typename T1, typename T2>
+constexpr bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(lhs == rhs)) {
+	return !(lhs == rhs);
+}
+
+template<typename T1, typename T2>
+constexpr bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+		noexcept(noexcept(lhs.first < rhs.first) && noexcept(lhs.second < rhs.second)) {
+	if ( lhs.first < rhs.first ) {
+		return true;
+	} //if ( lhs.first < rhs.first )
+	if ( rhs.first < lhs.first ) {
+		return false;
+	} //if ( rhs.first < lhs.first )
+	return lhs.second < rhs.second;
+}
+
+template<typename T1, typename T2>
+constexpr bool operator>(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(rhs < lhs)) {
+	return rhs < lhs;
+}
+
+template<typename T1, typename T2>
+constexpr bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(rhs < lhs)) {
+	return !(rhs < lhs);
+}
+
+template<typename T1, typename T2>
+constexpr bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(lhs < rhs)) {
+	return !(lhs < rhs);
+}
+
+template<typename T1, typename T2>
 constexpr void swap(pair<T1, T2>& p1, pair<T1, T2>& p2) noexcept(noexcept(p1.swap(p2))) {
 	p1.swap(p2);
 	return;
