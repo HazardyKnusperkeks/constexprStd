@@ -204,28 +204,29 @@ struct pair {
 		return;
 	}
 	
-	constexpr std::pair<T1, T2> to_std(void) const noexcept {
+	[[nodiscard]] constexpr std::pair<T1, T2> to_std(void) const noexcept {
 		return {first, second};
 	}
 	
-	constexpr operator std::pair<T1, T2>(void) const noexcept(noexcept(std::declval<pair&>().to_std())) {
+	[[nodiscard]] constexpr operator std::pair<T1, T2>(void) const noexcept(noexcept(std::declval<pair&>().to_std())) {
 		return to_std();
 	}
 };
 
 template<typename T1, typename T2>
-constexpr bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+[[nodiscard]] constexpr bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
 		noexcept(noexcept(lhs.first == rhs.first && lhs.second == rhs.second)) {
 	return lhs.first == rhs.first && lhs.second == rhs.second;
 }
 
 template<typename T1, typename T2>
-constexpr bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(lhs == rhs)) {
+[[nodiscard]] constexpr bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+		noexcept(noexcept(lhs == rhs)) {
 	return !(lhs == rhs);
 }
 
 template<typename T1, typename T2>
-constexpr bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+[[nodiscard]] constexpr bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
 		noexcept(noexcept(lhs.first < rhs.first) && noexcept(lhs.second < rhs.second)) {
 	if ( lhs.first < rhs.first ) {
 		return true;
@@ -237,17 +238,19 @@ constexpr bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
 }
 
 template<typename T1, typename T2>
-constexpr bool operator>(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(rhs < lhs)) {
+[[nodiscard]] constexpr bool operator>(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(rhs < lhs)) {
 	return rhs < lhs;
 }
 
 template<typename T1, typename T2>
-constexpr bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(rhs < lhs)) {
+[[nodiscard]] constexpr bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+		noexcept(noexcept(rhs < lhs)) {
 	return !(rhs < lhs);
 }
 
 template<typename T1, typename T2>
-constexpr bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) noexcept(noexcept(lhs < rhs)) {
+[[nodiscard]] constexpr bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+		noexcept(noexcept(lhs < rhs)) {
 	return !(lhs < rhs);
 }
 
@@ -258,7 +261,7 @@ constexpr void swap(pair<T1, T2>& p1, pair<T1, T2>& p2) noexcept(noexcept(p1.swa
 }
 
 template<typename T1, typename T2>
-constexpr pair<std::decay_t<T1>, std::decay_t<T2>> make_pair(T1&& t1, T2&& t2)
+[[nodiscard]] constexpr pair<std::decay_t<T1>, std::decay_t<T2>> make_pair(T1&& t1, T2&& t2)
 		noexcept(std::is_nothrow_constructible_v<pair<std::decay_t<T1>, std::decay_t<T2>>, T1&&, T2&&>) {
 	return {std::forward<T1>(t1), std::forward<T2>(t2)};
 }
