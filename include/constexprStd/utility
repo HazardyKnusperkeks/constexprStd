@@ -204,8 +204,7 @@ struct pair {
 		return;
 	}
 	
-	constexpr std::pair<T1, T2> to_std(void) const
-			noexcept(std::is_nothrow_constructible_v<std::pair<T1, T2>, const T1&, const T2&>) {
+	constexpr std::pair<T1, T2> to_std(void) const noexcept {
 		return {first, second};
 	}
 	
@@ -219,6 +218,12 @@ constexpr void swap(pair<T1, T2>& p1, pair<T1, T2>& p2) noexcept(noexcept(p1.swa
 	p1.swap(p2);
 	return;
 }
+
+template<typename T1, typename T2>
+constexpr pair<std::decay_t<T1>, std::decay_t<T2>> make_pair(T1&& t1, T2&& t2)
+		noexcept(std::is_nothrow_constructible_v<pair<std::decay_t<T1>, std::decay_t<T2>>, T1&&, T2&&>) {
+	return {std::forward<T1>(t1), std::forward<T2>(t2)};
+}
 } //namespace constexprStd
 
 namespace std {
@@ -226,6 +231,92 @@ template<typename T1, typename T2>
 constexpr void swap(constexprStd::pair<T1, T2>& p1, constexprStd::pair<T1, T2>& p2) noexcept(noexcept(p1.swap(p2))) {
 	p1.swap(p2);
 	return;
+}
+
+template<typename T1, typename T2>
+struct tuple_size<constexprStd::pair<T1, T2>> : tuple_size<std::pair<T1, T2>> { };
+
+template<std::size_t I, typename T1, typename T2>
+struct tuple_element<I, constexprStd::pair<T1, T2>> : tuple_element<I, std::pair<T1, T2>> { };
+
+template<std::size_t I, typename T1, typename T2>
+constexpr tuple_element_t<I, constexprStd::pair<T1, T2>>& get(constexprStd::pair<T1, T2>& p) noexcept {
+	if constexpr ( I == 0 ) {
+		return p.first;
+	} //if constexpr ( I == 0 )
+	else {
+		return p.second;
+	} //else -> if constexpr ( I == 0 )
+}
+
+template<std::size_t I, typename T1, typename T2>
+constexpr const tuple_element_t<I, constexprStd::pair<T1, T2>>& get(const constexprStd::pair<T1, T2>& p) noexcept {
+	if constexpr ( I == 0 ) {
+		return p.first;
+	} //if constexpr ( I == 0 )
+	else {
+		return p.second;
+	} //else -> if constexpr ( I == 0 )
+}
+
+template<std::size_t I, typename T1, typename T2>
+constexpr tuple_element_t<I, constexprStd::pair<T1, T2>>&& get(constexprStd::pair<T1, T2>&& p) noexcept {
+	if constexpr ( I == 0 ) {
+		return std::move(p.first);
+	} //if constexpr ( I == 0 )
+	else {
+		return std::move(p.second);
+	} //else -> if constexpr ( I == 0 )
+}
+
+template<std::size_t I, typename T1, typename T2>
+constexpr const tuple_element_t<I, constexprStd::pair<T1, T2>>&& get(const constexprStd::pair<T1, T2>&& p) noexcept {
+	if constexpr ( I == 0 ) {
+		return std::move(p.first);
+	} //if constexpr ( I == 0 )
+	else {
+		return std::move(p.second);
+	} //else -> if constexpr ( I == 0 )
+}
+
+template<typename T1, typename T2>
+constexpr T1& get(constexprStd::pair<T1, T2>& p) noexcept {
+	return p.first;
+}
+
+template<typename T1, typename T2>
+constexpr const T1& get(const constexprStd::pair<T1, T2>& p) noexcept {
+	return p.first;
+}
+
+template<typename T1, typename T2>
+constexpr T1&& get(constexprStd::pair<T1, T2>&& p) noexcept {
+	return std::move(p.first);
+}
+
+template<typename T1, typename T2>
+constexpr const T1&& get(const constexprStd::pair<T1, T2>&& p) noexcept {
+	return std::move(p.first);
+}
+
+template<typename T2, typename T1>
+constexpr T2& get(constexprStd::pair<T1, T2>& p) noexcept {
+	return p.first;
+}
+
+template<typename T2, typename T1>
+constexpr const T2& get(const constexprStd::pair<T1, T2>& p) noexcept {
+	return p.first;
+}
+
+template<typename T2, typename T1>
+constexpr T2&& get(constexprStd::pair<T1, T2>&& p) noexcept {
+	return std::move(p.first);
+}
+
+template<typename T2, typename T1>
+constexpr const T2&& get(const constexprStd::pair<T1, T2>&& p) noexcept {
+	return std::move(p.first);
 }
 } //namespace std
 

@@ -119,6 +119,32 @@ void TestConstexprStd::testPair(void) const noexcept {
 	using cpair = constexprStd::pair<int, std::string>;
 	using spair =          std::pair<int, std::string>;
 	
+	//It seems that GCC didn't implement the const rvalue ref overload
+	static_assert(std::is_same_v<decltype(std::get<0          >(std::declval<      cpair  >())), decltype(std::get<0          >(std::declval<      spair  >()))>);
+//	static_assert(std::is_same_v<decltype(std::get<0          >(std::declval<const cpair  >())), decltype(std::get<0          >(std::declval<const spair  >()))>);
+	static_assert(std::is_same_v<decltype(std::get<0          >(std::declval<      cpair& >())), decltype(std::get<0          >(std::declval<      spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<0          >(std::declval<const cpair& >())), decltype(std::get<0          >(std::declval<const spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<0          >(std::declval<      cpair&&>())), decltype(std::get<0          >(std::declval<      spair&&>()))>);
+//	static_assert(std::is_same_v<decltype(std::get<0          >(std::declval<const cpair&&>())), decltype(std::get<0          >(std::declval<const spair&&>()))>);
+	static_assert(std::is_same_v<decltype(std::get<1          >(std::declval<      cpair  >())), decltype(std::get<1          >(std::declval<      spair  >()))>);
+//	static_assert(std::is_same_v<decltype(std::get<1          >(std::declval<const cpair  >())), decltype(std::get<1          >(std::declval<const spair  >()))>);
+	static_assert(std::is_same_v<decltype(std::get<1          >(std::declval<      cpair& >())), decltype(std::get<1          >(std::declval<      spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<1          >(std::declval<const cpair& >())), decltype(std::get<1          >(std::declval<const spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<1          >(std::declval<      cpair&&>())), decltype(std::get<1          >(std::declval<      spair&&>()))>);
+//	static_assert(std::is_same_v<decltype(std::get<1          >(std::declval<const cpair&&>())), decltype(std::get<1          >(std::declval<const spair&&>()))>);
+	static_assert(std::is_same_v<decltype(std::get<int        >(std::declval<      cpair  >())), decltype(std::get<int        >(std::declval<      spair  >()))>);
+//	static_assert(std::is_same_v<decltype(std::get<int        >(std::declval<const cpair  >())), decltype(std::get<int        >(std::declval<const spair  >()))>);
+	static_assert(std::is_same_v<decltype(std::get<int        >(std::declval<      cpair& >())), decltype(std::get<int        >(std::declval<      spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<int        >(std::declval<const cpair& >())), decltype(std::get<int        >(std::declval<const spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<int        >(std::declval<      cpair&&>())), decltype(std::get<int        >(std::declval<      spair&&>()))>);
+//	static_assert(std::is_same_v<decltype(std::get<int        >(std::declval<const cpair&&>())), decltype(std::get<int        >(std::declval<const spair&&>()))>);
+	static_assert(std::is_same_v<decltype(std::get<std::string>(std::declval<      cpair  >())), decltype(std::get<std::string>(std::declval<      spair  >()))>);
+//	static_assert(std::is_same_v<decltype(std::get<std::string>(std::declval<const cpair  >())), decltype(std::get<std::string>(std::declval<const spair  >()))>);
+	static_assert(std::is_same_v<decltype(std::get<std::string>(std::declval<      cpair& >())), decltype(std::get<std::string>(std::declval<      spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<std::string>(std::declval<const cpair& >())), decltype(std::get<std::string>(std::declval<const spair& >()))>);
+	static_assert(std::is_same_v<decltype(std::get<std::string>(std::declval<      cpair&&>())), decltype(std::get<std::string>(std::declval<      spair&&>()))>);
+//	static_assert(std::is_same_v<decltype(std::get<std::string>(std::declval<const cpair&&>())), decltype(std::get<std::string>(std::declval<const spair&&>()))>);
+	
 	#define CMP(c, s) QVERIFY(c.first == s.first); QVERIFY(c.second == s.second)
 	
 	//Construct
