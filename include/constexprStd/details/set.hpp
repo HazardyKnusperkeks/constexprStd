@@ -259,7 +259,7 @@ class SetNodeIterator {
 		return std::addressof(Node->getContent());
 	}
 	
-	constexpr SetNodeIterator& operator++(void) const noexcept {
+	constexpr SetNodeIterator& operator++(void) noexcept {
 		Node = Node->next();
 		return *this;
 	}
@@ -270,7 +270,7 @@ class SetNodeIterator {
 		return copy;
 	}
 	
-	constexpr SetNodeIterator& operator--(void) const noexcept {
+	constexpr SetNodeIterator& operator--(void) noexcept {
 		Node = Node->prev();
 		return *this;
 	}
