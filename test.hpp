@@ -97,7 +97,7 @@ class TestConstexprStd : public QObject {
 	void testSwap(void) const noexcept;
 	
 	//Container
-	void testMap(void) const noexcept;
+	void testSet(void) const noexcept;
 	
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr);

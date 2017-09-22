@@ -18,33 +18,32 @@
 
 /**
  * @file
- * @brief Contains the constexpr variants of <map>
+ * @brief Contains the constexpr variants of <set>
  */
 
-#ifndef CONSTEXPRSTD_MAP
-#define CONSTEXPRSTD_MAP
+#ifndef CONSTEXPRSTD_SET
+#define CONSTEXPRSTD_SET
 
 #include <iterator>
 #include <memory>
 
-#include "details/map.hpp"
+#include "details/set.hpp"
 #include "memory"
 
 namespace constexprStd {
-template<typename Key, typename Value, std::size_t N, typename Compare,
+template<typename Key, std::size_t N, typename Compare,
          template<typename, std::size_t> typename Allocator,
-         typename NodeType = details::MapNode<Key, Value>, std::size_t AllocN = N>
-class map_base {
+         typename NodeType = details::SetNode<Key>, std::size_t AllocN = N>
+class set_base {
 	public:
 	using key_type               = Key;
-	using mapped_type            = Value;
-	using value_type             = std::pair<const Key, Value>;
-	using AllocatedValueType     = std::pair<Key, Value>;
-	using iterator               = details::NodeIterator<Key, Value, false>;
-	using const_iterator         = details::NodeIterator<Key, Value, true>;
+	using value_type             = Key;
+	using iterator               = details::SetNodeIterator<Key>;
+	using const_iterator         = details::SetNodeIterator<Key>;
 	using size_type              = std::size_t;
 	using difference_type        = std::ptrdiff_t;
 	using key_compare            = Compare;
+	using value_compare          = Compare;
 	using allocator_type         = Allocator<NodeType, AllocN>;
 	using reference              = value_type&;
 	using const_reference        = const value_type&;
@@ -62,33 +61,6 @@ class map_base {
 	using CreateIsNoexcept = std::bool_constant<
 		noexcept(std::declval<allocator_type&>().construct(std::declval<NodeType*>(), std::declval<Args&&>()...))>;
 	
-	class value_compare {
-		protected:
-		Compare Cmp;
-		
-		constexpr value_compare(Compare cmp) noexcept : Cmp(std::move(cmp)) {
-			return;
-		}
-		
-		public:
-		[[nodiscard]] constexpr bool operator()(const value_type& lhs, const value_type& rhs) const
-				noexcept(CmpIsNoexcept::value) {
-			return Cmp(lhs.first, rhs.first);
-		}
-		
-		[[nodiscard]] constexpr bool operator()(const AllocatedValueType& lhs, const value_type& rhs) const
-		noexcept(CmpIsNoexcept::value) {
-			return Cmp(lhs.first, rhs.first);
-		}
-		
-		[[nodiscard]] constexpr bool operator()(const value_type& lhs, const AllocatedValueType& rhs) const
-		noexcept(CmpIsNoexcept::value) {
-			return Cmp(lhs.first, rhs.first);
-		}
-		
-		friend class map_base;
-	};
-	
 	private:
 	allocator_type& Alloc;
 	NodeType End{};
@@ -102,7 +74,7 @@ class map_base {
 		return !Cmp(lhs, rhs) && !Cmp(rhs, lhs);
 	}
 	
-	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(value_type& value) const
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const value_type& value) const
 			noexcept(CmpIsNoexcept::value) {
 		if ( Nodes == 0 ) {
 			return {Root, false};
@@ -112,10 +84,10 @@ class map_base {
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(NodeType *node, const value_type& value) const
 			noexcept(CmpIsNoexcept::value) {
-		if ( isEqual(*node->Content, value) ) {
+		if ( isEqual(node->getContent(), value) ) {
 			return {node, true};
 		} //if ( isEqual(*node->Content, value) )
-		return Cmp(*node->Content, value) ? findBestNodeLeft(node, value) : findBestNodeRight(node, value);
+		return Cmp(node->getContent(), value) ? findBestNodeLeft(node, value) : findBestNodeRight(node, value);
 	}
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeLeft(NodeType *node, const value_type& value)
@@ -153,20 +125,18 @@ class map_base {
 	}
 	
 	constexpr void destroyNode(NodeType *node) noexcept(DestroyIsNoexcept::value) {
-		if ( !node->PastEnd ) {
-			node->InternalContent.deinit();
-		} //if ( !node->PastEnd )
+		node->reset();
 		Alloc.destroy(node);
 		Alloc.deallocate(node, 1);
 		return;
 	}
 	
 	public:
-	explicit constexpr map_base(allocator_type& alloc) noexcept : map_base{Compare{}, alloc} {
+	explicit constexpr set_base(allocator_type& alloc) noexcept : set_base{Compare{}, alloc} {
 		return;
 	}
 	
-	explicit constexpr map_base(Compare cmp, allocator_type& alloc) noexcept : Alloc{alloc}, Cmp{std::move(cmp)} {
+	explicit constexpr set_base(Compare cmp, allocator_type& alloc) noexcept : Alloc{alloc}, Cmp{std::move(cmp)} {
 		End.Red = false;
 		return;
 	}
@@ -187,7 +157,7 @@ class map_base {
 	
 	constexpr std::pair<iterator, bool> insert(const value_type& value)
 			noexcept(CmpIsNoexcept::value &&
-		         noexcept(std::declval<map_base&>().createNode(std::declval<details::NodeTag>(), value))) {
+		         noexcept(std::declval<set_base&>().createNode(std::declval<details::NodeTag>(), value))) {
 		if ( empty() ) {
 			Root = createNode(details::NodeTag{}, value);
 			Root->adoptRight(&End);
@@ -196,11 +166,11 @@ class map_base {
 			return {{Root}, true};
 		} //if ( empty() )
 		
-//		std::pair<NodeType*, bool> result = findBestNode(value);
-//		NodeType*& node = result.first;
-//		if ( result.second ) {
-//			return {node, false};
-//		} //if ( result.second )
+		std::pair<NodeType*, bool> result = findBestNode(value);
+		NodeType*& node = result.first;
+		if ( result.second ) {
+			return {node, false};
+		} //if ( result.second )
 		
 //		if ( Cmp(*node->Content, value) ) {
 			
@@ -208,40 +178,40 @@ class map_base {
 //		else {
 			
 //		} //else -> if ( Cmp(*node->Content, value) )
-//		return {{node}, true};
+		return {node, true};
 	}
 };
 
-template<typename Key, typename Value, std::size_t N, typename Compare = std::less<Key>,
+template<typename Key, std::size_t N, typename Compare = std::less<Key>,
          template<typename, std::size_t> typename Allocator = constexprStd::allocator>
-class map : public map_base<Key, Value, N, Compare, Allocator> {
+class set : public set_base<Key, N, Compare, Allocator> {
 	private:
-	using Base = map_base<Key, Value, N, Compare, Allocator>;
+	using Base = set_base<Key, N, Compare, Allocator>;
 	
 	typename Base::allocator_type Alloc;
 	
 	public:
-	constexpr map(void) noexcept : Base{Alloc} {
+	constexpr set(void) noexcept : Base{Alloc} {
 		return;
 	}
 };
 
-template<typename Key, typename Value, std::size_t N, typename Compare = std::less<Key>,
+template<typename Key, std::size_t N, typename Compare = std::less<Key>,
          template<typename, std::size_t> typename Allocator = constexprStd::allocator>
-class mapDestroy : public map<Key, Value, N, Compare, Allocator> {
+class setDestroy : public set<Key, N, Compare, Allocator> {
 	private:
-	using Base = map<Key, Value, N, Compare, Allocator>;
+	using Base = set<Key, N, Compare, Allocator>;
 	
 	public:
-	constexpr mapDestroy(void) noexcept = default;
+	constexpr setDestroy(void) noexcept = default;
 	
 	template<typename... Args>
-	explicit constexpr mapDestroy(Args&&... args) noexcept(std::is_nothrow_constructible_v<Base, Args&&...>) :
+	explicit constexpr setDestroy(Args&&... args) noexcept(std::is_nothrow_constructible_v<Base, Args&&...>) :
 			Base{std::forward<Args>(args)...} {
 		return;
 	}
 	
-	~mapDestroy(void) noexcept(noexcept(std::declval<Base&>().clear())) {
+	~setDestroy(void) noexcept(noexcept(std::declval<Base&>().clear())) {
 		Base::clear();
 		return;
 	}

@@ -18,11 +18,11 @@
 
 /**
  * @file
- * @brief Contains details for the constexpr variants of <map>
+ * @brief Contains details for the constexpr variants of <set>
  */
 
-#ifndef CONSTEXPRSTD_DETAILS_MAP_HPP
-#define CONSTEXPRSTD_DETAILS_MAP_HPP
+#ifndef CONSTEXPRSTD_DETAILS_SET_HPP
+#define CONSTEXPRSTD_DETAILS_SET_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -33,72 +33,82 @@
 #include "uninitialized.hpp"
 
 namespace constexprStd {
-template<typename, typename, std::size_t, typename, template<typename, std::size_t> typename, typename, std::size_t>
-class map_base;
+template<typename, std::size_t, typename, template<typename, std::size_t> typename, typename, std::size_t>
+class set_base;
 } //namespace constexprStd
 
 namespace constexprStd::details {
 struct NodeTag {};
 
-template<typename Key, typename Value>
-struct MapNode {
-	using InternalContentType = std::pair<Key, Value>;
-	using ExternalContentType = std::pair<const Key&, Value&>;
+template<typename Key>
+struct SetNode {
+	using ContentType         = Key;
+	using InternalContentType = Uninitialized<ContentType>;
 	
-	Uninitialized<InternalContentType> InternalContent;
-	ExternalContentType ExternalContent{InternalContent.get().first, InternalContent.get().second};
-	MapNode *Parent     = nullptr;
-	MapNode *LeftChild  = nullptr;
-	MapNode *RightChild = nullptr;
+	InternalContentType Content;
+	SetNode *Parent     = nullptr;
+	SetNode *LeftChild  = nullptr;
+	SetNode *RightChild = nullptr;
 	bool Red            = true;
 	bool PastEnd        = true;
 	
-	constexpr MapNode(void) = default;
+	constexpr SetNode(void) = default;
 	
 	template<typename... Args>
-	constexpr MapNode(NodeTag, Args&&... args)
-			noexcept(std::is_nothrow_constructible_v<decltype(InternalContent), Args&&...>) :
-			InternalContent{std::forward<Args>(args)...}, PastEnd{false} {
+	constexpr SetNode(NodeTag, Args&&... args)
+			noexcept(std::is_nothrow_constructible_v<Key, Args&&...>) :
+			Content{std::forward<Args>(args)...}, PastEnd{false} {
 		return;
 	}
 	
-	constexpr MapNode& operator=(MapNode&& that)
+	constexpr SetNode& operator=(SetNode&& that)
 			noexcept(std::conjunction_v<std::is_nothrow_move_assignable<InternalContentType>,
 			                            std::is_nothrow_move_constructible<InternalContentType>,
 			                            std::is_nothrow_destructible<InternalContentType>>) {
+		const auto oldThatPastEnd = that.PastEnd;
 		//The PastEnd flag also indicates wether InternalContent is initialized.
 		if ( !that.PastEnd ) {
 			//The element to move from is initialized...
 			if ( !PastEnd ) {
 				//... and so are we, just move.
-				InternalContent.get() = std::move(that.InternalContent).get();
+				Content.get() = std::move(that.Content).get();
 			} //if ( !PastEnd )
 			else {
 				//... but we aren't, we have to initialize.
-				InternalContent.init(std::move(that.InternalContent).get());
+				Content.init(std::move(that.Content).get());
 			} //else -> if ( !PastEnd )
 			//And finally deinit the moved from content.
-			that.InternalContent.deinit();
+			that.reset();
 		} //if ( !that.PastEnd )
 		else {
 			//We move from a not initialized
-			if ( !PastEnd ) {
-				InternalContent.deinit();
-			} //if ( !PastEnd )
+			reset();
 		} //else -> if ( !that.PastEnd )
 		Parent     = constexprStd::exchange(that.Parent,     nullptr);
 		LeftChild  = constexprStd::exchange(that.LeftChild,  nullptr);
 		RightChild = constexprStd::exchange(that.RightChild, nullptr);
 		Red        = constexprStd::exchange(that.Red,        true);
-		PastEnd    = constexprStd::exchange(that.PastEnd,    true);
+		PastEnd    = oldThatPastEnd;
 		return *this;
+	}
+	
+	constexpr void reset(void) noexcept {
+		if ( !PastEnd ) {
+			Content.deinit();
+			PastEnd = true;
+		} //if ( !PastEnd )
+		return;
+	}
+	
+	[[nodiscard]] constexpr const ContentType& getContent(void) const noexcept {
+		return Content.get();
 	}
 	
 	[[nodiscard]] constexpr bool hasChildren(void) const noexcept {
 		return LeftChild || RightChild;
 	}
 	
-	[[nodiscard]] constexpr MapNode* next(void) const noexcept {
+	[[nodiscard]] constexpr SetNode* next(void) const noexcept {
 		if ( LeftChild ) {
 			return LeftChild;
 		} //if ( LeftChild )
@@ -106,9 +116,9 @@ struct MapNode {
 			return RightChild;
 		} //if ( RightChild )
 		
-		MapNode *current = this;
+		SetNode *current = this;
 		do { //while ( current )
-			MapNode *parent = current->Parent;
+			SetNode *parent = current->Parent;
 			if ( parent && parent->RightChild != current ) {
 				return parent->RightChild;
 			} //if ( parent && parent->RightChild != current )
@@ -116,7 +126,7 @@ struct MapNode {
 		return nullptr;
 	}
 	
-	[[nodiscard]] constexpr MapNode* prev(void) const noexcept {
+	[[nodiscard]] constexpr SetNode* prev(void) const noexcept {
 		if ( !Parent ) {
 			return nullptr;
 		} //if ( !Parent )
@@ -131,7 +141,7 @@ struct MapNode {
 			return Parent;
 		} //if ( Parent->LeftChild == nullptr )
 		
-		MapNode *current = Parent->LeftChild;
+		SetNode *current = Parent->LeftChild;
 		while ( current->hasChildren() ) {
 			if ( current->LeftChild ) {
 				current = current->LeftChild;
@@ -156,68 +166,66 @@ struct MapNode {
 		return;
 	}
 	
-	constexpr void adoptRight(MapNode *child) noexcept {
+	constexpr void adoptRight(SetNode *child) noexcept {
 		RightChild    = child;
 		child->Parent = this;
 		return;
 	}
 };
 
-template<typename Key, typename Value, bool IsConst>
-class NodeIterator {
+template<typename Key>
+class SetNodeIterator {
 	private:
-	using NodeType = MapNode<Key, Value>;
+	using NodeType = SetNode<Key>;
 	
 	public:
-	using value_type        = typename NodeType::ExternalContentType;
-	using reference         = std::conditional_t<IsConst, const typename NodeType::ExternalContentType&,
-	                                             typename NodeType::ExternalContentType&>;
-	using pointer           = typename NodeType::ExternalContentType*;
+	using value_type        = typename NodeType::ContentType;
+	using reference         = const value_type&;
+	using pointer           = const value_type*;
 	using difference_type   = std::ptrdiff_t;
 	using iterator_category = std::bidirectional_iterator_tag;
 	
 	private:
 	NodeType *Node = nullptr;
 	
-	constexpr NodeIterator(NodeType *node) noexcept : Node{node} {
+	constexpr SetNodeIterator(NodeType *node) noexcept : Node{node} {
 		return;
 	}
 	
 	public:
-	constexpr NodeIterator(void) noexcept = default;
+	constexpr SetNodeIterator(void) noexcept = default;
 	
 	[[nodiscard]] constexpr reference operator*(void) const noexcept {
-		return *Node->Content;
+		return Node->getContent();
 	}
 	
 	[[nodiscard]] constexpr pointer operator->(void) const noexcept {
-		return Node->Content;
+		return std::addressof(Node->getContent());
 	}
 	
-	constexpr NodeIterator& operator++(void) const noexcept {
+	constexpr SetNodeIterator& operator++(void) const noexcept {
 		Node = Node->next();
 		return *this;
 	}
 	
-	[[nodiscard]] constexpr NodeIterator operator++(int) const noexcept {
-		NodeIterator copy(*this);
+	[[nodiscard]] constexpr SetNodeIterator operator++(int) const noexcept {
+		SetNodeIterator copy(*this);
 		++*this;
 		return copy;
 	}
 	
-	constexpr NodeIterator& operator--(void) const noexcept {
+	constexpr SetNodeIterator& operator--(void) const noexcept {
 		Node = Node->prev();
 		return *this;
 	}
 	
-	[[nodiscard]] constexpr NodeIterator operator--(int) const noexcept {
-		NodeIterator copy(*this);
+	[[nodiscard]] constexpr SetNodeIterator operator--(int) const noexcept {
+		SetNodeIterator copy(*this);
 		--*this;
 		return copy;
 	}
 	
-	template<bool IsConst2>
-	[[nodiscard]] constexpr bool operator==(const NodeIterator<Key, Value, IsConst2> that) const noexcept {
+	[[nodiscard]] constexpr bool operator==(const SetNodeIterator that) const noexcept {
 		if ( Node == that.Node ) {
 			return true;
 		} //if ( Node == that.Node )
@@ -232,16 +240,15 @@ class NodeIterator {
 		return Node->PastEnd;
 	}
 	
-	template<bool IsConst2>
-	[[nodiscard]] constexpr bool operator!=(const NodeIterator<Key, Value, IsConst2> that) const noexcept {
+	[[nodiscard]] constexpr bool operator!=(const SetNodeIterator that) const noexcept {
 		return !(*this == that);
 	}
 	
 	template<typename K, typename V, bool IsConst2>
 	friend class NodeIterator;
 	
-	template<typename, typename, std::size_t, typename, template<typename, std::size_t> typename, typename, std::size_t>
-	friend class constexprStd::map_base;
+	template<typename, std::size_t, typename, template<typename, std::size_t> typename, typename, std::size_t>
+	friend class constexprStd::set_base;
 };
 
 } //namespace constexprStd::details

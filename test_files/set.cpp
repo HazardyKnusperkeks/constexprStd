@@ -18,47 +18,68 @@
 
 /**
  * @file
- * @brief Checks constexprStd/map for self-containment and contains the tests.
+ * @brief Checks constexprStd/set for self-containment and contains the tests.
  */
 
-#include <constexprStd/map>
+#include <constexprStd/set>
 
 #include "../test.hpp"
 
-#include <map>
+#include <set>
 #include <string>
 #include <tuple>
 
 #include "test_constants.hpp"
 #include "test_count_instances.hpp"
 
-void TestConstexprStd::testMap(void) const noexcept {
+void TestConstexprStd::testSet(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			constexprStd::set<int, 15> set;
+			set.clear();
+			
+			auto ins1 = set.insert(1);
+			auto t1   = std::tuple{ins1.second};
+			auto ins2 = set.insert(1);
+			auto t2   = std::tuple{ins2.second, *ins2.first};
+			return std::tuple_cat(t1, t2);
+		};
+	
+	static_assert(l() == std::tuple{true, false, 1});
+	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
 		QWARN("Had to reset CountInstances<std::string>::Instances");
 		instances = 0;
 	} //if ( instances != 0 )
 	
-	constexprStd::map<int, CountInstances<std::string>, 15> cmap;
-	std::map<int, CountInstances<std::string>> smap;
+	constexprStd::set<CountInstances<std::string>, 15> cset;
+	         std::set<CountInstances<std::string>> sset;
 	QCOMPARE(instances, 0);
 	
 	//Test empty clear
-	cmap.clear();
-	smap.clear();
+	cset.clear();
+	sset.clear();
 	QCOMPARE(instances, 0);
 	
-	auto cins = cmap.insert({1, fooString});
-	auto sins = smap.insert({1, fooString});
-	QVERIFY(cins.second);
-	QVERIFY(sins.second);
+	auto cins1 = cset.insert(fooString);
+	auto sins1 = sset.insert(fooString);
+	QVERIFY(cins1.second);
+	QVERIFY(sins1.second);
 	QCOMPARE(instances, 2);
 	
-	cmap.clear();
-	smap.clear();
+	auto cins2 = cset.insert(fooString);
+	auto sins2 = sset.insert(fooString);
+	QVERIFY(!cins2.second);
+	QVERIFY(!sins2.second);
+	QCOMPARE(*cins2.first, fooString);
+	QCOMPARE(*sins2.first, fooString);
+	QCOMPARE(instances, 2);
+	
+	cset.clear();
+	sset.clear();
 	QCOMPARE(instances, 0);
 	{
-		constexprStd::mapDestroy<int, CountInstances<std::string>, 15> dmap;
+		constexprStd::setDestroy<CountInstances<std::string>, 15> dset;
 	}
 	QCOMPARE(instances, 0);
 	return;
