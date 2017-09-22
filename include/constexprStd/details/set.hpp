@@ -105,7 +105,66 @@ struct SetNode {
 	}
 	
 	[[nodiscard]] constexpr bool hasChildren(void) const noexcept {
-		return LeftChild || RightChild;
+		return hasLeftChild() || hasRightChild();
+	}
+	
+	[[nodiscard]] constexpr bool hasLeftChild(void) const noexcept {
+		return LeftChild;
+	}
+	
+	[[nodiscard]] constexpr bool isLeftChild(const SetNode *node) const noexcept {
+		return LeftChild == node;
+	}
+	
+	[[nodiscard]] constexpr bool hasRightChild(void) const noexcept {
+		return RightChild;
+	}
+	
+	[[nodiscard]] constexpr bool isRightChild(const SetNode *node) const noexcept {
+		return RightChild == node;
+	}
+	
+	[[nodiscard]] constexpr bool hasParent(void) const noexcept {
+		return Parent;
+	}
+	
+	[[nodiscard]] constexpr SetNode* leftestNode(void) noexcept {
+		auto node = this;
+		while ( node->hasLeftChild() ) {
+			node = node->LeftChild;
+		} //while ( node->hasLeftChild() )
+		return node;
+	}
+	
+	[[nodiscard]] constexpr const SetNode* leftestNode(void) const noexcept {
+		auto node = this;
+		while ( node->hasLeftChild() ) {
+			node = node->LeftChild;
+		} //while ( node->hasLeftChild() )
+		return node;
+	}
+	
+	[[nodiscard]] constexpr SetNode* rightestNode(void) noexcept {
+		auto node = this;
+		while ( node->hasRightChild() ) {
+			node = node->RightChild;
+		} //while ( node->hasRightChild() )
+		return node;
+	}
+	
+	[[nodiscard]] constexpr const SetNode* rightestNode(void) const noexcept {
+		auto node = this;
+		while ( node->hasRightChild() ) {
+			node = node->RightChild;
+		} //while ( node->hasRightChild() )
+		return node;
+	}
+	
+	[[nodiscard]] constexpr SetNode* fancyThis(void) const noexcept {
+		if ( Parent->isLeftChild(this) ) {
+			return Parent->LeftChild;
+		} //if ( Parent->isLeftChild(this) )
+		return Parent->RightChild;
 	}
 	
 	[[nodiscard]] constexpr SetNode* next(void) const noexcept {
@@ -155,12 +214,12 @@ struct SetNode {
 	
 	constexpr void markForAdoption(void) noexcept {
 		if ( Parent ) {
-			if ( Parent->LeftChild == this ) {
-				Parent->LeftChild = nullptr;
-			} //if ( Parent->LeftChild == this )
-			else {
+			if ( Parent->isRightChild(this) ) {
 				Parent->RightChild = nullptr;
-			} //else -> if ( Parent->LeftChild == this )
+			} //if ( Parent->isRightChild(this) )
+			else {
+				Parent->LeftChild = nullptr;
+			} //else -> if ( Parent->isRightChild(this) )
 			Parent = nullptr;
 		} //if ( Parent )
 		return;

@@ -110,11 +110,7 @@ class set_base {
 	}
 	
 	constexpr void attachEnd(void) noexcept {
-		NodeType *node = Root;
-		while ( node->RightChild ) {
-			node = node->RightChild;
-		} //while ( node->RightChild )
-		node->adoptRight(&End);
+		Root->rightestNode()->adoptRight(&End);
 		return;
 	}
 	
