@@ -373,9 +373,9 @@ constexpr bool is_permutation(ForwardIter1 first1, const ForwardIter1 last1,
 	} //if constexpr ( bothRandomAccess )
 	
 	//Search common prefix
-	for ( ; first1 != last1 && first2 != last2 && pred(*first1, *first2); ++first1, ++first2 ) {
-		
-	} //for ( ; first1 != last1 && first2 != last2 && pred(*first1, *first2); ++first1, ++first2 )
+	auto mismatchIters = constexprStd::mismatch(first1, last1, first2, last2, pred);
+	first1 = mismatchIters.first;
+	first2 = mismatchIters.second;
 	
 	if constexpr ( bothRandomAccess ) {
 		if ( first1 == last1 ) {
