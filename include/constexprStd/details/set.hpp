@@ -166,6 +166,12 @@ struct SetNode {
 		return;
 	}
 	
+	constexpr void adoptLeft(SetNode *child) noexcept {
+		LeftChild     = child;
+		child->Parent = this;
+		return;
+	}
+	
 	constexpr void adoptRight(SetNode *child) noexcept {
 		RightChild    = child;
 		child->Parent = this;

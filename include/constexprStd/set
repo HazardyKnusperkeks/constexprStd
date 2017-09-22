@@ -68,26 +68,24 @@ class set_base {
 	size_type Nodes = 0;
 	value_compare Cmp;
 	
-	template<typename T1, typename T2>
-	[[nodiscard]] constexpr bool isEqual(const T1& lhs, const T2& rhs) const
-			noexcept(CmpIsNoexcept::value) {
-		return !Cmp(lhs, rhs) && !Cmp(rhs, lhs);
-	}
-	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const value_type& value) const
 			noexcept(CmpIsNoexcept::value) {
-		if ( Nodes == 0 ) {
+		if ( empty() ) {
 			return {Root, false};
-		} //if ( Nodes == 0 )
+		} //if ( empty() )
 		return findBestNode(Root, value);
 	}
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(NodeType *node, const value_type& value) const
 			noexcept(CmpIsNoexcept::value) {
-		if ( isEqual(node->getContent(), value) ) {
-			return {node, true};
-		} //if ( isEqual(*node->Content, value) )
-		return Cmp(node->getContent(), value) ? findBestNodeLeft(node, value) : findBestNodeRight(node, value);
+		if ( Cmp(value, node->getContent()) ) {
+			return findBestNodeLeft(node, value);
+		} //if ( Cmp(value, node->getContent()) )
+		if ( Cmp(node->getContent(), value) ) {
+			return findBestNodeRight(node, value);
+		} //if ( Cmp(node->getContent(), value) )
+		//The value is equal to the value of node
+		return {node, true};
 	}
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeLeft(NodeType *node, const value_type& value)
@@ -106,11 +104,25 @@ class set_base {
 		return findBestNode(node->RightChild, value);
 	}
 	
+	constexpr void detachEnd(void) noexcept {
+		End.markForAdoption();
+		return;
+	}
+	
+	constexpr void attachEnd(void) noexcept {
+		NodeType *node = Root;
+		while ( node->RightChild ) {
+			node = node->RightChild;
+		} //while ( node->RightChild )
+		node->adoptRight(&End);
+		return;
+	}
+	
 	template<typename... Args>
-	[[nodiscard]] constexpr NodeType* createNode(details::NodeTag tag, Args&&... args)
+	[[nodiscard]] constexpr NodeType* createNode(Args&&... args)
 			noexcept(AllocIsNoexcept::value && CreateIsNoexcept<details::NodeTag, Args&&...>::value) {
 		NodeType *ret = Alloc.allocate(1);
-		Alloc.construct(ret, tag, std::forward<Args>(args)...);
+		Alloc.construct(ret, details::NodeTag{}, std::forward<Args>(args)...);
 		return ret;
 	}
 	
@@ -145,6 +157,10 @@ class set_base {
 		return Nodes == 0;
 	}
 	
+	[[nodiscard]] constexpr size_type size(void) const noexcept {
+		return Nodes;
+	}
+	
 	constexpr void clear(void) noexcept(DestroyIsNoexcept::value) {
 		if ( empty() ) {
 			return;
@@ -152,33 +168,38 @@ class set_base {
 		End.markForAdoption();
 		destroyNodeRecursive(Root);
 		Root = &End;
+		Nodes = 0;
 		return;
 	}
 	
 	constexpr std::pair<iterator, bool> insert(const value_type& value)
-			noexcept(CmpIsNoexcept::value &&
-		         noexcept(std::declval<set_base&>().createNode(std::declval<details::NodeTag>(), value))) {
+			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
 		if ( empty() ) {
-			Root = createNode(details::NodeTag{}, value);
+			Root = createNode(value);
 			Root->adoptRight(&End);
 			Root->Red = false;
 			Nodes = 1;
-			return {{Root}, true};
+			return {Root, true};
 		} //if ( empty() )
 		
+		detachEnd();
 		std::pair<NodeType*, bool> result = findBestNode(value);
-		NodeType*& node = result.first;
+		NodeType *node = result.first;
 		if ( result.second ) {
+			attachEnd();
 			return {node, false};
 		} //if ( result.second )
 		
-//		if ( Cmp(*node->Content, value) ) {
-			
-//		} //if ( Cmp(*node->Content, value) )
-//		else {
-			
-//		} //else -> if ( Cmp(*node->Content, value) )
-		return {node, true};
+		auto newNode = createNode(value);
+		++Nodes;
+		if ( Cmp(newNode->getContent(), node->getContent()) ) {
+			node->adoptLeft(newNode);
+		} //if ( Cmp(newNode->getContent(), node->getContent()) )
+		else {
+			node->adoptRight(newNode);
+		} //else -> if ( Cmp(newNode->getContent(), node->getContent()) )
+		attachEnd();
+		return {newNode, true};
 	}
 };
 

@@ -41,10 +41,14 @@ void TestConstexprStd::testSet(void) const noexcept {
 			auto t1   = std::tuple{ins1.second};
 			auto ins2 = set.insert(1);
 			auto t2   = std::tuple{ins2.second, *ins2.first};
-			return std::tuple_cat(t1, t2);
+			for ( int i : {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15} ) {
+				set.insert(i);
+			} //for ( int i : {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15} )
+			auto t3   = std::tuple{set.size()};
+			return std::tuple_cat(t1, t2, t3);
 		};
 	
-	static_assert(l() == std::tuple{true, false, 1});
+	static_assert(l() == std::tuple{true, false, 1, 15});
 	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
@@ -74,6 +78,27 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QCOMPARE(*cins2.first, fooString);
 	QCOMPARE(*sins2.first, fooString);
 	QCOMPARE(instances, 2);
+	
+	cset.insert(barString);
+	sset.insert(barString);
+	
+	cset.insert(bazString);
+	sset.insert(bazString);
+	QCOMPARE(instances, 6);
+	
+	std::string cstr(emptyString);
+	std::string sstr(emptyString);
+	
+	cset.insert(cstr);
+	sset.insert(sstr);
+	QCOMPARE(cset.size(), static_cast<decltype(cset.size())>(4));
+	QCOMPARE(sset.size(), static_cast<decltype(sset.size())>(4));
+	QCOMPARE(instances, 8);
+	
+	for ( const auto s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} ) {
+		cset.insert(s);
+		sset.insert(s);
+	} //for ( const auto s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} )
 	
 	cset.clear();
 	sset.clear();
