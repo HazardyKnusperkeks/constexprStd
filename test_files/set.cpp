@@ -95,10 +95,14 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QCOMPARE(sset.size(), static_cast<decltype(sset.size())>(4));
 	QCOMPARE(instances, 10);
 	
-	for ( const auto s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} ) {
+	for ( const auto& s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} ) {
 		cset.insert(s);
 		sset.insert(s);
-	} //for ( const auto s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} )
+	} //for ( const auto& s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} )
+	
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	
+	QVERIFY(std::equal(cset.rbegin(), cset.rend(), sset.rbegin(), sset.rend()));
 	
 	cset.clear();
 	sset.clear();

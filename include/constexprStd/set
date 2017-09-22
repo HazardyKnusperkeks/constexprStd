@@ -169,6 +169,54 @@ class set_base {
 		return;
 	}
 	
+	[[nodiscard]] constexpr iterator begin(void) noexcept {
+		return Root->leftestNode();
+	}
+	
+	[[nodiscard]] constexpr const_iterator begin(void) const noexcept {
+		return Root->leftestNode();
+	}
+	
+	[[nodiscard]] constexpr iterator end(void) noexcept {
+		return &End;
+	}
+	
+	[[nodiscard]] constexpr const_iterator end(void) const noexcept {
+		return &End;
+	}
+	
+	[[nodiscard]] constexpr const_iterator cbegin(void) const noexcept {
+		return Root->leftestNode();
+	}
+	
+	[[nodiscard]] constexpr const_iterator cend(void) const noexcept {
+		return &End;
+	}
+	
+	[[nodiscard]] constexpr reverse_iterator rbegin(void) noexcept {
+		return std::make_reverse_iterator(end());
+	}
+	
+	[[nodiscard]] constexpr const_reverse_iterator rbegin(void) const noexcept {
+		return std::make_reverse_iterator(end());
+	}
+	
+	[[nodiscard]] constexpr reverse_iterator rend(void) noexcept {
+		return std::make_reverse_iterator(begin());
+	}
+	
+	[[nodiscard]] constexpr const_reverse_iterator rend(void) const noexcept {
+		return std::make_reverse_iterator(begin());
+	}
+	
+	[[nodiscard]] constexpr const_reverse_iterator crbegin(void) const noexcept {
+		return std::make_reverse_iterator(end());
+	}
+	
+	[[nodiscard]] constexpr const_reverse_iterator crend(void) const noexcept {
+		return std::make_reverse_iterator(begin());
+	}
+	
 	[[nodiscard]] constexpr bool empty(void) const noexcept {
 		return Nodes == 0;
 	}
