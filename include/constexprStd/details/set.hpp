@@ -283,10 +283,16 @@ class SetNodeIterator {
 	
 	[[nodiscard]] constexpr bool operator==(const SetNodeIterator that) const noexcept {
 		if ( Node == that.Node ) {
+			//This takes care of really equal iterators and two default constructed ones
 			return true;
 		} //if ( Node == that.Node )
 		
-		//From here on, only one is a default constructed iterator
+		if ( Node != nullptr && that.Node != nullptr ) {
+			//Two non default constructed iterators with different nodes
+			return false;
+		} //if ( Node != nullptr && that.Node != nullptr )
+		
+		//From here on exactly one is a default constructed iterator
 		if ( Node == nullptr ) {
 			//We are it, so we are equal iff that is past the end, a.k.a. the content pointer of the node is nullptr
 			return that.Node->PastEnd;
