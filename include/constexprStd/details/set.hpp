@@ -168,48 +168,39 @@ struct SetNode {
 	}
 	
 	[[nodiscard]] constexpr SetNode* next(void) const noexcept {
-		if ( LeftChild ) {
-			return LeftChild;
-		} //if ( LeftChild )
-		if ( RightChild ) {
-			return RightChild;
-		} //if ( RightChild )
+		if ( hasRightChild() ) {
+			return RightChild->leftestNode();
+		} //if ( hasRightChild() )
 		
-		SetNode *current = this;
-		do { //while ( current )
-			SetNode *parent = current->Parent;
-			if ( parent && parent->RightChild != current ) {
-				return parent->RightChild;
-			} //if ( parent && parent->RightChild != current )
-		} while ( current );
+		if ( !hasParent() ) {
+			//We are the root, the next one is always on the right side, but it is empty
+			return nullptr;
+		} //if ( !hasParent() )
+		
+		for ( SetNode *node = fancyThis(); node && node->hasParent(); node = node->Parent ) {
+			if ( node->Parent->isLeftChild(node) ) {
+				return node->Parent;
+			} //if ( node->Parent->isLeftChild(node) )
+		} //for ( SetNode *node = fancyThis(); node && node->hasParent(); node = node->Parent )
 		return nullptr;
 	}
 	
 	[[nodiscard]] constexpr SetNode* prev(void) const noexcept {
-		if ( !Parent ) {
+		if ( hasLeftChild() ) {
+			return LeftChild->rightestNode();
+		} //if ( hasLeftChild() )
+		
+		if ( !hasParent() ) {
+			//We are the root, the next one is always on the left side, but it is empty
 			return nullptr;
-		} //if ( !Parent )
+		} //if ( !hasParent() )
 		
-		if ( this == Parent->LeftChild ) {
-			return Parent;
-		} //if ( this == Parent->LeftChild )
-		
-		//We are the right child
-		if ( Parent->LeftChild == nullptr ) {
-			//But we are an only child
-			return Parent;
-		} //if ( Parent->LeftChild == nullptr )
-		
-		SetNode *current = Parent->LeftChild;
-		while ( current->hasChildren() ) {
-			if ( current->LeftChild ) {
-				current = current->LeftChild;
-			} //if ( current->LeftChild )
-			else {
-				current = current->RightChild;
-			} //else -> if ( current->LeftChild )
-		} //while ( current->hasChildren() )
-		return current;
+		for ( SetNode *node = fancyThis(); node && node->hasParent(); node = node->Parent ) {
+			if ( node->Parent->isRightChild(node) ) {
+				return node->Parent;
+			} //if ( node->Parent->isRightChild(node) )
+		} //for ( SetNode *node = fancyThis(); node && node->hasParent(); node = node->Parent )
+		return nullptr;
 	}
 	
 	constexpr void markForAdoption(void) noexcept {
