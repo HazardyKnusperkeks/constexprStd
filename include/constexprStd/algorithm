@@ -95,6 +95,85 @@ constexpr auto count(Container&& c, const T& t)
 	return constexprStd::count(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), t);
 }
 
+template<typename InputIter1, typename InputIter2, typename BinaryPredicate>
+constexpr std::pair<InputIter1, InputIter2> mismatch(InputIter1 first1, const InputIter1 last1, InputIter2 first2,
+                                                     const BinaryPredicate pred)
+		noexcept(noexcept(first1 != last1) && noexcept(++first1, ++first2) && noexcept(!pred(*first1, *first2))) {
+	for ( ; first1 != last1; ++first1, ++first2 ) {
+		if ( !pred(*first1, *first2) ) {
+			break;
+		} //if ( !pred(*first1, *first2) )
+	} //for ( ; first1 != last1; ++first1, ++first2 )
+	return {first1, first2};
+}
+
+template<typename InputIter1, typename InputIter2>
+constexpr std::pair<InputIter1, InputIter2> mismatch(const InputIter1 first1, const InputIter1 last1,
+                                                     const InputIter2 first2)
+		noexcept(noexcept(constexprStd::mismatch(first1, last1, first2, details::cmp::Equal{}))) {
+	return constexprStd::mismatch(first1, last1, first2, details::cmp::Equal{});
+}
+
+template<typename Container, typename InputIter2, typename BinaryPredicate>
+constexpr std::pair<decltype(std::begin(std::declval<Container&&>())), InputIter2>
+		mismatch(Container&& c, const InputIter2 first2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::mismatch(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)), first2, pred))) {
+	return constexprStd::mismatch(std::begin(std::forward<Container>(c)),
+	                              std::end(std::forward<Container>(c)), first2, pred);
+}
+
+template<typename Container, typename InputIter2, std::enable_if_t<details::IsIterV<InputIter2>>* = nullptr>
+constexpr std::pair<decltype(std::begin(std::declval<Container&&>())), InputIter2>
+		mismatch(Container&& c, const InputIter2 first2)
+		noexcept(noexcept(constexprStd::mismatch(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)), first2))) {
+	return constexprStd::mismatch(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), first2);
+}
+
+template<typename InputIter1, typename InputIter2, typename BinaryPredicate>
+constexpr std::pair<InputIter1, InputIter2> mismatch(InputIter1 first1, const InputIter1 last1,
+                                                     InputIter2 first2, const InputIter2 last2,
+                                                     const BinaryPredicate pred)
+		noexcept(noexcept(first1 != last1 && first2 != last2) && noexcept(++first1, ++first2) &&
+		         noexcept(!pred(*first1, *first2))) {
+	for ( ; first1 != last1 && first2 != last2; ++first1, ++first2 ) {
+		if ( !pred(*first1, *first2) ) {
+			break;
+		} //if ( !pred(*first1, *first2) )
+	} //for ( ; first1 != last1 && first2 != last2; ++first1, ++first2 )
+	return {first1, first2};
+}
+
+template<typename InputIter1, typename InputIter2>
+constexpr std::pair<InputIter1, InputIter2> mismatch(const InputIter1 first1, const InputIter1 last1,
+                                                     const InputIter2 first2, const InputIter2 last2)
+		noexcept(noexcept(constexprStd::mismatch(first1, last1, first2, last2, details::cmp::Equal{}))) {
+	return constexprStd::mismatch(first1, last1, first2, last2, details::cmp::Equal{});
+}
+
+template<typename Container1, typename Container2, typename BinaryPredicate>
+constexpr auto mismatch(Container1&& c1, Container2&& c2, const BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::mismatch(std::begin(std::forward<Container1>(c1)),
+		                                         std::end(std::forward<Container1>(c1)),
+		                                         std::begin(std::forward<Container2>(c2)),
+		                                         std::end(std::forward<Container2>(c2)), pred))) {
+	return constexprStd::mismatch(std::begin(std::forward<Container1>(c1)), std::end(std::forward<Container1>(c1)),
+	                              std::begin(std::forward<Container2>(c2)), std::end(std::forward<Container2>(c2)),
+	                              pred);
+}
+
+template<typename Container1, typename Container2,
+         std::enable_if_t<std::negation_v<details::IsIter<Container2>>>* = nullptr>
+constexpr auto mismatch(Container1&& c1, Container2&& c2)
+		noexcept(noexcept(constexprStd::mismatch(std::begin(std::forward<Container1>(c1)),
+		                                         std::end(std::forward<Container1>(c1)),
+		                                         std::begin(std::forward<Container2>(c2)),
+		                                         std::end(std::forward<Container2>(c2))))) {
+	return constexprStd::mismatch(std::begin(std::forward<Container1>(c1)), std::end(std::forward<Container1>(c1)),
+	                              std::begin(std::forward<Container2>(c2)), std::end(std::forward<Container2>(c2)));
+}
+
 template<typename IterT1, typename IterT2, typename BinaryPredicate>
 constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const BinaryPredicate pred)
 		noexcept(noexcept(first1 != last1) && noexcept(++first1, ++first2) && noexcept(pred(*first1, *first2))) {

@@ -36,6 +36,7 @@ class TestConstexprStd : public QObject {
 	void testForEachN(void) const noexcept;
 	void testCount(void) const noexcept;
 	void testCountIf(void) const noexcept;
+	void testMismatch(void) const noexcept;
 	void testEqual(void) const noexcept;
 	void testUnequal(void) const noexcept;
 	void testFind(void) const noexcept;

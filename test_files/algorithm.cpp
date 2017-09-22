@@ -31,6 +31,8 @@
 #include <algorithm>
 #include <array>
 #include <forward_list>
+#include <iterator>
+#include <utility>
 
 #include <QTest>
 
@@ -211,6 +213,47 @@ void TestConstexprStd::testCountIf(void) const noexcept {
 	static_assert(constexprStd::count_if(c.begin(), c.end(), isOdd) == 5);
 	static_assert(constexprStd::count_if(c, isMultipleOfFive) == 2);
 	static_assert(constexprStd::count_if(c, isMultipleOfEleven) == 0);
+	return;
+}
+
+void TestConstexprStd::testMismatch(void) const noexcept {
+	//We test only withour predicate, because it uses the one with predicate
+	std::array a1{1, 2, 3, 4, 5};
+	std::array a2{1, 2, 3, 4, 6};
+	std::array a3{1, 2, 3, 4};
+	std::array a4{1, 9, 3, 4, 7};
+	
+	std::pair ma1{a1.end(), a1.end()};
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a1.begin()),           ma1);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a1.begin()),           ma1);
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a1.begin(), a1.end()), ma1);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a1.begin(), a1.end()), ma1);
+	QCOMPARE(constexprStd::mismatch(a1,                   a1.begin()),           ma1);
+	QCOMPARE(constexprStd::mismatch(a1,                   a1),                   ma1);
+	
+	std::pair ma2{std::prev(a1.end()), std::prev(a2.end())};
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a2.begin()),           ma2);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a2.begin()),           ma2);
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a2.begin(), a2.end()), ma2);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a2.begin(), a2.end()), ma2);
+	QCOMPARE(constexprStd::mismatch(a1,                   a2.begin()),           ma2);
+	QCOMPARE(constexprStd::mismatch(a1,                   a2),                   ma2);
+	
+	std::pair ma3{std::prev(a1.end()), a3.end()};
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a3.begin()),           ma3);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a3.begin()),           ma3);
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a3.begin(), a3.end()), ma3);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a3.begin(), a3.end()), ma3);
+	QCOMPARE(constexprStd::mismatch(a1,                   a3.begin()),           ma3);
+	QCOMPARE(constexprStd::mismatch(a1,                   a3),                   ma3);
+	
+	std::pair ma4{std::next(a1.begin()), std::next(a4.begin())};
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a4.begin()),           ma4);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a4.begin()),           ma4);
+	QCOMPARE(constexprStd::mismatch(a1.begin(), a1.end(), a4.begin(), a4.end()), ma4);
+	QCOMPARE(         std::mismatch(a1.begin(), a1.end(), a4.begin(), a4.end()), ma4);
+	QCOMPARE(constexprStd::mismatch(a1,                   a4.begin()),           ma4);
+	QCOMPARE(constexprStd::mismatch(a1,                   a4),                   ma4);
 	return;
 }
 

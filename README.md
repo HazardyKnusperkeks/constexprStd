@@ -82,7 +82,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] for_each_n
 - [X] count
 - [X] count_if
-- [ ] mismatch
+- [X] mismatch
 - [X] equal
 - [X] find
 - [X] find_if
