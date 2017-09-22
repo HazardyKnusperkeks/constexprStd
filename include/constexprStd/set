@@ -143,6 +143,26 @@ class set_base {
 		return;
 	}
 	
+	template<typename T>
+	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(T&& value)
+			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(std::forward<T>(value)))) {
+		std::pair<NodeType*, bool> result = findBestNode(value);
+		NodeType *node = result.first;
+		if ( result.second ) {
+			return {node, false};
+		} //if ( result.second )
+		
+		auto newNode = createNode(std::forward<T>(value));
+		++Nodes;
+		if ( Cmp(newNode->getContent(), node->getContent()) ) {
+			node->adoptLeft(newNode);
+		} //if ( Cmp(newNode->getContent(), node->getContent()) )
+		else {
+			node->adoptRight(newNode);
+		} //else -> if ( Cmp(newNode->getContent(), node->getContent()) )
+		return {newNode, true};
+	}
+	
 	public:
 	explicit constexpr set_base(allocator_type& alloc) noexcept : set_base{Compare{}, alloc} {
 		return;
@@ -165,7 +185,7 @@ class set_base {
 		if ( empty() ) {
 			return;
 		} //if ( empty() )
-		End.markForAdoption();
+		detachEnd();
 		destroyNodeRecursive(Root);
 		Root = &End;
 		Nodes = 0;
@@ -183,23 +203,25 @@ class set_base {
 		} //if ( empty() )
 		
 		detachEnd();
-		std::pair<NodeType*, bool> result = findBestNode(value);
-		NodeType *node = result.first;
-		if ( result.second ) {
-			attachEnd();
-			return {node, false};
-		} //if ( result.second )
-		
-		auto newNode = createNode(value);
-		++Nodes;
-		if ( Cmp(newNode->getContent(), node->getContent()) ) {
-			node->adoptLeft(newNode);
-		} //if ( Cmp(newNode->getContent(), node->getContent()) )
-		else {
-			node->adoptRight(newNode);
-		} //else -> if ( Cmp(newNode->getContent(), node->getContent()) )
+		auto ret = insertImpl(value);
 		attachEnd();
-		return {newNode, true};
+		return ret;
+	}
+	
+	constexpr std::pair<iterator, bool> insert(value_type&& value)
+			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+		if ( empty() ) {
+			Root = createNode(std::move(value));
+			Root->adoptRight(&End);
+			Root->Red = false;
+			Nodes = 1;
+			return {Root, true};
+		} //if ( empty() )
+		
+		detachEnd();
+		auto ret = insertImpl(std::move(value));
+		attachEnd();
+		return ret;
 	}
 };
 

@@ -86,14 +86,14 @@ void TestConstexprStd::testSet(void) const noexcept {
 	sset.insert(bazString);
 	QCOMPARE(instances, 6);
 	
-	std::string cstr(emptyString);
-	std::string sstr(emptyString);
+	CountInstances<std::string> cstr(emptyString);
+	CountInstances<std::string> sstr(emptyString);
 	
 	cset.insert(cstr);
 	sset.insert(sstr);
 	QCOMPARE(cset.size(), static_cast<decltype(cset.size())>(4));
 	QCOMPARE(sset.size(), static_cast<decltype(sset.size())>(4));
-	QCOMPARE(instances, 8);
+	QCOMPARE(instances, 10);
 	
 	for ( const auto s : {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o"} ) {
 		cset.insert(s);
@@ -102,10 +102,10 @@ void TestConstexprStd::testSet(void) const noexcept {
 	
 	cset.clear();
 	sset.clear();
-	QCOMPARE(instances, 0);
+	QCOMPARE(instances, 2); //cstr and sstr on the stack
 	{
 		constexprStd::setDestroy<CountInstances<std::string>, 15> dset;
 	}
-	QCOMPARE(instances, 0);
+	QCOMPARE(instances, 2);
 	return;
 }
