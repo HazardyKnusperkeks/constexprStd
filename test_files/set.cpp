@@ -102,6 +102,16 @@ void TestConstexprStd::testSet(void) const noexcept {
 	
 	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
 	
+	auto citer = cset.end();
+	auto siter = sset.end();
+	
+	for ( const auto& s : {"z", "y", "x", "u"} ) {
+		citer = cset.insert(citer, s);
+		siter = sset.insert(siter, s);
+	} //for ( const auto& s : {"z", "y", "x", "u"} )
+	
+	cset.insert(citer, cstr);
+	sset.insert(siter, sstr);
 	QVERIFY(std::equal(cset.rbegin(), cset.rend(), sset.rbegin(), sset.rend()));
 	
 	cset.clear();

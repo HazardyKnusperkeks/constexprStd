@@ -68,12 +68,17 @@ class set_base {
 	size_type Nodes = 0;
 	value_compare Cmp;
 	
-	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const value_type& value) const
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const value_type& value, NodeType *hintNode) const
 			noexcept(CmpIsNoexcept::value) {
 		if ( empty() ) {
 			return {Root, false};
 		} //if ( empty() )
-		return findBestNode(Root, value);
+		
+		if ( hintNode != Root ) {
+			//TODO: Take a hint
+			hintNode = Root;
+		} //if ( hintNode != Root )
+		return findBestNode(hintNode, value);
 	}
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(NodeType *node, const value_type& value) const
@@ -140,9 +145,9 @@ class set_base {
 	}
 	
 	template<typename T>
-	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(T&& value)
+	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(NodeType *hintNode, T&& value)
 			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(std::forward<T>(value)))) {
-		std::pair<NodeType*, bool> result = findBestNode(value);
+		std::pair<NodeType*, bool> result = findBestNode(value, hintNode);
 		NodeType *node = result.first;
 		if ( result.second ) {
 			return {node, false};
@@ -247,7 +252,7 @@ class set_base {
 		} //if ( empty() )
 		
 		detachEnd();
-		auto ret = insertImpl(value);
+		auto ret = insertImpl(Root, value);
 		attachEnd();
 		return ret;
 	}
@@ -263,9 +268,43 @@ class set_base {
 		} //if ( empty() )
 		
 		detachEnd();
-		auto ret = insertImpl(std::move(value));
+		auto ret = insertImpl(Root, std::move(value));
 		attachEnd();
 		return ret;
+	}
+	
+	constexpr iterator insert(const_iterator hint, const value_type& value)
+			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+		if ( empty() ) {
+			Root = createNode(value);
+			Root->adoptRight(&End);
+			Root->Red = false;
+			Nodes = 1;
+			return Root;
+		} //if ( empty() )
+		
+		NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
+		detachEnd();
+		auto ret = insertImpl(hintNode, value);
+		attachEnd();
+		return ret.first;
+	}
+	
+	constexpr iterator insert(const_iterator hint, value_type&& value)
+			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+		if ( empty() ) {
+			Root = createNode(std::move(value));
+			Root->adoptRight(&End);
+			Root->Red = false;
+			Nodes = 1;
+			return Root;
+		} //if ( empty() )
+		
+		NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
+		detachEnd();
+		auto ret = insertImpl(hintNode, std::move(value));
+		attachEnd();
+		return ret.first;
 	}
 };
 
