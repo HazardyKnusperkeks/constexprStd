@@ -100,6 +100,8 @@ class TestConstexprStd : public QObject {
 	
 	//Container
 	void testSet(void) const noexcept;
+	void testSetFailCaseOne(void) const noexcept;
+	void testSetRandom(void) const noexcept;
 	
 	public:
 	explicit TestConstexprStd(QObject *parent = nullptr);

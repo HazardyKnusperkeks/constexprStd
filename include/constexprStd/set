@@ -75,8 +75,16 @@ class set_base {
 		} //if ( empty() )
 		
 		if ( hintNode != Root ) {
-			//TODO: Take a hint
-			hintNode = Root;
+			if ( Cmp(value, hintNode->getContent()) ) {
+				if ( auto prev = hintNode->prev(); prev && Cmp(value, prev->getContent()) ) {
+					hintNode = Root;
+				} //if ( auto prev = hintNode->prev(); prev && Cmp(value, prev->getContent()) )
+			} //if ( Cmp(value, hintNode->getContent()) )
+			else {
+				if ( auto next = hintNode->next(); next && !Cmp(value, next->getContent()) ) {
+					hintNode = Root;
+				} //if ( auto next = hintNode->next(); next && !Cmp(value, next->getContent()) )
+			} //else -> if ( Cmp(value, hintNode->getContent()) )
 		} //if ( hintNode != Root )
 		return findBestNode(hintNode, value);
 	}
@@ -95,17 +103,17 @@ class set_base {
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeLeft(NodeType *node, const value_type& value)
 			const noexcept(CmpIsNoexcept::value) {
-		if ( !node->LeftChild ) {
+		if ( !node->hasLeftChild() ) {
 			return {node, false};
-		} //if ( !node->LeftChild )
+		} //if ( !node->hasLeftChild() )
 		return findBestNode(node->LeftChild, value);
 	}
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeRight(NodeType *node, const value_type& value)
 			const noexcept(CmpIsNoexcept::value) {
-		if ( !node->RightChild ) {
+		if ( !node->hasRightChild() ) {
 			return {node, false};
-		} //if ( !node->RightChild )
+		} //if ( !node->hasRightChild() )
 		return findBestNode(node->RightChild, value);
 	}
 	

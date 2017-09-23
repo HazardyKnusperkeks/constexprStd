@@ -25,9 +25,12 @@
 
 #include "../test.hpp"
 
+#include <iostream>
+#include <random>
 #include <set>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "test_constants.hpp"
 #include "test_count_instances.hpp"
@@ -121,5 +124,68 @@ void TestConstexprStd::testSet(void) const noexcept {
 		constexprStd::setDestroy<CountInstances<std::string>, 15> dset;
 	}
 	QCOMPARE(instances, 2);
+	return;
+}
+
+void TestConstexprStd::testSetFailCaseOne(void) const noexcept {
+	constexpr std::array a{5, 4, 3, 2, 3, 2, 3};
+	constexprStd::setDestroy<int, 30000> cset;
+	std::set<int> sset;
+	
+	auto citer = cset.end();
+	auto siter = sset.end();
+	
+	for ( auto i = 0u; i < a.size(); ++i ) {
+		citer = cset.insert(citer, a[i]);
+		siter = sset.insert(siter, a[i]);
+		
+//		if ( !std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()) ) {
+//			QCOMPARE(i, 0u);
+//		} //if ( !std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()) )
+	} //for ( auto i = 0u; i < a.size(); ++i )
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	return;
+}
+
+void TestConstexprStd::testSetRandom(void) const noexcept {
+	constexprStd::setDestroy<int, 30000> cset;
+	std::set<int> sset;
+	
+	struct PrintSetOnEarlyExit {
+		std::vector<int> Vec;
+		bool Print = true;
+		
+		~PrintSetOnEarlyExit(void) noexcept {
+			if ( Print ) {
+				std::cout<<"Insertion order on error: ";
+				for ( const auto& i : Vec ) {
+					std::cout<<i<<", ";
+				} //for ( const auto& i : Vec )
+				std::cout<<std::endl;
+			} //if ( Print )
+			return;
+		}
+	};
+	
+	PrintSetOnEarlyExit p;
+	p.Vec.reserve(30000);
+	std::mt19937 gen{std::random_device{}()};
+	std::uniform_int_distribution<int> distribution{0, 100000};
+	
+	auto citer = cset.end();
+	auto siter = sset.end();
+	
+	for ( int i = 0; i < 30000; ++i ) {
+		int rand = distribution(gen);
+		p.Vec.emplace_back(rand);
+		citer = cset.insert(citer, rand);
+		siter = sset.insert(siter, rand);
+		
+//		if ( i % 1000 == 0 ) {
+//			QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+//		} //if ( i % 1000 == 0 )
+	} //for ( int i = 0; i < 30000; ++i )
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	p.Print = false;
 	return;
 }
