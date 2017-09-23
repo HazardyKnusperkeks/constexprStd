@@ -185,6 +185,9 @@ struct SetNode {
 		return nullptr;
 	}
 	
+#pragma GCC diagnostic push
+//The nullpointer derefence may only happen if you decrement a begin iterator, which is undefined behaviour
+#pragma GCC diagnostic ignored "-Wnull-dereference"
 	[[nodiscard]] constexpr SetNode* prev(void) const noexcept {
 		if ( hasLeftChild() ) {
 			return LeftChild->rightestNode();
@@ -202,6 +205,7 @@ struct SetNode {
 		} //for ( SetNode *node = fancyThis(); node && node->hasParent(); node = node->Parent )
 		return nullptr;
 	}
+#pragma GCC diagnostic pop
 	
 	constexpr void markForAdoption(void) noexcept {
 		if ( Parent ) {
