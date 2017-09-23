@@ -32,6 +32,7 @@
 #include <array>
 #include <forward_list>
 #include <iterator>
+#include <tuple>
 #include <utility>
 
 #include <QTest>
@@ -525,6 +526,94 @@ void TestConstexprStd::testFindIfNot(void) const noexcept {
 	static_assert(constexprStd::find_if_not(cc, isLessThanEleven) == cc.end());
 	
 	//I don't think a comparison to std::find_if_not is neccessary.
+	return;
+}
+
+void TestConstexprStd::testFindEnd(void) const noexcept {
+	auto lambda = [](void) constexpr noexcept {
+			std::array a{1, 2, 3, 4, 5, 1, 2, 5, 4};
+			std::array s1{1, 2};
+			std::array s2{5};
+			std::array s3{7};
+			auto d1 = constexprStd::distance(a.begin(), constexprStd::find_end(a, s1.begin(), s1.end()));
+			auto d2 = constexprStd::distance(a.begin(), constexprStd::find_end(a, s2));
+			auto d3 = constexprStd::distance(a.begin(), constexprStd::find_end(a, s3));
+			return std::tuple{d1, d2, d3};
+		};
+	
+	static_assert(lambda() == std::tuple{5, 7, 9});
+	
+	std::string s = "123 hallo 123";
+	std::string searchS1 = "123";
+	std::string searchS2 = "l";
+	std::string searchS3 = fooString;
+	std::string searchS4 = "123 ";
+	std::string searchS5 = "123 hallo 123 bar";
+	
+	std::forward_list<char> l;
+	std::forward_list<char> searchL1;
+	std::forward_list<char> searchL2;
+	std::forward_list<char> searchL3;
+	std::forward_list<char> searchL4;
+	std::forward_list<char> searchL5;
+	
+	std::copy(       s.rbegin(),        s.rend(), std::front_inserter(l));
+	std::copy(searchS1.rbegin(), searchS1.rend(), std::front_inserter(searchL1));
+	std::copy(searchS2.rbegin(), searchS2.rend(), std::front_inserter(searchL2));
+	std::copy(searchS3.rbegin(), searchS3.rend(), std::front_inserter(searchL3));
+	std::copy(searchS4.rbegin(), searchS4.rend(), std::front_inserter(searchL4));
+	std::copy(searchS5.rbegin(), searchS5.rend(), std::front_inserter(searchL5));
+	
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d1 = 10;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d2 =  7;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d3 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d4 =  0;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d5 = 13;
+	
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchS1.begin(), searchS1.end())), d1);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchS2.begin(), searchS2.end())), d2);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchS3.begin(), searchS3.end())), d3);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchS4.begin(), searchS4.end())), d4);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchS5.begin(), searchS5.end())), d5);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchL1.begin(), searchL1.end())), d1);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchL2.begin(), searchL2.end())), d2);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchL3.begin(), searchL3.end())), d3);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchL4.begin(), searchL4.end())), d4);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchL5.begin(), searchL5.end())), d5);
+	QCOMPARE(std::distance(s.begin(),          std::find_end(s.begin(), s.end(), searchL3.end(),   searchL3.end())), d3);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchS1.begin(), searchS1.end())), d1);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchS2.begin(), searchS2.end())), d2);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchS3.begin(), searchS3.end())), d3);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchS4.begin(), searchS4.end())), d4);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchS5.begin(), searchS5.end())), d5);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchL1.begin(), searchL1.end())), d1);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchL2.begin(), searchL2.end())), d2);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchL3.begin(), searchL3.end())), d3);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchL4.begin(), searchL4.end())), d4);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchL5.begin(), searchL5.end())), d5);
+	QCOMPARE(std::distance(l.begin(),          std::find_end(l.begin(), l.end(), searchL3.end(),   searchL3.end())), d3);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchS1.begin(), searchS1.end())), d1);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchS2.begin(), searchS2.end())), d2);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchS3.begin(), searchS3.end())), d3);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchS4.begin(), searchS4.end())), d4);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchS5.begin(), searchS5.end())), d5);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchL1.begin(), searchL1.end())), d1);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchL2.begin(), searchL2.end())), d2);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchL3.begin(), searchL3.end())), d3);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchL4.begin(), searchL4.end())), d4);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchL5.begin(), searchL5.end())), d5);
+	QCOMPARE(std::distance(s.begin(), constexprStd::find_end(s.begin(), s.end(), searchL3.end(),   searchL3.end())), d3);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchS1.begin(), searchS1.end())), d1);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchS2.begin(), searchS2.end())), d2);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchS3.begin(), searchS3.end())), d3);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchS4.begin(), searchS4.end())), d4);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchS5.begin(), searchS5.end())), d5);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchL1.begin(), searchL1.end())), d1);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchL2.begin(), searchL2.end())), d2);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchL3.begin(), searchL3.end())), d3);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchL4.begin(), searchL4.end())), d4);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchL5.begin(), searchL5.end())), d5);
+	QCOMPARE(std::distance(l.begin(), constexprStd::find_end(l.begin(), l.end(), searchL3.end(),   searchL3.end())), d3);
 	return;
 }
 

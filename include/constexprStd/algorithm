@@ -325,6 +325,61 @@ constexpr bool none_of(Container&& c, UnaryPredicate pred)
 	                             std::move(pred));
 }
 
+template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
+constexpr ForwardIter1 find_end(const ForwardIter1 first, const ForwardIter1 last,
+                                const ForwardIter2 s_first, const ForwardIter2 s_last, BinaryPredicate pred)
+		noexcept(noexcept(details::findEndImpl(first, last, s_first, s_last, std::move(pred)))) {
+	return details::findEndImpl(first, last, s_first, s_last, std::move(pred));
+}
+
+template<typename Container, typename ForwardIter2, typename BinaryPredicate,
+         std::enable_if_t<std::negation_v<details::IsIter<Container>>>* = nullptr>
+constexpr auto find_end(Container&& c, const ForwardIter2 s_first, const ForwardIter2 s_last, BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_end(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)),
+		                                         s_first, s_last, std::move(pred)))) {
+	return constexprStd::find_end(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                              s_first, s_last, std::move(pred));
+}
+
+template<typename Container, typename SearchContainer, typename BinaryPredicate>
+constexpr auto find_end(Container&& c, SearchContainer&& s, BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_end(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)),
+		                                         std::begin(std::forward<SearchContainer>(s)),
+		                                         std::end(std::forward<SearchContainer>(s)), std::move(pred)))) {
+	return constexprStd::find_end(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                              std::begin(std::forward<SearchContainer>(s)),
+	                              std::end(std::forward<SearchContainer>(s)), std::move(pred));
+}
+
+template<typename ForwardIter1, typename ForwardIter2, std::enable_if_t<details::IsIterV<ForwardIter1>>* = nullptr>
+constexpr ForwardIter1 find_end(const ForwardIter1 first, const ForwardIter1 last,
+                                const ForwardIter2 s_first, const ForwardIter2 s_last)
+		noexcept(noexcept(details::findEndImpl(first, last, s_first, s_last, details::cmp::Equal{}))) {
+	return constexprStd::find_end(first, last, s_first, s_last, details::cmp::Equal{});
+}
+
+template<typename Container, typename ForwardIter2>
+constexpr auto find_end(Container&& c, const ForwardIter2 s_first, const ForwardIter2 s_last)
+		noexcept(noexcept(constexprStd::find_end(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)),
+		                                         s_first, s_last, details::cmp::Equal{}))) {
+	return constexprStd::find_end(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                              s_first, s_last, details::cmp::Equal{});
+}
+
+template<typename Container, typename SearchContainer>
+constexpr auto find_end(Container&& c, SearchContainer&& s)
+		noexcept(noexcept(constexprStd::find_end(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)),
+		                                         std::begin(std::forward<SearchContainer>(s)),
+		                                         std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{}))) {
+	return constexprStd::find_end(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                              std::begin(std::forward<SearchContainer>(s)),
+	                              std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{});
+}
+
 /*****                                       Modifying sequence operations                                        *****/
 
 template<typename InputIterator, typename OutputIterator>

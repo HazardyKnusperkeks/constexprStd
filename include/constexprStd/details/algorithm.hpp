@@ -84,6 +84,84 @@ constexpr bool equalImpl(IterT1 first1, const IterT1 last1, IterT2 first2, const
 	} //for ( ; first1 != last1 && first2 != last2; ++first1, ++first2 )
 	return first1 == last1 && first2 == last2;
 }
+
+template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate,
+         std::enable_if_t<std::negation_v<IsRaIter<ForwardIter1>>>* = nullptr>
+constexpr ForwardIter1 findEndImpl(ForwardIter1 first, const ForwardIter1 last,
+                                   const ForwardIter2 s_first, const ForwardIter2 s_last, BinaryPredicate pred)
+		noexcept(noexcept(s_first == s_last) && std::is_nothrow_copy_constructible_v<ForwardIter1> &&
+		         std::is_nothrow_copy_constructible_v<ForwardIter2> && noexcept(first != last) && noexcept(++first) &&
+		         std::is_nothrow_copy_assignable_v<ForwardIter1> && std::is_nothrow_copy_assignable_v<ForwardIter2> &&
+		         noexcept(pred(*first, *s_first)) && noexcept(++std::declval<ForwardIter2&>() == s_last)) {
+	if ( s_first == s_last ) {
+		return last;
+	} //if ( s_first == s_last )
+	
+	auto scan      = s_first;
+	auto ret       = last;
+	auto lastStart = first;
+	bool resetScan = false;
+	
+	for ( ; first != last; ++first ) {
+		if ( resetScan ) {
+			scan = s_first;
+			resetScan = false;
+			lastStart = first;
+		} //if ( resetScan )
+		
+		if ( pred(*first, *scan) ) {
+			if ( ++scan == s_last ) {
+				ret = lastStart;
+				resetScan = true;
+			} //if ( ++scan == s_last )
+		} //if ( pred(*first, *scan) )
+		else {
+			resetScan = true;
+		} //else -> if ( pred(*first, *scan) )
+	} //for ( ; first != last; ++first )
+	return ret;
+}
+
+template<typename RandomAccessIter1, typename RandomAccessIter2, typename BinaryPredicate,
+         std::enable_if_t<IsRaIter<RandomAccessIter1>::value>* = nullptr>
+constexpr RandomAccessIter1 findEndImpl(const RandomAccessIter1 first, const RandomAccessIter1 last,
+                                        const RandomAccessIter2 s_first, const RandomAccessIter2 s_last,
+                                        BinaryPredicate pred)
+		noexcept(noexcept(s_first == s_last) && noexcept(constexprStd::distance(s_first, s_last)) &&
+		         noexcept(constexprStd::distance(first, last)) &&
+		         noexcept(std::next(first, std::declval<
+		                                   typename std::iterator_traits<RandomAccessIter1>::difference_type>())) &&
+		         std::is_nothrow_copy_constructible_v<RandomAccessIter1> &&
+		         std::is_nothrow_copy_constructible_v<RandomAccessIter2> &&
+		         noexcept(s_first != s_last) &&
+		         noexcept(++std::declval<RandomAccessIter2&>(), ++std::declval<RandomAccessIter1&>()) &&
+		         noexcept(!pred(*first, *s_first))) {
+	if ( s_first == s_last ) {
+		return last;
+	} //if ( s_first == s_last )
+	
+	auto sDistance = constexprStd::distance(s_first, s_last);
+	auto  distance = constexprStd::distance(first, last);
+	
+	if ( sDistance > distance ) {
+		return last;
+	} //if ( sDistance > distance )
+	
+	for ( auto dist = distance - sDistance; dist >= 0; --dist ) {
+		auto iter = constexprStd::next(first, dist);
+		auto ret  = iter;
+		auto search = s_first;
+		for ( ; search != s_last; ++search, ++iter ) {
+			if ( !pred(*iter, *search) ) {
+				break;
+			} //if ( !pred(*iter, *search) )
+		} //for ( ; search != s_last; ++search, ++iter )
+		if ( search == s_last ) {
+			return ret;
+		} //if ( search == s_last )
+	} //for ( auto dist = distance - sDistance; dist >= 0; --dist )
+	return last;
+}
 } //namespace constexprStd::details
 
 #endif
