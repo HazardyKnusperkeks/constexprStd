@@ -460,6 +460,12 @@ class set_base {
 		return;
 	}
 	
+	constexpr void insert(const std::initializer_list<value_type> il)
+			noexcept(noexcept(std::declval<set_base&>().insert(il.begin(), il.end()))) {
+		insert(il.begin(), il.end());
+		return;
+	}
+	
 	[[nodiscard]] constexpr bool checkBlackDepth(void) const noexcept {
 		if ( empty() ) {
 			return true;

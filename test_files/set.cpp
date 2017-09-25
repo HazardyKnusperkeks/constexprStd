@@ -53,10 +53,15 @@ void TestConstexprStd::testSet(void) const noexcept {
 			auto t4   = std::tuple{set.size()};
 			set.insert(a.end(), a.end());
 			auto t5   = std::tuple{set.size()};
-			return std::tuple_cat(t1, t2, t3, t4, t5);
+			set.insert({9, 10, 11, 12});
+			auto t6   = std::tuple{set.size()};
+			
+			set.clear();
+			auto tX   = std::tuple{set.size()};
+			return std::tuple_cat(t1, t2, t3, t4, t5, t6, tX);
 		};
 	
-	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8});
+	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 0});
 	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
@@ -129,6 +134,10 @@ void TestConstexprStd::testSet(void) const noexcept {
 	
 	cset.insert(a.end(), a.end());
 	sset.insert(a.end(), a.end());
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	
+	cset.insert({"this", "is", "a", "test"});
+	sset.insert({"this", "is", "a", "test"});
 	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
 	
 	cset.clear();
