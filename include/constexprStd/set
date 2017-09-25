@@ -319,11 +319,8 @@ class set_base {
 	}
 	
 	public:
-	explicit constexpr set_base(allocator_type& alloc) noexcept : set_base{Compare{}, alloc} {
-		return;
-	}
-	
-	explicit constexpr set_base(Compare cmp, allocator_type& alloc) noexcept : Alloc{alloc}, Cmp{std::move(cmp)} {
+	constexpr set_base(Compare cmp, allocator_type& alloc) noexcept(std::is_nothrow_move_constructible_v<Compare>) :
+			Alloc{alloc}, Cmp{std::move(cmp)} {
 		return;
 	}
 	
@@ -509,7 +506,8 @@ class set : public set_base<Key, N, Compare, Allocator> {
 	typename Base::allocator_type Alloc;
 	
 	public:
-	constexpr set(void) noexcept : Base{Alloc} {
+	explicit constexpr set(Compare cmp = Compare{}) noexcept(std::is_nothrow_move_constructible_v<Compare>) :
+			Base{std::move(cmp), Alloc} {
 		return;
 	}
 };
@@ -521,13 +519,9 @@ class setDestroy : public set<Key, N, Compare, Allocator> {
 	using Base = set<Key, N, Compare, Allocator>;
 	
 	public:
-	constexpr setDestroy(void) noexcept = default;
+	constexpr setDestroy(void) = default;
 	
-	template<typename... Args>
-	explicit constexpr setDestroy(Args&&... args) noexcept(std::is_nothrow_constructible_v<Base, Args&&...>) :
-			Base{std::forward<Args>(args)...} {
-		return;
-	}
+	using Base::Base;
 	
 	~setDestroy(void) noexcept(noexcept(std::declval<Base&>().clear())) {
 		Base::clear();
