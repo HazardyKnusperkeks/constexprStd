@@ -88,7 +88,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] find_if
 - [X] find_if_not
 - [X] find_end
-- [ ] find_first_of
+- [X] find_first_of
 - [ ] adjacent_find
 - [ ] search
 - [ ] search_n

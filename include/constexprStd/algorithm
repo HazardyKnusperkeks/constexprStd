@@ -380,6 +380,74 @@ constexpr auto find_end(Container&& c, SearchContainer&& s)
 	                              std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{});
 }
 
+template<typename InputIter, typename ForwardIter, typename BinaryPredicate>
+constexpr InputIter find_first_of(InputIter first, const InputIter last,
+                                  const ForwardIter s_first, const ForwardIter s_last, BinaryPredicate pred)
+		noexcept(noexcept(s_first == s_last) && noexcept(first != last) && noexcept(++first) &&
+		         std::is_nothrow_copy_constructible_v<ForwardIter> && noexcept(s_first != s_last) &&
+		         noexcept(++std::declval<ForwardIter&>()) && noexcept(pred(*first, *s_first))) {
+	if ( s_first == s_last ) {
+		return last;
+	} //if ( s_first == s_last )
+	
+	for ( ; first != last; ++first ) {
+		for ( auto scan = s_first; scan != s_last; ++scan ) {
+			if ( pred(*first, *scan) ) {
+				return first;
+			} //if ( pred(*first, *scan) )
+		} //for ( auto scan = s_first; scan != s_last; ++scan )
+	} //for ( ; first != last; ++first )
+	return last;
+}
+
+template<typename Container, typename ForwardIter, typename BinaryPredicate,
+         std::enable_if_t<std::negation_v<details::IsIter<Container>>>* = nullptr>
+constexpr auto find_first_of(Container&& c, const ForwardIter s_first, const ForwardIter s_last, BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_first_of(std::begin(std::forward<Container>(c)),
+		                                              std::end(std::forward<Container>(c)),
+		                                              s_first, s_last, std::move(pred)))) {
+	return constexprStd::find_first_of(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                   s_first, s_last, std::move(pred));
+}
+
+template<typename Container, typename SearchContainer, typename BinaryPredicate>
+constexpr auto find_first_of(Container&& c, SearchContainer&& s, BinaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_first_of(std::begin(std::forward<Container>(c)),
+		                                              std::end(std::forward<Container>(c)),
+		                                              std::begin(std::forward<SearchContainer>(s)),
+		                                              std::end(std::forward<SearchContainer>(s)), std::move(pred)))) {
+	return constexprStd::find_first_of(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                   std::begin(std::forward<SearchContainer>(s)),
+	                                   std::end(std::forward<SearchContainer>(s)), std::move(pred));
+}
+
+template<typename InputIter, typename ForwardIter, std::enable_if_t<details::IsIterV<InputIter>>* = nullptr>
+constexpr InputIter find_first_of(const InputIter first, const InputIter last,
+                                  const ForwardIter s_first, const ForwardIter s_last)
+		noexcept(noexcept(details::findEndImpl(first, last, s_first, s_last, details::cmp::Equal{}))) {
+	return constexprStd::find_first_of(first, last, s_first, s_last, details::cmp::Equal{});
+}
+
+template<typename Container, typename ForwardIter>
+constexpr auto find_first_of(Container&& c, const ForwardIter s_first, const ForwardIter s_last)
+		noexcept(noexcept(constexprStd::find_first_of(std::begin(std::forward<Container>(c)),
+		                                              std::end(std::forward<Container>(c)),
+		                                              s_first, s_last, details::cmp::Equal{}))) {
+	return constexprStd::find_first_of(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                   s_first, s_last, details::cmp::Equal{});
+}
+
+template<typename Container, typename SearchContainer>
+constexpr auto find_first_of(Container&& c, SearchContainer&& s)
+		noexcept(noexcept(constexprStd::find_first_of(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)),
+		                                         std::begin(std::forward<SearchContainer>(s)),
+		                                         std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{}))) {
+	return constexprStd::find_first_of(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                              std::begin(std::forward<SearchContainer>(s)),
+	                              std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{});
+}
+
 /*****                                       Modifying sequence operations                                        *****/
 
 template<typename InputIterator, typename OutputIterator>
