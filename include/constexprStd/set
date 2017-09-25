@@ -25,6 +25,7 @@
 #define CONSTEXPRSTD_SET
 
 #include <iterator>
+#include <limits>
 #include <memory>
 
 #include "details/set.hpp"
@@ -391,6 +392,11 @@ class set_base {
 		Root = &End;
 		Nodes = 0;
 		return;
+	}
+	
+	[[nodiscard]] constexpr size_type max_size(void) const noexcept {
+		return static_cast<size_type>(
+			std::numeric_limits<typename std::iterator_traits<iterator>::difference_type>::max());
 	}
 	
 	constexpr std::pair<iterator, bool> insert(const value_type& value)
