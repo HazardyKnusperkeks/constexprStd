@@ -28,7 +28,9 @@
 #include <limits>
 #include <memory>
 
+#include "algorithm"
 #include "details/set.hpp"
+#include "iterator"
 #include "memory"
 
 namespace constexprStd {
@@ -448,23 +450,11 @@ class set_base {
 	}
 	
 	template<typename InputIter>
-	constexpr void insert(InputIter first, const InputIter last)
-		noexcept(noexcept(first == last) && CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value &&
-		         noexcept(*first) && noexcept(++first) && noexcept(first != last) &&
-		         std::is_nothrow_copy_assignable_v<iterator>) {
-		if ( empty() ) {
-			if ( first == last ) {
-				return;
-			} //if ( first == last )
-			
-			insertRoot(*first);
-			++first;
-		} //if ( empty() )
-		
-		iterator hint = End.Parent;
-		for ( ; first != last; ++first ) {
-			hint = insert(hint, *first);
-		} //for ( ; first != last; ++first )
+	constexpr void insert(const InputIter first, const InputIter last)
+			noexcept(noexcept(constexprStd::copy(first, last,
+			                                     constexprStd::inserter(std::declval<set_base&>(),
+			                                                            std::declval<set_base&>().end())))) {
+		constexprStd::copy(first, last, constexprStd::inserter(*this, end()));
 		return;
 	}
 	
