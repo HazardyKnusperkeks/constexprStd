@@ -168,6 +168,15 @@ class set_base {
 		return {newNode, true};
 	}
 	
+	template<typename T>
+	constexpr void insertRoot(T&& value) noexcept(InsertIsNoexcept<T&&>::value) {
+		Root = createNode(std::forward<T>(value));
+		Root->adoptRight(&End);
+		Root->Color = details::NodeColor::Black;
+		Nodes = 1;
+		return;
+	}
+	
 	constexpr void rotateLeft(NodeType *parent, NodeType *child) noexcept {
 		child->markForAdoption();
 		
@@ -387,10 +396,7 @@ class set_base {
 	constexpr std::pair<iterator, bool> insert(const value_type& value)
 			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value) {
 		if ( empty() ) {
-			Root = createNode(value);
-			Root->adoptRight(&End);
-			Root->Color = details::NodeColor::Black;
-			Nodes = 1;
+			insertRoot(value);
 			return {Root, true};
 		} //if ( empty() )
 		
@@ -401,10 +407,7 @@ class set_base {
 	constexpr std::pair<iterator, bool> insert(value_type&& value)
 			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<value_type&&>::value) {
 		if ( empty() ) {
-			Root = createNode(std::move(value));
-			Root->adoptRight(&End);
-			Root->Color = details::NodeColor::Black;
-			Nodes = 1;
+			insertRoot(std::move(value));
 			return {Root, true};
 		} //if ( empty() )
 		
@@ -415,10 +418,7 @@ class set_base {
 	constexpr iterator insert(const_iterator hint, const value_type& value)
 			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value) {
 		if ( empty() ) {
-			Root = createNode(value);
-			Root->adoptRight(&End);
-			Root->Color = details::NodeColor::Black;
-			Nodes = 1;
+			insertRoot(value);
 			return Root;
 		} //if ( empty() )
 		
@@ -430,10 +430,7 @@ class set_base {
 	constexpr iterator insert(const_iterator hint, value_type&& value)
 			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<value_type&&>::value) {
 		if ( empty() ) {
-			Root = createNode(std::move(value));
-			Root->adoptRight(&End);
-			Root->Color = details::NodeColor::Black;
-			Nodes = 1;
+			insertRoot(std::move(value));
 			return Root;
 		} //if ( empty() )
 		
