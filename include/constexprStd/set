@@ -60,6 +60,8 @@ class set_base {
 	template<typename... Args>
 	using CreateIsNoexcept = std::bool_constant<
 		noexcept(std::declval<allocator_type&>().construct(std::declval<NodeType*>(), std::declval<Args&&>()...))>;
+	template<typename T>
+	using InsertIsNoexcept = std::bool_constant<CreateIsNoexcept<details::NodeTag, T&&>::value>;
 	
 	private:
 	allocator_type& Alloc;
@@ -140,7 +142,7 @@ class set_base {
 	
 	template<typename T>
 	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(NodeType *hintNode, T&& value)
-			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(std::forward<T>(value)))) {
+			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<T&&>::value) {
 		std::pair<NodeType*, bool> result = findBestNode(value, hintNode);
 		NodeType *node = result.first;
 		if ( result.second ) {
@@ -383,7 +385,7 @@ class set_base {
 	}
 	
 	constexpr std::pair<iterator, bool> insert(const value_type& value)
-			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value) {
 		if ( empty() ) {
 			Root = createNode(value);
 			Root->adoptRight(&End);
@@ -397,7 +399,7 @@ class set_base {
 	}
 	
 	constexpr std::pair<iterator, bool> insert(value_type&& value)
-			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<value_type&&>::value) {
 		if ( empty() ) {
 			Root = createNode(std::move(value));
 			Root->adoptRight(&End);
@@ -411,7 +413,7 @@ class set_base {
 	}
 	
 	constexpr iterator insert(const_iterator hint, const value_type& value)
-			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value) {
 		if ( empty() ) {
 			Root = createNode(value);
 			Root->adoptRight(&End);
@@ -426,7 +428,7 @@ class set_base {
 	}
 	
 	constexpr iterator insert(const_iterator hint, value_type&& value)
-			noexcept(CmpIsNoexcept::value && noexcept(std::declval<set_base&>().createNode(value))) {
+			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<value_type&&>::value) {
 		if ( empty() ) {
 			Root = createNode(std::move(value));
 			Root->adoptRight(&End);
