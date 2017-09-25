@@ -510,6 +510,14 @@ class set : public set_base<Key, N, Compare, Allocator> {
 			Base{std::move(cmp), Alloc} {
 		return;
 	}
+	
+	template<typename InputIter>
+	constexpr set(const InputIter first, const InputIter last, Compare cmp = {})
+			noexcept(std::is_nothrow_move_constructible_v<Compare> &&
+			         noexcept(std::declval<Base&>().insert(first, last))) : set{std::move(cmp)} {
+		Base::insert(first, last);
+		return;
+	}
 };
 
 template<typename Key, std::size_t N, typename Compare = std::less<Key>,
