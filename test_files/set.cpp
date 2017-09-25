@@ -59,12 +59,17 @@ void TestConstexprStd::testSet(void) const noexcept {
 			constexprStd::set<int, 15> iset(a.begin(), a.end());
 			auto t7   = std::tuple{iset.size()};
 			
+			constexprStd::set<int, 15> cset(iset);
+			auto t8   = std::tuple{cset.size()};
+			
 			set.clear();
+			iset.clear();
+			cset.clear();
 			auto tX   = std::tuple{set.size()};
-			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, tX);
+			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, tX);
 		};
 	
-	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 3, 0});
+	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 3, 3, 0});
 	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
@@ -147,10 +152,16 @@ void TestConstexprStd::testSet(void) const noexcept {
 	         std::set<CountInstances<std::string>>     isset(sset.begin(), sset.end());
 	QVERIFY(std::equal(icset.begin(), icset.end(), isset.begin(), isset.end()));
 	
+	constexprStd::set<CountInstances<std::string>, 15> ccset(cset);
+	         std::set<CountInstances<std::string>>     csset(sset);
+	QVERIFY(std::equal(ccset.begin(), ccset.end(), csset.begin(), csset.end()));
+	
 	cset.clear();
 	sset.clear();
 	icset.clear();
 	isset.clear();
+	ccset.clear();
+	csset.clear();
 	QCOMPARE(instances, 2); //cstr and sstr on the stack
 	{
 		constexprStd::setDestroy<CountInstances<std::string>, 15> dset;

@@ -142,9 +142,9 @@ class set_base {
 	}
 	
 	template<typename T>
-	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(NodeType *hintNode, T&& value)
+	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(const NodeType *hintNode, T&& value)
 			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<T&&>::value) {
-		std::pair<NodeType*, bool> result = findBestNode(value, hintNode);
+		std::pair<NodeType*, bool> result = findBestNode(value, hintNode == Root ? Root : hintNode->fancyThis());
 		NodeType *node = result.first;
 		if ( result.second ) {
 			return {node, false};
@@ -324,6 +324,11 @@ class set_base {
 		return;
 	}
 	
+	constexpr set_base(const set_base& that, allocator_type& alloc)
+			noexcept(std::is_nothrow_copy_constructible_v<Compare>) : set_base{that.Cmp, alloc} {
+		return;
+	}
+	
 	[[nodiscard]] constexpr iterator begin(void) noexcept {
 		return Root->leftestNode();
 	}
@@ -425,7 +430,7 @@ class set_base {
 			return Root;
 		} //if ( empty() )
 		
-		NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
+		const NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
 		auto ret = insertImpl(hintNode, value);
 		return ret.first;
 	}
@@ -437,7 +442,7 @@ class set_base {
 			return Root;
 		} //if ( empty() )
 		
-		NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
+		const NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
 		auto ret = insertImpl(hintNode, std::move(value));
 		return ret.first;
 	}
@@ -516,6 +521,13 @@ class set : public set_base<Key, N, Compare, Allocator> {
 			noexcept(std::is_nothrow_move_constructible_v<Compare> &&
 			         noexcept(std::declval<Base&>().insert(first, last))) : set{std::move(cmp)} {
 		Base::insert(first, last);
+		return;
+	}
+	
+	constexpr set(const set& that)
+			noexcept(std::is_nothrow_constructible_v<Base, const Base&, typename Base::allocator_type&> &&
+			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : Base{that, Alloc} {
+		Base::insert(that.begin(), that.end());
 		return;
 	}
 };

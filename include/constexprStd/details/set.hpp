@@ -276,9 +276,9 @@ class SetNodeIterator {
 	using iterator_category = std::bidirectional_iterator_tag;
 	
 	private:
-	NodeType *Node = nullptr;
+	const NodeType *Node = nullptr;
 	
-	constexpr SetNodeIterator(NodeType *node) noexcept : Node{node} {
+	constexpr SetNodeIterator(const NodeType *node) noexcept : Node{node} {
 		return;
 	}
 	
