@@ -70,10 +70,6 @@ class set_base {
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const value_type& value, NodeType *hintNode) const
 			noexcept(CmpIsNoexcept::value) {
-		if ( empty() ) {
-			return {Root, false};
-		} //if ( empty() )
-		
 		if ( hintNode != Root ) {
 			if ( Cmp(value, hintNode->getContent()) ) {
 				if ( auto prev = hintNode->prev(); prev && Cmp(value, prev->getContent()) ) {
@@ -169,7 +165,145 @@ class set_base {
 		else {
 			node->adoptRight(newNode);
 		} //else -> if ( Cmp(newNode->getContent(), node->getContent()) )
+		rebalanceTreeAfterInsert(newNode);
 		return {newNode, true};
+	}
+	
+	constexpr void rotateLeft(NodeType *parent, NodeType *child) noexcept {
+		child->markForAdoption();
+		
+		if ( auto leftGrandchild = child->LeftChild; leftGrandchild ) {
+			leftGrandchild->markForAdoption();
+			parent->adoptRight(leftGrandchild);
+		} //if ( auto leftGrandchild = child->LeftChild; leftGrandchild )
+		
+		auto grandparent = parent->Parent;
+		auto dir = parent->markForAdoption();
+		child->adoptLeft(parent);
+		if ( grandparent ) {
+			grandparent->adopt(child, dir);
+		} //if ( grandparent )
+		return;
+	}
+	
+	constexpr void rotateRight(NodeType *parent, NodeType *child) noexcept {
+		child->markForAdoption();
+		
+		if ( auto rightGrandchild = child->RightChild; rightGrandchild ) {
+			rightGrandchild->markForAdoption();
+			parent->adoptLeft(rightGrandchild);
+		} //if ( auto rightGrandchild = child->RightChild; rightGrandchild )
+		
+		auto grandparent = parent->Parent;
+		auto dir = parent->markForAdoption();
+		child->adoptRight(parent);
+		if ( grandparent ) {
+			grandparent->adopt(child, dir);
+		} //if ( grandparent )
+		return;
+	}
+	
+	constexpr void rebalanceTreeAfterInsert(NodeType *node) noexcept {
+		//Cases according to german wikipedia
+		//Case 1: Node has no parent, it is the root, is has to be black!
+		auto parent = node->Parent;
+		if ( !parent ) {
+			node->Color = details::NodeColor::Black;
+			return;
+		} //if ( !parent )
+		
+		//Case 2: Parent is black, everything is fine
+		if ( parent->Color == details::NodeColor::Black ) {
+			return;
+		} //if ( parent->Color == details::NodeColor::Black )
+		
+		//Now we know the parent is red, so itself has a parent, there exists a grandparent
+		auto grandparent = parent->Parent;
+		//And possibly an uncle
+		auto uncle = grandparent->otherChild(parent);
+		
+		//Case 3: Parent and uncle are red
+		if ( uncle && uncle->Color == details::NodeColor::Red ) {
+			//Switch color from parent, uncle, and grandparent and and restart at the grandparent
+			parent->Color = uncle->Color = details::NodeColor::Black;
+			grandparent->Color = details::NodeColor::Red;
+			rebalanceTreeAfterInsert(grandparent);
+			return;
+		} //if ( uncle && uncle->Color == details::NodeColor::Red )
+		
+		//Case 4: If there is an uncle he is black, node and parent are black, the grandparent is black
+		//Case 4a: The parent is the left child and node is the right child
+		if ( parent->isRightChild(node) && grandparent->isLeftChild(parent) ) {
+			//Rotate left from parent and node
+			rotateLeft(parent, node);
+			//Change the names and continue with case 5
+			constexprStd::swap(parent, node);
+		} //if ( parent->isRightChild(node) && grandparent->isLeftChild(parent) )
+		//Case 4b: Change left and right
+		else if ( parent->isLeftChild(node) && grandparent->isRightChild(parent) ) {
+			rotateRight(parent, node);
+			constexprStd::swap(parent, node);
+		} //else if ( parent->isLeftChild(node) && grandparent->isRightChild(parent) )
+		
+		//Case 5: The uncle is still black, as is the grandparent, node and parent are still red
+		if ( grandparent->isLeftChild(parent) ) {
+			rotateRight(grandparent, parent);
+		} //if ( grandparent->isLeftChild(parent) )
+		else {
+			rotateLeft(grandparent, parent);
+		} //else -> if ( grandparent->isLeftChild(parent) )
+		//After rotation change colors of parent and grandparent (which is now a son of parent, weird or?)
+		parent->Color = details::NodeColor::Black;
+		grandparent->Color = details::NodeColor::Red;
+		
+		if ( grandparent == Root ) {
+			//Update the root, if neccessary.
+			Root = parent;
+		} //if ( grandparent == Root )
+		return;
+	}
+	
+	[[nodiscard]] constexpr bool checkBlackDepth(const NodeType *node, int blackToGo) const noexcept {
+		if ( !node ) {
+			return blackToGo == 0;
+		} //if ( !node )
+		
+		if ( node->Color == details::NodeColor::Black ) {
+			if ( --blackToGo == -1 ) {
+				return false;
+			} //if ( --blackToGo == -1 )
+		} //if ( node->Color == details::NodeColor::Black )
+		
+		return checkBlackDepth(node->LeftChild, blackToGo) && checkBlackDepth(node->RightChild, blackToGo);
+	}
+	
+	[[nodiscard]] constexpr bool checkBinarySearchTree(const NodeType *node) const noexcept {
+		auto left  = node->LeftChild;
+		auto right = node->RightChild;
+		
+		if ( right == &End ) {
+			right = nullptr;
+		} //if ( right == &End )
+		
+		if ( left ) {
+			if ( !Cmp(left->getContent(), node->getContent()) ) {
+				return false;
+			} //if ( !Cmp(left->getContent(), node->getContent()) )
+			if ( !checkBinarySearchTree(left) ) {
+				return false;
+			} //if ( !checkBinarySearchTree(left) )
+		} //if ( left )
+		
+		if ( right ) {
+			if ( !Cmp(node->getContent(), right->getContent()) ) {
+				return false;
+			} //if ( !Cmp(node->getContent(), right->getContent()) )
+			if ( !checkBinarySearchTree(right) ) {
+				return false;
+			} //if ( !checkBinarySearchTree(right) )
+		} //if ( right )
+		
+		return true;
 	}
 	
 	public:
@@ -178,7 +312,6 @@ class set_base {
 	}
 	
 	explicit constexpr set_base(Compare cmp, allocator_type& alloc) noexcept : Alloc{alloc}, Cmp{std::move(cmp)} {
-		End.Red = false;
 		return;
 	}
 	
@@ -254,7 +387,7 @@ class set_base {
 		if ( empty() ) {
 			Root = createNode(value);
 			Root->adoptRight(&End);
-			Root->Red = false;
+			Root->Color = details::NodeColor::Black;
 			Nodes = 1;
 			return {Root, true};
 		} //if ( empty() )
@@ -270,7 +403,7 @@ class set_base {
 		if ( empty() ) {
 			Root = createNode(std::move(value));
 			Root->adoptRight(&End);
-			Root->Red = false;
+			Root->Color = details::NodeColor::Black;
 			Nodes = 1;
 			return {Root, true};
 		} //if ( empty() )
@@ -286,7 +419,7 @@ class set_base {
 		if ( empty() ) {
 			Root = createNode(value);
 			Root->adoptRight(&End);
-			Root->Red = false;
+			Root->Color = details::NodeColor::Black;
 			Nodes = 1;
 			return Root;
 		} //if ( empty() )
@@ -303,7 +436,7 @@ class set_base {
 		if ( empty() ) {
 			Root = createNode(std::move(value));
 			Root->adoptRight(&End);
-			Root->Red = false;
+			Root->Color = details::NodeColor::Black;
 			Nodes = 1;
 			return Root;
 		} //if ( empty() )
@@ -313,6 +446,33 @@ class set_base {
 		auto ret = insertImpl(hintNode, std::move(value));
 		attachEnd();
 		return ret.first;
+	}
+	
+	[[nodiscard]] constexpr bool checkBlackDepth(void) const noexcept {
+		if ( empty() ) {
+			return true;
+		} //if ( empty() )
+		
+		if ( Root->Color == details::NodeColor::Red ) {
+			return false;
+		} //if ( Root->Color == details::NodeColor::Red )
+		
+		int blackCount = 1;
+		for ( NodeType *node = Root->LeftChild; node; node = node->LeftChild ) {
+			if ( node->Color == details::NodeColor::Black ) {
+				++blackCount;
+			} //if ( node->Color == details::NodeColor::Black )
+		} //for ( NodeType *node = Root->LeftChild; node; node = node->LeftChild )
+		
+		return checkBlackDepth(Root, blackCount);
+	}
+	
+	[[nodiscard]] constexpr bool checkBinarySearchTree(void) const noexcept {
+		if ( empty() ) {
+			return true;
+		} //if ( empty() )
+		
+		return checkBinarySearchTree(Root);
 	}
 };
 

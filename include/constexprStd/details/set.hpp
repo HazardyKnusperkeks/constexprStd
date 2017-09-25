@@ -40,6 +40,17 @@ class set_base;
 namespace constexprStd::details {
 struct NodeTag {};
 
+enum class NodeColor {
+	Red,
+	Black
+};
+
+enum class NodeDirection {
+	None,
+	Left,
+	Right
+};
+
 template<typename Key>
 struct SetNode {
 	using ContentType         = Key;
@@ -49,7 +60,7 @@ struct SetNode {
 	SetNode *Parent     = nullptr;
 	SetNode *LeftChild  = nullptr;
 	SetNode *RightChild = nullptr;
-	bool Red            = true;
+	NodeColor Color     = NodeColor::Red;
 	bool PastEnd        = true;
 	
 	constexpr SetNode(void) = default;
@@ -87,7 +98,7 @@ struct SetNode {
 		Parent     = constexprStd::exchange(that.Parent,     nullptr);
 		LeftChild  = constexprStd::exchange(that.LeftChild,  nullptr);
 		RightChild = constexprStd::exchange(that.RightChild, nullptr);
-		Red        = constexprStd::exchange(that.Red,        true);
+		Color      = constexprStd::exchange(that.Color,      NodeColor::Red);
 		PastEnd    = oldThatPastEnd;
 		return *this;
 	}
@@ -126,6 +137,13 @@ struct SetNode {
 	
 	[[nodiscard]] constexpr bool hasParent(void) const noexcept {
 		return Parent;
+	}
+	
+	[[nodiscard]] constexpr SetNode* otherChild(const SetNode *node) const noexcept {
+		if ( isLeftChild(node) ) {
+			return RightChild;
+		} //if ( isLeftChild(node) )
+		return LeftChild;
 	}
 	
 	[[nodiscard]] constexpr SetNode* leftestNode(void) noexcept {
@@ -207,17 +225,20 @@ struct SetNode {
 	}
 #pragma GCC diagnostic pop
 	
-	constexpr void markForAdoption(void) noexcept {
+	constexpr NodeDirection markForAdoption(void) noexcept {
+		NodeDirection ret = NodeDirection::None;
 		if ( Parent ) {
 			if ( Parent->isRightChild(this) ) {
 				Parent->RightChild = nullptr;
+				ret = NodeDirection::Right;
 			} //if ( Parent->isRightChild(this) )
 			else {
 				Parent->LeftChild = nullptr;
+				ret = NodeDirection::Left;
 			} //else -> if ( Parent->isRightChild(this) )
 			Parent = nullptr;
 		} //if ( Parent )
-		return;
+		return ret;
 	}
 	
 	constexpr void adoptLeft(SetNode *child) noexcept {
@@ -229,6 +250,15 @@ struct SetNode {
 	constexpr void adoptRight(SetNode *child) noexcept {
 		RightChild    = child;
 		child->Parent = this;
+		return;
+	}
+	
+	constexpr void adopt(SetNode *child, const NodeDirection dir) noexcept {
+		switch ( dir ) {
+			case NodeDirection::None  : std::terminate();
+			case NodeDirection::Left  : adoptLeft(child); break;
+			case NodeDirection::Right : adoptRight(child); break;
+		} //switch ( dir )
 		return;
 	}
 };
