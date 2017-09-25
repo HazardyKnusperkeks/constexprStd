@@ -129,7 +129,7 @@ void TestConstexprStd::testSet(void) const noexcept {
 
 void TestConstexprStd::testSetFailCaseOne(void) const noexcept {
 	constexpr std::array a{5, 4, 3, 2, 3, 2, 3};
-	constexprStd::setDestroy<int, 30000> cset;
+	constexprStd::setDestroy<int, 10> cset;
 	std::set<int> sset;
 	
 	auto citer = cset.end();
@@ -148,7 +148,7 @@ void TestConstexprStd::testSetFailCaseOne(void) const noexcept {
 }
 
 void TestConstexprStd::testSetRandom(void) const noexcept {
-	constexprStd::setDestroy<int, 30000> cset;
+	constexprStd::setDestroy<int, 10> cset;
 	std::set<int> sset;
 	
 	struct PrintSetOnEarlyExit {
