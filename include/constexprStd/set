@@ -107,20 +107,10 @@ class set_base {
 	
 	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeRight(NodeType *node, const value_type& value)
 			const noexcept(CmpIsNoexcept::value) {
-		if ( !node->hasRightChild() ) {
+		if ( !node->hasRightChild() || node->RightChild == &End ) {
 			return {node, false};
-		} //if ( !node->hasRightChild() )
+		} //if ( !node->hasRightChild() || node->RightChild == &End )
 		return findBestNode(node->RightChild, value);
-	}
-	
-	constexpr void detachEnd(void) noexcept {
-		End.markForAdoption();
-		return;
-	}
-	
-	constexpr void attachEnd(void) noexcept {
-		Root->rightestNode()->adoptRight(&End);
-		return;
 	}
 	
 	template<typename... Args>
@@ -163,7 +153,14 @@ class set_base {
 			node->adoptLeft(newNode);
 		} //if ( Cmp(newNode->getContent(), node->getContent()) )
 		else {
+			const bool adaptEnd = node->isRightChild(&End);
+			if ( adaptEnd ) {
+				End.markForAdoption();
+			} //if ( adaptEnd )
 			node->adoptRight(newNode);
+			if ( adaptEnd ) {
+				newNode->adoptRight(&End);
+			} //if ( adaptEnd )
 		} //else -> if ( Cmp(newNode->getContent(), node->getContent()) )
 		rebalanceTreeAfterInsert(newNode);
 		return {newNode, true};
@@ -221,6 +218,9 @@ class set_base {
 		auto grandparent = parent->Parent;
 		//And possibly an uncle
 		auto uncle = grandparent->otherChild(parent);
+		if ( uncle == &End ) {
+			uncle = nullptr;
+		} //if ( uncle == &End )
 		
 		//Case 3: Parent and uncle are red
 		if ( uncle && uncle->Color == details::NodeColor::Red ) {
@@ -375,7 +375,7 @@ class set_base {
 		if ( empty() ) {
 			return;
 		} //if ( empty() )
-		detachEnd();
+		End.markForAdoption();
 		destroyNodeRecursive(Root);
 		Root = &End;
 		Nodes = 0;
@@ -392,9 +392,7 @@ class set_base {
 			return {Root, true};
 		} //if ( empty() )
 		
-		detachEnd();
 		auto ret = insertImpl(Root, value);
-		attachEnd();
 		return ret;
 	}
 	
@@ -408,9 +406,7 @@ class set_base {
 			return {Root, true};
 		} //if ( empty() )
 		
-		detachEnd();
 		auto ret = insertImpl(Root, std::move(value));
-		attachEnd();
 		return ret;
 	}
 	
@@ -425,9 +421,7 @@ class set_base {
 		} //if ( empty() )
 		
 		NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
-		detachEnd();
 		auto ret = insertImpl(hintNode, value);
-		attachEnd();
 		return ret.first;
 	}
 	
@@ -442,9 +436,7 @@ class set_base {
 		} //if ( empty() )
 		
 		NodeType *hintNode = hint.Node == &End ? End.Parent : hint.Node;
-		detachEnd();
 		auto ret = insertImpl(hintNode, std::move(value));
-		attachEnd();
 		return ret.first;
 	}
 	
