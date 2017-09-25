@@ -38,20 +38,25 @@
 void TestConstexprStd::testSet(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			constexprStd::set<int, 15> set;
+			std::array a{6, 7, 8};
 			set.clear();
 			
 			auto ins1 = set.insert(1);
 			auto t1   = std::tuple{ins1.second};
 			auto ins2 = set.insert(1);
 			auto t2   = std::tuple{ins2.second, *ins2.first};
-			for ( int i : {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15} ) {
+			for ( int i : {2, 3, 4, 5} ) {
 				set.insert(i);
-			} //for ( int i : {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15} )
+			} //for ( int i : {2, 3, 4, 5} )
 			auto t3   = std::tuple{set.size()};
-			return std::tuple_cat(t1, t2, t3);
+			set.insert(a.begin(), a.end());
+			auto t4   = std::tuple{set.size()};
+			set.insert(a.end(), a.end());
+			auto t5   = std::tuple{set.size()};
+			return std::tuple_cat(t1, t2, t3, t4, t5);
 		};
 	
-	static_assert(l() == std::tuple{true, false, 1, 15});
+	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8});
 	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
@@ -116,6 +121,15 @@ void TestConstexprStd::testSet(void) const noexcept {
 	cset.insert(citer, cstr);
 	sset.insert(siter, sstr);
 	QVERIFY(std::equal(cset.rbegin(), cset.rend(), sset.rbegin(), sset.rend()));
+	
+	std::array a{"hello", "world", "42"};
+	cset.insert(a.begin(), a.end());
+	sset.insert(a.begin(), a.end());
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	
+	cset.insert(a.end(), a.end());
+	sset.insert(a.end(), a.end());
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
 	
 	cset.clear();
 	sset.clear();

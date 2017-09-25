@@ -439,6 +439,27 @@ class set_base {
 		return ret.first;
 	}
 	
+	template<typename InputIter>
+	constexpr void insert(InputIter first, const InputIter last)
+		noexcept(noexcept(first == last) && CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value &&
+		         noexcept(*first) && noexcept(++first) && noexcept(first != last) &&
+		         std::is_nothrow_copy_assignable_v<iterator>) {
+		if ( empty() ) {
+			if ( first == last ) {
+				return;
+			} //if ( first == last )
+			
+			insertRoot(*first);
+			++first;
+		} //if ( empty() )
+		
+		iterator hint = End.Parent;
+		for ( ; first != last; ++first ) {
+			hint = insert(hint, *first);
+		} //for ( ; first != last; ++first )
+		return;
+	}
+	
 	[[nodiscard]] constexpr bool checkBlackDepth(void) const noexcept {
 		if ( empty() ) {
 			return true;
