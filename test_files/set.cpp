@@ -61,7 +61,7 @@ void TestConstexprStd::testSet(void) const noexcept {
 			
 			constexprStd::set<int, 15> cset(iset);
 			auto t8   = std::tuple{cset.size()};
-			auto t9   = std::tuple{set.count(2), set.count(55)};
+			auto t9   = std::tuple{set.count(2), set.count(55), set.find(33) == set.end(), set.find(3) == set.end()};
 			
 			set.clear();
 			iset.clear();
@@ -70,7 +70,7 @@ void TestConstexprStd::testSet(void) const noexcept {
 			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, t9, tX);
 		};
 	
-	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 3, 3, 1, 0, 0});
+	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 3, 3, 1, 0, true, false, 0});
 	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
@@ -161,6 +161,15 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QCOMPARE(sset.count("a"),    static_cast<decltype(sset.count(""))>(1));
 	QCOMPARE(cset.count("damn"), static_cast<decltype(cset.count(""))>(0));
 	QCOMPARE(sset.count("damn"), static_cast<decltype(sset.count(""))>(0));
+	
+	QVERIFY(cset.find("damn") == cset.end());
+	QVERIFY(sset.find("damn") == sset.end());
+	QVERIFY(std::as_const(cset).find("damn") == cset.cend());
+	QVERIFY(std::as_const(sset).find("damn") == sset.cend());
+	QCOMPARE(*cset.find(fooString), fooString);
+	QCOMPARE(*sset.find(fooString), fooString);
+	QCOMPARE(*std::as_const(cset).find(fooString), fooString);
+	QCOMPARE(*std::as_const(sset).find(fooString), fooString);
 	
 	cset.clear();
 	sset.clear();

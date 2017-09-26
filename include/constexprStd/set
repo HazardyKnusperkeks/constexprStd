@@ -512,6 +512,16 @@ class set_base {
 		return ret.second ? 1 : 0;
 	}
 	
+	[[nodiscard]] constexpr iterator find(const Key& key) noexcept(CmpIsNoexcept::value) {
+		const auto ret = findBestNode(key, Root);
+		return ret.second ? ret.first : &End;
+	}
+	
+	[[nodiscard]] constexpr const_iterator find(const Key& key) const noexcept(CmpIsNoexcept::value) {
+		const auto ret = findBestNode(key, Root);
+		return ret.second ? ret.first : &End;
+	}
+	
 	[[nodiscard]] constexpr key_compare key_comp(void) const noexcept {
 		return Cmp;
 	}
