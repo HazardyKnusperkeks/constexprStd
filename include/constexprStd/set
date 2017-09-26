@@ -560,22 +560,29 @@ class set : public set_base<Key, N, Compare, Allocator> {
 	template<typename InputIter>
 	constexpr set(const InputIter first, const InputIter last, Compare cmp = {})
 			noexcept(std::is_nothrow_move_constructible_v<Compare> &&
-			         noexcept(std::declval<Base&>().insert(first, last))) : set{std::move(cmp)} {
+			         noexcept(std::declval<Base&>().insert(first, last))) : set(std::move(cmp)) {
 		Base::insert(first, last);
 		return;
 	}
 	
 	constexpr set(const set& that)
 			noexcept(std::is_nothrow_copy_constructible_v<Compare> && std::is_nothrow_move_constructible_v<Compare> &&
-			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : set{that.key_comp()} {
+			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : set(that.key_comp()) {
 		Base::insert(that.begin(), that.end());
 		return;
 	}
 	
 	constexpr set(set&& that)
 			noexcept(std::is_nothrow_copy_constructible_v<Compare> && std::is_nothrow_move_constructible_v<Compare> &&
-			         noexcept(std::declval<Base&>().moveFrom(std::move(that)))) : set{that.key_comp()} {
+			         noexcept(std::declval<Base&>().moveFrom(std::move(that)))) : set(that.key_comp()) {
 		Base::moveFrom(std::move(that));
+		return;
+	}
+	
+	constexpr set(std::initializer_list<typename Base::value_type> il)
+			noexcept(std::is_nothrow_move_constructible_v<Compare> && noexcept(std::declval<Base&>().insert(il))) :
+			set() {
+		Base::insert(il);
 		return;
 	}
 };
