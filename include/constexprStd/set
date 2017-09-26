@@ -320,6 +320,23 @@ class set_base {
 		return true;
 	}
 	
+	constexpr void takeTree(set_base&& that) noexcept {
+		Nodes = constexprStd::exchange(that.Nodes, 0u);
+		Root  = constexprStd::exchange(that.Root,  &that.End);
+		auto endParent = that.End.Parent;
+		that.End.markForAdoption();
+		endParent->adoptRight(&End);
+		return;
+	}
+	
+	constexpr void moveElementsFrom(set_base&& that)
+			noexcept(noexcept(constexprStd::move(that.begin(), that.end(),
+			                                     constexprStd::inserter(std::declval<set_base&>(),
+			                                                            std::declval<set_base&>().end())))) {
+		constexprStd::move(that.begin(), that.end(), constexprStd::inserter(*this, end()));
+		return;
+	}
+	
 	public:
 	constexpr set_base(Compare cmp, allocator_type& alloc) noexcept(std::is_nothrow_move_constructible_v<Compare>) :
 			Alloc{alloc}, Cmp{std::move(cmp)} {
@@ -327,8 +344,29 @@ class set_base {
 	}
 	
 	constexpr set_base(const set_base& that)
-			noexcept(std::is_nothrow_copy_constructible_v<Compare>) : set_base{that.Cmp, that.Alloc} {
-		constexprStd::copy(that.begin(), that.end(), constexprStd::inserter(*this, end()));
+			noexcept(std::is_nothrow_copy_constructible_v<Compare> &&
+			         noexcept(std::declval<set_base&>().insert(that.begin(), that.end()))) :
+			set_base{that.Cmp, that.Alloc} {
+		insert(that.begin(), that.end());
+		return;
+	}
+	
+	constexpr set_base(set_base&& that)
+			noexcept(std::is_nothrow_copy_constructible_v<Compare> &&
+	                 noexcept(std::declval<set_base&>().takeTree(std::move(that)))) : set_base{that.Cmp, that.Alloc} {
+		takeTree(std::move(that));
+		return;
+	}
+	
+	constexpr void moveFrom(set_base&& that)
+			noexcept(noexcept(std::declval<set_base&>().takeTree(std::move(that))) &&
+			         noexcept(std::declval<set_base&>().moveElementsFrom(std::move(that)))) {
+		if ( Alloc == that.Alloc ) {
+			takeTree(std::move(that));
+		} //if ( Alloc == that.Alloc )
+		else {
+			moveElementsFrom(std::move(that));
+		} //else -> if ( Alloc == that.Alloc )
 		return;
 	}
 	
@@ -531,6 +569,13 @@ class set : public set_base<Key, N, Compare, Allocator> {
 			noexcept(std::is_nothrow_copy_constructible_v<Compare> && std::is_nothrow_move_constructible_v<Compare> &&
 			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : set{that.key_comp()} {
 		Base::insert(that.begin(), that.end());
+		return;
+	}
+	
+	constexpr set(set&& that)
+			noexcept(std::is_nothrow_copy_constructible_v<Compare> && std::is_nothrow_move_constructible_v<Compare> &&
+			         noexcept(std::declval<Base&>().moveFrom(std::move(that)))) : set{that.key_comp()} {
+		Base::moveFrom(std::move(that));
 		return;
 	}
 };
