@@ -331,6 +331,10 @@ class set_base {
 		return;
 	}
 	
+	[[nodiscard]] constexpr allocator_type& get_allocator(void) const noexcept {
+		return Alloc;
+	}
+	
 	[[nodiscard]] constexpr iterator begin(void) noexcept {
 		return Root->leftestNode();
 	}
