@@ -24,6 +24,7 @@
 #ifndef CONSTEXPRSTD_SET
 #define CONSTEXPRSTD_SET
 
+#include <experimental/type_traits>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -55,8 +56,9 @@ class set_base {
 	using reverse_iterator       = std::reverse_iterator<iterator>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	
-	using CmpIsNoexcept       = std::bool_constant<noexcept(std::declval<Compare&>()(std::declval<const key_type&>(),
-	                                                                                 std::declval<const key_type&>()))>;
+	template<typename K = value_type>
+	using CmpIsNoexcept       = std::bool_constant<noexcept(std::declval<Compare&>()(std::declval<const K&>(),
+	                                                                                 std::declval<const K&>()))>;
 	using AllocIsNoexcept     = std::bool_constant<noexcept(std::declval<allocator_type&>().allocate(1))>;
 	using DestroyIsNoexcept   = std::bool_constant<
 		noexcept(std::declval<allocator_type&>().destroy(std::declval<NodeType*>()))>;
@@ -66,6 +68,11 @@ class set_base {
 	template<typename T>
 	using InsertIsNoexcept = std::bool_constant<CreateIsNoexcept<details::NodeTag, T&&>::value>;
 	
+	template<typename T>
+	using HasIsTransparent = typename T::is_transparent;
+	template<typename K>
+	using CmpIsTransparent = std::experimental::is_detected<HasIsTransparent, Compare>;
+	
 	private:
 	allocator_type& Alloc;
 	NodeType End{};
@@ -73,49 +80,53 @@ class set_base {
 	size_type Nodes = 0;
 	value_compare Cmp;
 	
-	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const value_type& value, NodeType *hintNode) const
-			noexcept(CmpIsNoexcept::value) {
+	template<typename K>
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(const K& key, NodeType *hintNode) const
+			noexcept(CmpIsNoexcept<K>::value) {
 		if ( hintNode != Root ) {
-			if ( Cmp(value, hintNode->getContent()) ) {
-				if ( auto prev = hintNode->prev(); prev && Cmp(value, prev->getContent()) ) {
+			if ( Cmp(key, hintNode->getContent()) ) {
+				if ( auto prev = hintNode->prev(); prev && Cmp(key, prev->getContent()) ) {
 					hintNode = Root;
-				} //if ( auto prev = hintNode->prev(); prev && Cmp(value, prev->getContent()) )
-			} //if ( Cmp(value, hintNode->getContent()) )
+				} //if ( auto prev = hintNode->prev(); prev && Cmp(key, prev->getContent()) )
+			} //if ( Cmp(key, hintNode->getContent()) )
 			else {
-				if ( auto next = hintNode->next(); next && !Cmp(value, next->getContent()) ) {
+				if ( auto next = hintNode->next(); next && !Cmp(key, next->getContent()) ) {
 					hintNode = Root;
-				} //if ( auto next = hintNode->next(); next && !Cmp(value, next->getContent()) )
-			} //else -> if ( Cmp(value, hintNode->getContent()) )
+				} //if ( auto next = hintNode->next(); next && !Cmp(key, next->getContent()) )
+			} //else -> if ( Cmp(key, hintNode->getContent()) )
 		} //if ( hintNode != Root )
-		return findBestNode(hintNode, value);
+		return findBestNode(hintNode, key);
 	}
 	
-	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(NodeType *node, const value_type& value) const
-			noexcept(CmpIsNoexcept::value) {
-		if ( Cmp(value, node->getContent()) ) {
-			return findBestNodeLeft(node, value);
-		} //if ( Cmp(value, node->getContent()) )
-		if ( Cmp(node->getContent(), value) ) {
-			return findBestNodeRight(node, value);
-		} //if ( Cmp(node->getContent(), value) )
-		//The value is equal to the value of node
+	template<typename K>
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNode(NodeType *node, const K& key) const
+			noexcept(CmpIsNoexcept<K>::value) {
+		if ( Cmp(key, node->getContent()) ) {
+			return findBestNodeLeft(node, key);
+		} //if ( Cmp(key, node->getContent()) )
+		if ( Cmp(node->getContent(), key) ) {
+			return findBestNodeRight(node, key);
+		} //if ( Cmp(node->getContent(), key) )
+		//The key is equal to the key of node
 		return {node, true};
 	}
 	
-	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeLeft(NodeType *node, const value_type& value)
-			const noexcept(CmpIsNoexcept::value) {
+	template<typename K>
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeLeft(NodeType *node, const K& key)
+			const noexcept(CmpIsNoexcept<K>::value) {
 		if ( !node->hasLeftChild() ) {
 			return {node, false};
 		} //if ( !node->hasLeftChild() )
-		return findBestNode(node->LeftChild, value);
+		return findBestNode(node->LeftChild, key);
 	}
 	
-	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeRight(NodeType *node, const value_type& value)
-			const noexcept(CmpIsNoexcept::value) {
+	template<typename K>
+	[[nodiscard]] constexpr std::pair<NodeType*, bool> findBestNodeRight(NodeType *node, const K& key)
+			const noexcept(CmpIsNoexcept<K>::value) {
 		if ( !node->hasRightChild() || node->RightChild == &End ) {
 			return {node, false};
 		} //if ( !node->hasRightChild() || node->RightChild == &End )
-		return findBestNode(node->RightChild, value);
+		return findBestNode(node->RightChild, key);
 	}
 	
 	template<typename... Args>
@@ -145,7 +156,7 @@ class set_base {
 	
 	template<typename T>
 	[[nodiscard]] constexpr std::pair<iterator, bool> insertImpl(const NodeType *hintNode, T&& value)
-			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<T&&>::value) {
+			noexcept(CmpIsNoexcept<>::value && InsertIsNoexcept<T&&>::value) {
 		std::pair<NodeType*, bool> result = findBestNode(value, hintNode == Root ? Root : hintNode->fancyThis());
 		NodeType *node = result.first;
 		if ( result.second ) {
@@ -447,7 +458,7 @@ class set_base {
 	}
 	
 	constexpr std::pair<iterator, bool> insert(const value_type& value)
-			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value) {
+			noexcept(CmpIsNoexcept<>::value && InsertIsNoexcept<const value_type&>::value) {
 		if ( empty() ) {
 			insertRoot(value);
 			return {Root, true};
@@ -458,7 +469,7 @@ class set_base {
 	}
 	
 	constexpr std::pair<iterator, bool> insert(value_type&& value)
-			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<value_type&&>::value) {
+			noexcept(CmpIsNoexcept<>::value && InsertIsNoexcept<value_type&&>::value) {
 		if ( empty() ) {
 			insertRoot(std::move(value));
 			return {Root, true};
@@ -469,7 +480,7 @@ class set_base {
 	}
 	
 	constexpr iterator insert(const_iterator hint, const value_type& value)
-			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<const value_type&>::value) {
+			noexcept(CmpIsNoexcept<>::value && InsertIsNoexcept<const value_type&>::value) {
 		if ( empty() ) {
 			insertRoot(value);
 			return Root;
@@ -481,7 +492,7 @@ class set_base {
 	}
 	
 	constexpr iterator insert(const_iterator hint, value_type&& value)
-			noexcept(CmpIsNoexcept::value && InsertIsNoexcept<value_type&&>::value) {
+			noexcept(CmpIsNoexcept<>::value && InsertIsNoexcept<value_type&&>::value) {
 		if ( empty() ) {
 			insertRoot(std::move(value));
 			return Root;
@@ -507,17 +518,23 @@ class set_base {
 		return;
 	}
 	
-	[[nodiscard]] constexpr size_type count(const Key& key) const noexcept(CmpIsNoexcept::value) {
+	[[nodiscard]] constexpr size_type count(const Key& key) const noexcept(CmpIsNoexcept<>::value) {
 		const auto ret = findBestNode(key, Root);
 		return ret.second ? 1 : 0;
 	}
 	
-	[[nodiscard]] constexpr iterator find(const Key& key) noexcept(CmpIsNoexcept::value) {
+	template<typename K, std::enable_if_t<CmpIsTransparent<K>::value>* = nullptr>
+	[[nodiscard]] constexpr size_type count(const K& k) const noexcept(CmpIsNoexcept<K>::value) {
+		const auto ret = findBestNode(k, Root);
+		return ret.second ? 1 : 0;
+	}
+	
+	[[nodiscard]] constexpr iterator find(const Key& key) noexcept(CmpIsNoexcept<>::value) {
 		const auto ret = findBestNode(key, Root);
 		return ret.second ? ret.first : &End;
 	}
 	
-	[[nodiscard]] constexpr const_iterator find(const Key& key) const noexcept(CmpIsNoexcept::value) {
+	[[nodiscard]] constexpr const_iterator find(const Key& key) const noexcept(CmpIsNoexcept<>::value) {
 		const auto ret = findBestNode(key, Root);
 		return ret.second ? ret.first : &End;
 	}

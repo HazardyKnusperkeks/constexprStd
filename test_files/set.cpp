@@ -35,6 +35,8 @@
 #include "test_constants.hpp"
 #include "test_count_instances.hpp"
 
+using namespace std::string_literals;
+
 void TestConstexprStd::testSet(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			constexprStd::set<int, 15> set;
@@ -212,6 +214,90 @@ void TestConstexprStd::testSet(void) const noexcept {
 	moveSet.clear();
 	moveBase.clear();
 	QCOMPARE(instances, 2);
+	return;
+}
+
+struct String {
+	std::string S;
+	
+	String(std::string s) noexcept(std::is_nothrow_move_constructible_v<std::string>) : S(std::move(s)) {
+		return;
+	}
+	
+	String(const char*) {
+		throw std::exception{};
+	}
+	
+	operator std::string(void) const {
+		return S;
+	}
+	
+	bool operator<(const char *c) const noexcept(noexcept(S < c)) {
+		return S < c;
+	}
+	
+	bool operator<(const std::string& c) const noexcept(noexcept(S < c)) {
+		return S < c;
+	}
+	
+	bool operator<(const String& c) const noexcept(noexcept(S < S)) {
+		return S < c.S;
+	}
+	
+	friend bool operator<(const char *c, const String& s) noexcept(noexcept(c < std::declval<const std::string&>())) {
+		return c < s.S;
+	}
+	
+	friend bool operator<(const std::string& c, const String& s) noexcept(noexcept(c < c)) {
+		return c < s.S;
+	}
+};
+
+void TestConstexprStd::testSetTransparentCompare(void) const noexcept {
+	constexprStd::set<String, 10>              cnset;
+	constexprStd::set<String, 10, std::less<>> ctset;
+	         std::set<String>                  snset;
+	         std::set<String,     std::less<>> stset;
+	
+	std::generate_n(std::inserter(cnset, cnset.end()), 39, [c = 'a', lower = true](void) mutable {
+			std::string s(1, c);
+			++c;
+			if ( lower ) {
+				if ( c++ == 'z' ) {
+					c = 'A';
+					lower = false;
+				} //if ( c++ == 'z' )
+			} //if ( lower )
+			return s;
+		});
+	
+	std::copy(cnset.begin(), cnset.end(), std::inserter(ctset, ctset.end()));
+	std::copy(cnset.begin(), cnset.end(), std::inserter(snset, snset.end()));
+	std::copy(cnset.begin(), cnset.end(), std::inserter(stset, stset.end()));
+	
+	constexpr decltype(cnset.count("")) zero = 0;
+	constexpr decltype(cnset.count("")) one  = 1;
+	
+	try { QCOMPARE(cnset.count("a"), one); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QCOMPARE(snset.count("a"), one); QVERIFY(false); } catch ( const std::exception& ) { }
+	QCOMPARE(ctset.count("a"),  one);
+	QCOMPARE(stset.count("a"),  one);
+	QCOMPARE(cnset.count("a"s), one);
+	QCOMPARE(ctset.count("a"s), one);
+	QCOMPARE(snset.count("a"s), one);
+	QCOMPARE(stset.count("a"s), one);
+	
+	try { QCOMPARE(cnset.count("b"), zero); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QCOMPARE(snset.count("b"), zero); QVERIFY(false); } catch ( const std::exception& ) { }
+	QCOMPARE(ctset.count("b"),  zero);
+	QCOMPARE(stset.count("b"),  zero);
+	QCOMPARE(cnset.count("b"s), zero);
+	QCOMPARE(ctset.count("b"s), zero);
+	QCOMPARE(snset.count("b"s), zero);
+	QCOMPARE(stset.count("b"s), zero);
+	
+	cnset.clear();
+	ctset.clear();
 	return;
 }
 
