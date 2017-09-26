@@ -742,8 +742,18 @@ void TestConstexprStd::testMove(void) const noexcept {
 	siter =          std::move(&ba2[0], &ba2[2], siter);
 	QCOMPARE(ca, expected3);
 	QCOMPARE(sa, expected3);
-	QVERIFY(std::all_of(std::begin(ba1), std::begin(ba1), isEmpty));
-	QVERIFY(std::all_of(std::begin(ba2), std::begin(ba2), isEmpty));
+	QVERIFY(std::all_of(std::begin(ba1), std::end(ba1), isEmpty));
+	QVERIFY(std::all_of(std::begin(ba2), std::end(ba2), isEmpty));
+	
+	std::set<std::string> cfs(ca.begin(), ca.end()), cts;
+	std::set<std::string> sfs(ca.begin(), ca.end()), sts;
+	
+	constexprStd::move(cfs.begin(), cfs.end(), std::inserter(cts, cts.end()));
+	         std::move(sfs.begin(), sfs.end(), std::inserter(sts, sts.end()));
+	QVERIFY(!std::all_of(std::begin(cfs), std::end(cfs), isEmpty));
+	QVERIFY(!std::all_of(std::begin(sfs), std::end(sfs), isEmpty));
+	QVERIFY(std::is_permutation(cts.begin(), cts.end(), ca.begin(), ca.end()));
+	QVERIFY(std::is_permutation(sts.begin(), sts.end(), sa.begin(), sa.end()));
 	return;
 }
 
