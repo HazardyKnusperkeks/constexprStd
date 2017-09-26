@@ -703,6 +703,50 @@ void TestConstexprStd::testCopy(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testMove(void) const noexcept {
+	//Test the acutal constexprness
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			std::array a{42, 66, 0x185, 1337};
+			constexprStd::move(a, c.begin());
+			return c;
+		};
+	static_assert(l() == TestContainer{std::array{42, 66, 0x185, 1337, 5, 6, 7, 8, 9, 10}});
+	
+	//Test runtime behavior and compare against std::copy.
+	std::array<std::string, 5> ca;
+	std::array<std::string, 5> sa;
+	std::array<std::string, 2> a1{longString, "We have to use long strings"};
+	std::array<std::string, 2> a2{longString, "We have to use long strings"};
+	std::string ba1[2] = {"to actually see the move", "this is a test"};
+	std::string ba2[2] = {"to actually see the move", "this is a test"};
+	const std::array<std::string, 5> expected1;
+	const std::array<std::string, 5> expected2{longString, "We have to use long strings"};
+	const std::array<std::string, 5> expected3{longString, "We have to use long strings", "to actually see the move", "this is a test"};
+	auto citer = ca.begin();
+	auto siter = sa.begin();
+	
+	auto isEmpty = [](const std::string& s) noexcept { return s.empty(); };
+	
+	QCOMPARE(ca, expected1);
+	QCOMPARE(sa, expected1);
+	
+	citer = constexprStd::move(a1.begin(), a1.end(), citer);
+	siter =          std::move(a2.begin(), a2.end(), siter);
+	QCOMPARE(ca, expected2);
+	QCOMPARE(sa, expected2);
+	QVERIFY(std::all_of(a1.begin(), a1.end(), isEmpty));
+	QVERIFY(std::all_of(a2.begin(), a2.end(), isEmpty));
+	
+	citer = constexprStd::move(&ba1[0], &ba1[2], citer);
+	siter =          std::move(&ba2[0], &ba2[2], siter);
+	QCOMPARE(ca, expected3);
+	QCOMPARE(sa, expected3);
+	QVERIFY(std::all_of(std::begin(ba1), std::begin(ba1), isEmpty));
+	QVERIFY(std::all_of(std::begin(ba2), std::begin(ba2), isEmpty));
+	return;
+}
+
 void TestConstexprStd::testIsPermutation(void) const noexcept {
 	constexpr std::array sa1{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10};
 	constexpr std::array sa2{ 1,  2,  3,  4,  5,  6,  7,  9,  8, 10};

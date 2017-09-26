@@ -467,6 +467,23 @@ constexpr OutputIterator copy(Container&& c, OutputIterator destination)
 	return copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination);
 }
 
+template<typename InputIterator, typename OutputIterator>
+constexpr OutputIterator move(InputIterator sourceFirst, const InputIterator sourceLast, OutputIterator destination)
+		noexcept(noexcept(sourceFirst != sourceLast) && noexcept(++sourceFirst) && noexcept(++destination) &&
+		         noexcept(*destination = std::move(*sourceFirst))) {
+	for ( ; sourceFirst != sourceLast; ++sourceFirst, ++destination ) {
+		*destination = std::move(*sourceFirst);
+	} //for ( ; sourceFirst != sourceLast; ++sourceFirst, ++destination )
+	return destination;
+}
+
+template<typename Container, typename OutputIterator>
+constexpr OutputIterator move(Container&& c, OutputIterator destination)
+		noexcept(noexcept(move(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+		                       destination))) {
+	return move(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination);
+}
+
 /*****                                               Permutations                                                 *****/
 
 template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>

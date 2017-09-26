@@ -47,6 +47,7 @@ class TestConstexprStd : public QObject {
 	
 	//Modifying sequence operations
 	void testCopy(void) const noexcept;
+	void testMove(void) const noexcept;
 	
 	//Permutations
 	void testIsPermutation(void) const noexcept;
