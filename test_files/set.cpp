@@ -61,15 +61,16 @@ void TestConstexprStd::testSet(void) const noexcept {
 			
 			constexprStd::set<int, 15> cset(iset);
 			auto t8   = std::tuple{cset.size()};
+			auto t9   = std::tuple{set.count(2), set.count(55)};
 			
 			set.clear();
 			iset.clear();
 			cset.clear();
 			auto tX   = std::tuple{set.size()};
-			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, tX);
+			return std::tuple_cat(t1, t2, t3, t4, t5, t6, t7, t8, t9, tX);
 		};
 	
-	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 3, 3, 0});
+	static_assert(l() == std::tuple{true, false, 1, 5, 8, 8, 12, 3, 3, 1, 0, 0});
 	
 	int& instances = CountInstances<std::string>::Instances;
 	if ( instances != 0 ) {
@@ -155,6 +156,11 @@ void TestConstexprStd::testSet(void) const noexcept {
 	constexprStd::set<CountInstances<std::string>, 15> ccset(cset);
 	         std::set<CountInstances<std::string>>     csset(sset);
 	QVERIFY(std::equal(ccset.begin(), ccset.end(), csset.begin(), csset.end()));
+	
+	QCOMPARE(cset.count("a"),    static_cast<decltype(cset.count(""))>(1));
+	QCOMPARE(sset.count("a"),    static_cast<decltype(sset.count(""))>(1));
+	QCOMPARE(cset.count("damn"), static_cast<decltype(cset.count(""))>(0));
+	QCOMPARE(sset.count("damn"), static_cast<decltype(sset.count(""))>(0));
 	
 	cset.clear();
 	sset.clear();

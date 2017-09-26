@@ -507,6 +507,11 @@ class set_base {
 		return;
 	}
 	
+	[[nodiscard]] constexpr size_type count(const Key& key) const noexcept(CmpIsNoexcept::value) {
+		const auto ret = findBestNode(key, Root);
+		return ret.second ? 1 : 0;
+	}
+	
 	[[nodiscard]] constexpr key_compare key_comp(void) const noexcept {
 		return Cmp;
 	}
