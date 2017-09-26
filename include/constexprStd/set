@@ -326,8 +326,9 @@ class set_base {
 		return;
 	}
 	
-	constexpr set_base(const set_base& that, allocator_type& alloc)
-			noexcept(std::is_nothrow_copy_constructible_v<Compare>) : set_base{that.Cmp, alloc} {
+	constexpr set_base(const set_base& that)
+			noexcept(std::is_nothrow_copy_constructible_v<Compare>) : set_base{that.Cmp, that.Alloc} {
+		constexprStd::copy(that.begin(), that.end(), constexprStd::inserter(*this, end()));
 		return;
 	}
 	
@@ -527,8 +528,8 @@ class set : public set_base<Key, N, Compare, Allocator> {
 	}
 	
 	constexpr set(const set& that)
-			noexcept(std::is_nothrow_constructible_v<Base, const Base&, typename Base::allocator_type&> &&
-			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : Base{that, Alloc} {
+			noexcept(std::is_nothrow_copy_constructible_v<Compare> && std::is_nothrow_move_constructible_v<Compare> &&
+			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : set{that.key_comp()} {
 		Base::insert(that.begin(), that.end());
 		return;
 	}

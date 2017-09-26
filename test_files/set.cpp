@@ -167,6 +167,24 @@ void TestConstexprStd::testSet(void) const noexcept {
 		constexprStd::setDestroy<CountInstances<std::string>, 15> dset;
 	}
 	QCOMPARE(instances, 2);
+	
+	std::string generatedString(30, ' ');
+	auto generator = [s = generatedString, idx = 0u, c = 'a'](void) mutable noexcept {
+			s[idx] = c;
+			if ( c++ == 'z' ) {
+				c = 'a';
+				++idx;
+			} //if ( c++ == 'z' )
+			return s;
+		};
+	std::generate_n(std::inserter(cset, cset.end()), 26 * 30, generator);
+	QCOMPARE(instances, 2 + 26 * 30);
+	constexprStd::set_base copy(cset);
+	QCOMPARE(instances, 2 + 26 * 30 * 2);
+	
+	cset.clear();
+	copy.clear();
+	QCOMPARE(instances, 2);
 	return;
 }
 
