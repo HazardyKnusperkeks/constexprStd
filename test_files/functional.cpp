@@ -29,14 +29,6 @@
 
 #include "test_helper_functions.hpp"
 
-static constexpr int fib(const int i) noexcept {
-	switch ( i ) {
-		case 0 : 
-		case 1 : return i;
-	} //switch ( i )
-	return fib(i-1) + fib(i-2);
-}
-
 void TestConstexprStd::testInvoke(void) const noexcept {
 	struct Ackermann {
 		int N;

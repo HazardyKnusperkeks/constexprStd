@@ -747,6 +747,37 @@ void TestConstexprStd::testMove(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testGenerateN(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			std::array<int, 10> a{};
+			auto g = [i = 0](void) mutable constexpr noexcept {
+					return ++i;
+				};
+			constexprStd::generate_n(a.begin(), 10, g);
+			return a;
+		};
+	static_assert(TestContainer{l()} == TestContainer{});
+	
+	std::vector<int> cv;
+	std::vector<int> sv;
+	
+	auto citer = std::back_inserter(cv);
+	auto siter = std::back_inserter(sv);
+	for ( int i = 0; i < 10; ++i ) {
+		auto il = [i](void) noexcept { return i; };
+		citer = constexprStd::generate_n(citer, 1, il);
+		siter =          std::generate_n(siter, 1, il);
+	} //for ( int i = 0; i < 10; ++i )
+	
+	auto cl = [i = 0](void) mutable constexpr noexcept { return fib(i); };
+	auto sl = [i = 0](void) mutable constexpr noexcept { return fib(i); };
+	
+	constexprStd::generate_n(citer, 1, cl);
+	         std::generate_n(siter, 1, sl);
+	QVERIFY(sv == cv);
+	return;
+}
+
 void TestConstexprStd::testIsPermutation(void) const noexcept {
 	constexpr std::array sa1{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10};
 	constexpr std::array sa2{ 1,  2,  3,  4,  5,  6,  7,  9,  8, 10};

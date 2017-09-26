@@ -24,4 +24,12 @@ constexpr bool isMultipleOfFive(const int i) noexcept { return i %  5 == 0; }
 constexpr bool isMultipleOfEleven(const int i) noexcept { return i % 11 == 0; }
 constexpr bool isOdd(const int i) noexcept { return i % 2 == 1; }
 
+constexpr int fib(const int i) noexcept {
+	switch ( i ) {
+		case 0 :
+		case 1 : return i;
+	} //switch ( i )
+	return fib(i-1) + fib(i-2);
+}
+
 #endif

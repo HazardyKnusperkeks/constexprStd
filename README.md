@@ -104,7 +104,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] fill_n
 - [ ] transform
 - [ ] generate
-- [ ] generate_n
+- [X] generate_n
 - [ ] remover
 - [ ] emove_if
 - [ ] remove_copy

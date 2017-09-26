@@ -484,6 +484,16 @@ constexpr OutputIterator move(Container&& c, OutputIterator destination)
 	return move(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination);
 }
 
+template<typename OutputIter, typename Size, typename Generator>
+constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
+		noexcept(noexcept(count-- > 0) && noexcept(*first = g()) && noexcept(++first)) {
+	while ( count-- > 0 ) {
+		*first = g();
+		++first;
+	} //while ( count-- > 0 )
+	return first;
+}
+
 /*****                                               Permutations                                                 *****/
 
 template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
