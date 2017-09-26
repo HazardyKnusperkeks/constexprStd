@@ -468,6 +468,14 @@ class set_base {
 		return;
 	}
 	
+	[[nodiscard]] constexpr key_compare key_comp(void) const noexcept {
+		return Cmp;
+	}
+	
+	[[nodiscard]] constexpr value_compare value_comp(void) const noexcept {
+		return Cmp;
+	}
+	
 	[[nodiscard]] constexpr bool checkBlackDepth(void) const noexcept {
 		if ( empty() ) {
 			return true;
