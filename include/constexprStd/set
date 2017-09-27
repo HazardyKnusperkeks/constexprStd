@@ -534,8 +534,20 @@ class set_base {
 		return ret.second ? ret.first : &End;
 	}
 	
+	template<typename K, std::enable_if_t<CmpIsTransparent<K>::value>* = nullptr>
+	[[nodiscard]] constexpr iterator find(const K& k) noexcept(CmpIsNoexcept<K>::value) {
+		const auto ret = findBestNode(k, Root);
+		return ret.second ? ret.first : &End;
+	}
+	
 	[[nodiscard]] constexpr const_iterator find(const Key& key) const noexcept(CmpIsNoexcept<>::value) {
 		const auto ret = findBestNode(key, Root);
+		return ret.second ? ret.first : &End;
+	}
+	
+	template<typename K, std::enable_if_t<CmpIsTransparent<K>::value>* = nullptr>
+	[[nodiscard]] constexpr const_iterator find(const K& k) const noexcept(CmpIsNoexcept<K>::value) {
+		const auto ret = findBestNode(k, Root);
 		return ret.second ? ret.first : &End;
 	}
 	

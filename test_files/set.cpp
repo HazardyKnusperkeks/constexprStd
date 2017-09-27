@@ -232,6 +232,10 @@ struct String {
 		return S;
 	}
 	
+	auto toS(void) const {
+		return S;
+	}
+	
 	bool operator<(const char *c) const noexcept(noexcept(S < c)) {
 		return S < c;
 	}
@@ -295,6 +299,24 @@ void TestConstexprStd::testSetTransparentCompare(void) const noexcept {
 	QCOMPARE(ctset.count("b"s), zero);
 	QCOMPARE(snset.count("b"s), zero);
 	QCOMPARE(stset.count("b"s), zero);
+	
+	try { QCOMPARE(cnset.find("a")->toS(), "a"); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QCOMPARE(snset.find("a")->toS(), "a"); QVERIFY(false); } catch ( const std::exception& ) { }
+	QCOMPARE(ctset.find("a")->toS(),  "a");
+	QCOMPARE(stset.find("a")->toS(),  "a");
+	QCOMPARE(cnset.find("a"s)->toS(), "a");
+	QCOMPARE(ctset.find("a"s)->toS(), "a");
+	QCOMPARE(snset.find("a"s)->toS(), "a");
+	QCOMPARE(stset.find("a"s)->toS(), "a");
+	
+	try { QVERIFY(cnset.find("b") == cnset.end()); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QVERIFY(snset.find("b") == snset.end()); QVERIFY(false); } catch ( const std::exception& ) { }
+	QVERIFY(ctset.find("b")  == ctset.end());
+	QVERIFY(stset.find("b")  == stset.end());
+	QVERIFY(cnset.find("b"s) == cnset.end());
+	QVERIFY(ctset.find("b"s) == ctset.end());
+	QVERIFY(snset.find("b"s) == snset.end());
+	QVERIFY(stset.find("b"s) == stset.end());
 	
 	cnset.clear();
 	ctset.clear();
