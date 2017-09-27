@@ -658,6 +658,39 @@ void TestConstexprStd::testFindFirstOf(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testAdjacentFind(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			std::array a{6, 5, 9, 3, 3, 2, 0};
+			TestContainer c;
+			
+			auto d1 = constexprStd::distance(a.begin(), constexprStd::adjacent_find(a));
+			auto d2 = constexprStd::distance(a.begin(), constexprStd::adjacent_find(a, bothOdd));
+			auto d3 = constexprStd::distance(c.begin(), constexprStd::adjacent_find(c));
+			auto d4 = constexprStd::distance(c.begin(), constexprStd::adjacent_find(c, bothOdd));
+			return std::tuple{d1, d2, d3, d4};
+		};
+	
+	static_assert(l() == std::tuple{3, 1, 10, 10});
+	
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d1 =  1;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d2 =  1;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d3 = 30;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d4 = 47;
+	
+	std::string s1(fooString);
+	std::string s2(longString);
+	
+	QCOMPARE(std::distance(s1.begin(),          std::adjacent_find(s1.begin(), s1.end())           ), d1);
+	QCOMPARE(std::distance(s1.begin(),          std::adjacent_find(s1.begin(), s1.end(), bothVocal)), d2);
+	QCOMPARE(std::distance(s2.begin(),          std::adjacent_find(s2.begin(), s2.end())           ), d3);
+	QCOMPARE(std::distance(s2.begin(),          std::adjacent_find(s2.begin(), s2.end(), bothVocal)), d4);
+	QCOMPARE(std::distance(s1.begin(), constexprStd::adjacent_find(s1.begin(), s1.end())           ), d1);
+	QCOMPARE(std::distance(s1.begin(), constexprStd::adjacent_find(s1.begin(), s1.end(), bothVocal)), d2);
+	QCOMPARE(std::distance(s2.begin(), constexprStd::adjacent_find(s2.begin(), s2.end())           ), d3);
+	QCOMPARE(std::distance(s2.begin(), constexprStd::adjacent_find(s2.begin(), s2.end(), bothVocal)), d4);
+	return;
+}
+
 void TestConstexprStd::testCopy(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](void) constexpr noexcept {

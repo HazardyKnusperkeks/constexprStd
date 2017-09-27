@@ -23,6 +23,19 @@ constexpr bool isLessThanEleven(const int i) noexcept { return i < 11; }
 constexpr bool isMultipleOfFive(const int i) noexcept { return i %  5 == 0; }
 constexpr bool isMultipleOfEleven(const int i) noexcept { return i % 11 == 0; }
 constexpr bool isOdd(const int i) noexcept { return i % 2 == 1; }
+constexpr bool isVocal(const char c) noexcept {
+	switch ( c ) {
+		case 'a' :
+		case 'e' :
+		case 'i' :
+		case 'o' :
+		case 'u' : return true;
+	} //switch ( c )
+	return false;
+}
+
+constexpr bool bothOdd(const int i, const int j) noexcept { return isOdd(i) && isOdd(j); }
+constexpr bool bothVocal(const char c, const char d) noexcept { return isVocal(c) && isVocal(d); }
 
 constexpr int fib(const int i) noexcept {
 	switch ( i ) {
