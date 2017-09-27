@@ -57,8 +57,10 @@ class set_base {
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	
 	template<typename K = value_type>
-	using CmpIsNoexcept       = std::bool_constant<noexcept(std::declval<Compare&>()(std::declval<const K&>(),
-	                                                                                 std::declval<const K&>()))>;
+	using CmpIsNoexcept = std::bool_constant<noexcept(std::declval<Compare&>()(std::declval<const K&>(),
+	                                                                           std::declval<const value_type&>())) &&
+	                                         noexcept(std::declval<Compare&>()(std::declval<const value_type&>(),
+	                                                                           std::declval<const K&>()))>;
 	using AllocIsNoexcept     = std::bool_constant<noexcept(std::declval<allocator_type&>().allocate(1))>;
 	using DestroyIsNoexcept   = std::bool_constant<
 		noexcept(std::declval<allocator_type&>().destroy(std::declval<NodeType*>()))>;
