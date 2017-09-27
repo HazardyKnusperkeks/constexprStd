@@ -119,6 +119,20 @@ struct SetNode {
 		return hasLeftChild() || hasRightChild();
 	}
 	
+	[[nodiscard]] constexpr bool hasTwoChildren(void) const noexcept {
+		return hasLeftChild() && hasRightChild();
+	}
+	
+	[[nodiscard]] constexpr bool bothChildrenBlack(void) const noexcept {
+		if ( hasLeftChild() && LeftChild->Color == NodeColor::Red ) {
+			return false;
+		} //if ( hasLeftChild() && LeftChild->Color == NodeColor::Red )
+		if ( hasRightChild() && RightChild->Color == NodeColor::Red ) {
+			return false;
+		} //if ( hasRightChild() && RightChild->Color == NodeColor::Red )
+		return true;
+	}
+	
 	[[nodiscard]] constexpr bool hasLeftChild(void) const noexcept {
 		return LeftChild;
 	}
@@ -135,6 +149,16 @@ struct SetNode {
 		return RightChild == node;
 	}
 	
+	[[nodiscard]] constexpr NodeDirection directionOf(const SetNode *child) const noexcept {
+		if ( isLeftChild(child) ) {
+			return NodeDirection::Left;
+		} //if ( isLeftChild(child) )
+		if ( isRightChild(child) ) {
+			return NodeDirection::Right;
+		} //if ( isRightChild(child) )
+		return NodeDirection::None; 
+	}
+	
 	[[nodiscard]] constexpr bool hasParent(void) const noexcept {
 		return Parent;
 	}
@@ -144,6 +168,13 @@ struct SetNode {
 			return RightChild;
 		} //if ( isLeftChild(node) )
 		return LeftChild;
+	}
+	
+	[[nodiscard]] constexpr SetNode* onlyChild(void) const noexcept {
+		if ( hasLeftChild() ) {
+			return LeftChild;
+		} //if ( hasLeftChild() )
+		return RightChild;
 	}
 	
 	[[nodiscard]] constexpr SetNode* leftestNode(void) noexcept {

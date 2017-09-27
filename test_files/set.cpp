@@ -173,6 +173,14 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QCOMPARE(*std::as_const(cset).find(fooString), fooString);
 	QCOMPARE(*std::as_const(sset).find(fooString), fooString);
 	
+	QVERIFY(cset.checkBinarySearchTree());
+	QVERIFY(cset.checkBlackDepth());
+	QCOMPARE(*cset.erase(cset.find("n")), "o");
+	QCOMPARE(*sset.erase(sset.find("n")), "o");
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	QVERIFY(cset.checkBinarySearchTree());
+	QVERIFY(cset.checkBlackDepth());
+	
 	cset.clear();
 	sset.clear();
 	icset.clear();

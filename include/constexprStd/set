@@ -193,6 +193,154 @@ class set_base {
 		return;
 	}
 	
+	[[nodiscard]] constexpr iterator eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
+		//Make sure we have at most one child
+		if ( node->hasTwoChildren() ) {
+			//Since we go into the left subtree we can never end up with the end node
+			switchNode(node, node->LeftChild->rightestNode());
+		} //if ( node->hasTwoChildren() )
+		
+		//Now we know the return value
+		auto ret = node->next();
+		
+		/* If the node is red, we can just replace it with its child, if there is one and mark the child black.
+		 * If the node is black and has a child, the child has to be red, otherwise the node must have two children to
+		 * have the same black depth in both paths.
+		 * The remaining case is, the node is black and has no children. We remove the node, but have to add a black
+		 * node along the path to restore the black depth. */
+		auto child  = node->onlyChild();
+		auto parent = node->Parent;
+		auto dir    = node->markForAdoption();
+		if ( node->Color == details::NodeColor::Red || child ) {
+			if ( child ) {
+				child->Color = details::NodeColor::Black;
+				child->markForAdoption();
+				parent->adopt(child, dir);
+			} //if ( child )
+		} //if ( node->Color == details::NodeColor::Red || child )
+		else {
+			restoreBlackDepthAfterErase(&End, parent, dir);
+		} //else -> if ( node->Color == details::NodeColor::Red || child )
+		
+		//Destroy node and update node count
+		destroyNode(node);
+		--Nodes;
+		return ret;
+	}
+	
+	constexpr void switchNode(NodeType *node1, NodeType *node2) noexcept {
+		auto parent1 = node1->Parent;
+		auto dir1    = node1->markForAdoption();
+		
+		auto parent2 = node2->Parent;
+		auto dir2    = node2->markForAdoption();
+		
+		constexprStd::swap(node1->LeftChild,  node2->LeftChild);
+		constexprStd::swap(node1->RightChild, node2->RightChild);
+		constexprStd::swap(node1->Color,      node2->Color);
+		
+		auto reparent = [this](auto parent, auto dir, auto node) constexpr noexcept {
+				switch ( dir ) {
+					case details::NodeDirection::Left  : parent->adoptLeft(node);  break;
+					case details::NodeDirection::Right : parent->adoptRight(node); break;
+					case details::NodeDirection::None  : Root = node;
+				} //switch ( dir )
+				return;
+			};
+		reparent(parent1, dir1, node2);
+		reparent(parent2, dir2, node1);
+		return;
+	}
+	
+	constexpr void restoreBlackDepthAfterErase(NodeType *node, NodeType *parent, details::NodeDirection dir) noexcept {
+		//Case 1: No parent, the node was the root
+		if ( !parent ) {
+			Root = node;
+		} //if ( !parent )
+		
+		NodeType *sibling = dir == details::NodeDirection::Right ? parent->LeftChild : parent->RightChild;
+		
+		//Case 2: The sibling is red
+		if ( sibling->Color == details::NodeColor::Red ) {
+			//Rotate and switch colors between parent and sibling
+			parent->Color  = details::NodeColor::Red;
+			sibling->Color = details::NodeColor::Black;
+			if ( dir == details::NodeDirection::Left ) {
+				rotateLeft(parent, sibling);
+				//Update sibling
+				sibling = parent->RightChild;
+			} //if ( dir == details::NodeDirection::Left )
+			else {
+				rotateRight(parent, sibling);
+				sibling = parent->LeftChild;
+			} //else -> if ( dir == details::NodeDirection::Left )
+		} //if ( sibling->Color == details::NodeColor::Red )
+		
+		//Case 3: Parent, sibling, and both nephews are black (can not happen after case 2)
+		else if ( parent->Color == details::NodeColor::Black && sibling->Color == details::NodeColor::Black &&
+		          sibling->bothChildrenBlack() ) {
+			//Mark the sibling as red and move the problem one level up
+			sibling->Color = details::NodeColor::Red;
+			node = parent;
+			if ( node->hasParent() ) {
+				parent = node->Parent;
+				dir    = parent->directionOf(node);
+			} //if ( node->hasParent() )
+			else {
+				parent = nullptr;
+				dir    = details::NodeDirection::None;
+			} //else -> if ( node->hasParent() )
+			restoreBlackDepthAfterErase(node, parent, dir);
+		} //else if ( parent->Color == details::NodeColor::Black && sibling && bothChildrenBlack() )
+		
+		//Case 4: Parent is red, sibling and nephews are black
+		if ( parent->Color == details::NodeColor::Red && sibling->Color == details::NodeColor::Black &&
+		     sibling->bothChildrenBlack() ) {
+			//Switch colors between sibling and parent
+			sibling->Color = details::NodeColor::Red;
+			parent->Color  = details::NodeColor::Black;
+			//Everything is fine now
+			return;
+		} //if ( parent->Color == details::NodeColor::Red && sibling && bothChildrenBlack() )
+		
+		//Now the sibling is black and at least one of its children is red
+		//Case 5: The nephew facing away from node is black
+		if ( dir == details::NodeDirection::Left ) {
+			if ( auto nephew = sibling->RightChild; !nephew || nephew->Color == details::NodeColor::Black ) {
+				//Rotate sibling and the other nephew, than change colors
+				auto otherNephew = sibling->LeftChild;
+				rotateRight(sibling, otherNephew);
+				otherNephew->Color = details::NodeColor::Black;
+				sibling->Color     = details::NodeColor::Red;
+				//Update sibling
+				sibling = otherNephew;
+			} //if ( auto nephew = sibling->RightChild; !nephew || nephew->Color == details::NodeColor::Black )
+		} //if ( dir == details::NodeDirection::Left )
+		else {
+			if ( auto nephew = sibling->LeftChild; !nephew || nephew->Color == details::NodeColor::Black ) {
+				auto otherNephew = sibling->RightChild;
+				rotateLeft(sibling, otherNephew);
+				otherNephew->Color = details::NodeColor::Black;
+				sibling->Color     = details::NodeColor::Red;
+				sibling = otherNephew;
+			} //if ( auto nephew = sibling->LeftChild; !nephew || nephew->Color == details::NodeColor::Black )
+		} //else -> if ( dir == details::NodeDirection::Left )
+		
+		//Case 6: Now the outer nephew is the red one
+		//Rotate sibling and parent, mark parent black as well as the outer nephew, the sibling gets the color of parent
+		if ( dir == details::NodeDirection::Left ) {
+			rotateLeft(parent, sibling);
+			sibling->RightChild->Color = details::NodeColor::Black;
+		} //if ( dir == details::NodeDirection::Left )
+		else {
+			rotateRight(parent, sibling);
+			sibling->LeftChild->Color = details::NodeColor::Black;
+		} //else -> if ( dir == details::NodeDirection::Left )
+		sibling->Color = parent->Color;
+		parent->Color  = details::NodeColor::Black;
+		return;
+	}
+	
 	constexpr void rotateLeft(NodeType *parent, NodeType *child) noexcept {
 		child->markForAdoption();
 		
@@ -518,6 +666,17 @@ class set_base {
 			noexcept(noexcept(std::declval<set_base&>().insert(il.begin(), il.end()))) {
 		insert(il.begin(), il.end());
 		return;
+	}
+	
+	//No iterator overload needed, because const_iterator and iterator are the same class
+	static_assert(std::is_same_v<iterator, const_iterator>);
+	constexpr iterator erase(const_iterator pos)
+			noexcept(noexcept(std::declval<set_base&>().eraseImpl(std::declval<NodeType*>()))) {
+		NodeType *node = Root;
+		if ( pos.Node != Root ) {
+			node = pos.Node->fancyThis();
+		} //if ( pos.Node != Root )
+		return eraseImpl(node);
 	}
 	
 	[[nodiscard]] constexpr size_type count(const Key& key) const noexcept(CmpIsNoexcept<>::value) {
