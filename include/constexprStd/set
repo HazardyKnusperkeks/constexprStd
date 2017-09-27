@@ -653,6 +653,58 @@ class set_base {
 		return ret.first->next();
 	}
 	
+	[[nodiscard]] constexpr std::pair<iterator, iterator> equal_range(const Key& key) noexcept(CmpIsNoexcept<>::value) {
+		if ( empty() ) {
+			return {&End, &End};
+		} //if ( empty() )
+		
+		auto lb = lower_bound(key);
+		if ( lb.Node == &End || Cmp(key, *lb) ) {
+			return {lb, lb};
+		} //if ( lb.Node == &End || Cmp(key, *lb) )
+		return {lb, constexprStd::next(lb)};
+	}
+	
+	template<typename K, std::enable_if_t<CmpIsTransparent<K>::value>* = nullptr>
+	[[nodiscard]] constexpr std::pair<iterator, iterator> equal_range(const K& k) noexcept(CmpIsNoexcept<K>::value) {
+		if ( empty() ) {
+			return {&End, &End};
+		} //if ( empty() )
+		
+		auto lb = lower_bound(k);
+		if ( lb.Node == &End || Cmp(k, *lb) ) {
+			return {lb, lb};
+		} //if ( lb.Node == &End || Cmp(k, *lb) )
+		return {lb, constexprStd::next(lb)};
+	}
+	
+	[[nodiscard]] constexpr std::pair<const_iterator, const_iterator> equal_range(const Key& key) const
+			noexcept(CmpIsNoexcept<>::value) {
+		if ( empty() ) {
+			return {&End, &End};
+		} //if ( empty() )
+		
+		auto lb = lower_bound(key);
+		if ( lb.Node == &End || Cmp(key, *lb) ) {
+			return {lb, lb};
+		} //if ( lb.Node == &End || Cmp(key, *lb) )
+		return {lb, constexprStd::next(lb)};
+	}
+	
+	template<typename K, std::enable_if_t<CmpIsTransparent<K>::value>* = nullptr>
+	[[nodiscard]] constexpr std::pair<const_iterator, const_iterator> equal_range(const K& k) const
+			noexcept(CmpIsNoexcept<K>::value) {
+		if ( empty() ) {
+			return {&End, &End};
+		} //if ( empty() )
+		
+		auto lb = lower_bound(k);
+		if ( lb.Node == &End || Cmp(k, *lb) ) {
+			return {lb, lb};
+		} //if ( lb.Node == &End || Cmp(k, *lb) )
+		return {lb, constexprStd::next(lb)};
+	}
+	
 	[[nodiscard]] constexpr key_compare key_comp(void) const noexcept {
 		return Cmp;
 	}

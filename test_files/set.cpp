@@ -394,6 +394,38 @@ void TestConstexprStd::testSetTransparentCompare(void) const noexcept {
 	QVERIFY(snset.upper_bound(toGreatElements) == snset.end());
 	QVERIFY(stset.upper_bound(toGreatElements) == stset.end());
 	
+	auto cniters = std::pair{cnset.end(), cnset.end()};
+	auto ctiters = std::pair{ctset.end(), ctset.end()};
+	auto sniters = std::pair{snset.end(), snset.end()};
+	auto stiters = std::pair{stset.end(), stset.end()};
+	
+	try { cniters = cnset.equal_range("a"); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { sniters = snset.equal_range("a"); QVERIFY(false); } catch ( const std::exception& ) { }
+	ctiters = ctset.equal_range("a");  QCOMPARE(ctiters.first->toS(), "a"); QCOMPARE(ctiters.second->toS(), "c");
+	stiters = stset.equal_range("a");  QCOMPARE(stiters.first->toS(), "a"); QCOMPARE(stiters.second->toS(), "c");
+	cniters = cnset.equal_range("a"s); QCOMPARE(cniters.first->toS(), "a"); QCOMPARE(cniters.second->toS(), "c");
+	sniters = snset.equal_range("a"s); QCOMPARE(sniters.first->toS(), "a"); QCOMPARE(sniters.second->toS(), "c");
+	ctiters = ctset.equal_range("a"s); QCOMPARE(ctiters.first->toS(), "a"); QCOMPARE(ctiters.second->toS(), "c");
+	stiters = stset.equal_range("a"s); QCOMPARE(stiters.first->toS(), "a"); QCOMPARE(stiters.second->toS(), "c");
+	
+	try { cniters = cnset.equal_range("b"); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { sniters = snset.equal_range("b"); QVERIFY(false); } catch ( const std::exception& ) { }
+	ctiters = ctset.equal_range("b");  QCOMPARE(ctiters.first->toS(), "c"); QCOMPARE(ctiters.second->toS(), "c");
+	stiters = stset.equal_range("b");  QCOMPARE(stiters.first->toS(), "c"); QCOMPARE(stiters.second->toS(), "c");
+	cniters = cnset.equal_range("b"s); QCOMPARE(cniters.first->toS(), "c"); QCOMPARE(cniters.second->toS(), "c");
+	sniters = snset.equal_range("b"s); QCOMPARE(sniters.first->toS(), "c"); QCOMPARE(sniters.second->toS(), "c");
+	ctiters = ctset.equal_range("b"s); QCOMPARE(ctiters.first->toS(), "c"); QCOMPARE(ctiters.second->toS(), "c");
+	stiters = stset.equal_range("b"s); QCOMPARE(stiters.first->toS(), "c"); QCOMPARE(stiters.second->toS(), "c");
+	
+	try { cniters = cnset.equal_range(toGreatElement); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { sniters = snset.equal_range(toGreatElement); QVERIFY(false); } catch ( const std::exception& ) { }
+	ctiters = ctset.equal_range(toGreatElement);  QVERIFY(ctiters.first == ctset.end()); QVERIFY(ctiters.second == ctset.end());
+	stiters = stset.equal_range(toGreatElement);  QVERIFY(stiters.first == stset.end()); QVERIFY(stiters.second == stset.end());
+	cniters = cnset.equal_range(toGreatElements); QVERIFY(cniters.first == cnset.end()); QVERIFY(cniters.second == cnset.end());
+	sniters = snset.equal_range(toGreatElements); QVERIFY(sniters.first == snset.end()); QVERIFY(sniters.second == snset.end());
+	ctiters = ctset.equal_range(toGreatElements); QVERIFY(ctiters.first == ctset.end()); QVERIFY(ctiters.second == ctset.end());
+	stiters = stset.equal_range(toGreatElements); QVERIFY(stiters.first == stset.end()); QVERIFY(stiters.second == stset.end());
+	
 	cnset.clear();
 	ctset.clear();
 	return;
