@@ -318,6 +318,46 @@ void TestConstexprStd::testSetTransparentCompare(void) const noexcept {
 	QVERIFY(snset.find("b"s) == snset.end());
 	QVERIFY(stset.find("b"s) == stset.end());
 	
+	std::string toGreatElements = "y"s < "Z"s ? "Z" : "y";
+	++toGreatElements[0];
+	const char *toGreatElement = toGreatElements.data();
+	
+	try { QCOMPARE(cnset.lower_bound("a")->toS(), "a"); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QCOMPARE(snset.lower_bound("a")->toS(), "a"); QVERIFY(false); } catch ( const std::exception& ) { }
+	QCOMPARE(ctset.lower_bound("a")->toS(),  "a");
+	QCOMPARE(stset.lower_bound("a")->toS(),  "a");
+	QCOMPARE(cnset.lower_bound("a"s)->toS(), "a");
+	QCOMPARE(ctset.lower_bound("a"s)->toS(), "a");
+	QCOMPARE(snset.lower_bound("a"s)->toS(), "a");
+	QCOMPARE(stset.lower_bound("a"s)->toS(), "a");
+	
+	try { QCOMPARE(cnset.lower_bound("b")->toS(), "c"); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QCOMPARE(snset.lower_bound("b")->toS(), "c"); QVERIFY(false); } catch ( const std::exception& ) { }
+	QCOMPARE(ctset.lower_bound("b")->toS(),  "c");
+	QCOMPARE(stset.lower_bound("b")->toS(),  "c");
+	QCOMPARE(cnset.lower_bound("b"s)->toS(), "c");
+	QCOMPARE(ctset.lower_bound("b"s)->toS(), "c");
+	QCOMPARE(snset.lower_bound("b"s)->toS(), "c");
+	QCOMPARE(stset.lower_bound("b"s)->toS(), "c");
+	
+	try { QCOMPARE(cnset.lower_bound("x")->toS(), "y"); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QCOMPARE(snset.lower_bound("x")->toS(), "y"); QVERIFY(false); } catch ( const std::exception& ) { }
+	QCOMPARE(ctset.lower_bound("x")->toS(),  "y");
+	QCOMPARE(stset.lower_bound("x")->toS(),  "y");
+	QCOMPARE(cnset.lower_bound("x"s)->toS(), "y");
+	QCOMPARE(ctset.lower_bound("x"s)->toS(), "y");
+	QCOMPARE(snset.lower_bound("x"s)->toS(), "y");
+	QCOMPARE(stset.lower_bound("x"s)->toS(), "y");
+	
+	try { QVERIFY(cnset.lower_bound(toGreatElement) == cnset.end()); QVERIFY(false); } catch ( const std::exception& ) { }
+	try { QVERIFY(snset.lower_bound(toGreatElement) == snset.end()); QVERIFY(false); } catch ( const std::exception& ) { }
+	QVERIFY(ctset.lower_bound(toGreatElement)  == ctset.end());
+	QVERIFY(stset.lower_bound(toGreatElement)  == stset.end());
+	QVERIFY(cnset.lower_bound(toGreatElements) == cnset.end());
+	QVERIFY(ctset.lower_bound(toGreatElements) == ctset.end());
+	QVERIFY(snset.lower_bound(toGreatElements) == snset.end());
+	QVERIFY(stset.lower_bound(toGreatElements) == stset.end());
+	
 	cnset.clear();
 	ctset.clear();
 	return;
