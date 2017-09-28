@@ -105,6 +105,7 @@ class TestConstexprStd : public QObject {
 	//Container
 	void testSet(void) const noexcept;
 	void testSetTransparentCompare(void) const noexcept;
+	void testSetErase(void) const noexcept;
 	void testSetFailCaseOne(void) const noexcept;
 	void testSetRandom(void) const noexcept;
 	

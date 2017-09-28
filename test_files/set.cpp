@@ -439,6 +439,49 @@ void TestConstexprStd::testSetTransparentCompare(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testSetErase(void) const noexcept {
+	constexpr int elements = 10000;
+	constexpr int stepSize = 10;
+	
+	//Try to produce all cases of erase
+	std::set<int> sbegin;
+	std::generate_n(std::inserter(sbegin, sbegin.end()), elements, [i = 0](void) mutable noexcept { return ++i; });
+	std::set<int> send(sbegin), squarter(sbegin), smiddle(sbegin);
+	constexprStd::set<int, 10> cbegin(sbegin.begin(), sbegin.end());
+	constexprStd::set<int, 10> cend(cbegin), cquarter(cbegin), cmiddle(cbegin);
+	
+	//Remove always the first element
+	auto siter = sbegin.begin();
+	auto citer = cbegin.begin();
+	for ( int i = 1; i <= elements; ++i ) {
+		siter = sbegin.erase(siter);
+		citer = cbegin.erase(citer);
+		if ( i % stepSize == 0 ) {
+			auto equal = std::equal(siter, sbegin.end(), citer, cbegin.end());
+			auto depth = cbegin.checkBlackDepth();
+			if ( !equal || !depth ) {
+				QCOMPARE(i, 0);
+			} //if ( !equal || !depth )
+		} //if ( i % stepSize == 0 )
+	} //for ( int i = 1; i <= elements; ++i )
+	
+	//Remove always the last element
+	siter = send.end();
+	citer = cend.end();
+	for ( int i = 1; i <= elements; ++i ) {
+		siter = send.erase(std::prev(siter));
+		citer = cend.erase(std::prev(citer));
+		if ( i % stepSize == 0 ) {
+			auto equal = std::equal(send.begin(), siter, cend.begin(), citer);
+			auto depth = cbegin.checkBlackDepth();
+			if ( !equal || !depth ) {
+				QCOMPARE(i, 0);
+			} //if ( !equal || !depth )
+		} //if ( i % stepSize == 0 )
+	} //for ( int i = 1; i <= elements; ++i )
+	return;
+}
+
 void TestConstexprStd::testSetFailCaseOne(void) const noexcept {
 	constexpr std::array a{5, 4, 3, 2, 3, 2, 3};
 	constexprStd::setDestroy<int, 10> cset;

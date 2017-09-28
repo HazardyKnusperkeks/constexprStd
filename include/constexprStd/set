@@ -194,14 +194,16 @@ class set_base {
 	}
 	
 	[[nodiscard]] constexpr iterator eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
+		auto ret = node->next();
+		
+		//Detach end
+		End.markForAdoption();
+		
 		//Make sure we have at most one child
 		if ( node->hasTwoChildren() ) {
 			//Since we go into the left subtree we can never end up with the end node
 			switchNode(node, node->LeftChild->rightestNode());
 		} //if ( node->hasTwoChildren() )
-		
-		//Now we know the return value
-		auto ret = node->next();
 		
 		/* If the node is red, we can just replace it with its child, if there is one and mark the child black.
 		 * If the node is black and has a child, the child has to be red, otherwise the node must have two children to
@@ -215,16 +217,32 @@ class set_base {
 			if ( child ) {
 				child->Color = details::NodeColor::Black;
 				child->markForAdoption();
-				parent->adopt(child, dir);
+				if ( parent ) {
+					parent->adopt(child, dir);
+				} //if ( parent )
+				else {
+					Root = child;
+				} //else -> if ( parent )
 			} //if ( child )
 		} //if ( node->Color == details::NodeColor::Red || child )
 		else {
-			restoreBlackDepthAfterErase(&End, parent, dir);
+			restoreBlackDepthAfterErase(nullptr, parent, dir);
 		} //else -> if ( node->Color == details::NodeColor::Red || child )
 		
-		//Destroy node and update node count
+		//Update Root and End
+		if ( --Nodes == 0 ) {
+			Root = &End;
+			End.markForAdoption();
+		} //if ( --Nodes == 0 )
+		else {
+			while ( Root->hasParent() ) {
+				Root = Root->Parent;
+			} //while ( Root->hasParent() )
+			
+			Root->rightestNode()->adoptRight(&End);
+		} //else -> if ( --Nodes == 0 )
+		
 		destroyNode(node);
-		--Nodes;
 		return ret;
 	}
 	
@@ -256,6 +274,7 @@ class set_base {
 		//Case 1: No parent, the node was the root
 		if ( !parent ) {
 			Root = node;
+			return;
 		} //if ( !parent )
 		
 		NodeType *sibling = dir == details::NodeDirection::Right ? parent->LeftChild : parent->RightChild;
@@ -291,6 +310,7 @@ class set_base {
 				dir    = details::NodeDirection::None;
 			} //else -> if ( node->hasParent() )
 			restoreBlackDepthAfterErase(node, parent, dir);
+			return;
 		} //else if ( parent->Color == details::NodeColor::Black && sibling && bothChildrenBlack() )
 		
 		//Case 4: Parent is red, sibling and nephews are black
