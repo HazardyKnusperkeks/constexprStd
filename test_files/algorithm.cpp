@@ -691,6 +691,54 @@ void TestConstexprStd::testAdjacentFind(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testSearch(void) const noexcept {
+	auto lambda = [](void) constexpr noexcept {
+			std::array a{1, 2, 3, 4, 5, 1, 2, 5, 4};
+			std::array s1{1, 2};
+			std::array s2{5};
+			std::array s3{7};
+			auto d1 = constexprStd::distance(a.begin(), constexprStd::search(a, s1.begin(), s1.end()));
+			auto d2 = constexprStd::distance(a.begin(), constexprStd::search(a, s2));
+			auto d3 = constexprStd::distance(a.begin(), constexprStd::search(a, s3));
+			return std::tuple{d1, d2, d3};
+		};
+	
+	static_assert(lambda() == std::tuple{0, 4, 9});
+	
+	std::string s = "123 hallo 123";
+	std::string s1 = "123";
+	std::string s2 = "l";
+	std::string s3 = fooString;
+	std::string s4 = " 123";
+	std::string s5 = "123 hallo 123 bar";
+	std::string s6 = "x";
+	std::string s7 = "";
+	
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d1 =  0;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d2 =  6;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d3 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d4 =  9;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d5 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d6 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d7 =  0;
+	
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s1.begin(), s1.end())), d1);
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s2.begin(), s2.end())), d2);
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s3.begin(), s3.end())), d3);
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s4.begin(), s4.end())), d4);
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s5.begin(), s5.end())), d5);
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s6.begin(), s6.end())), d6);
+	QCOMPARE(std::distance(s.begin(),          std::search(s.begin(), s.end(), s7.begin(), s7.end())), d7);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s1.begin(), s1.end())), d1);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s2.begin(), s2.end())), d2);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s3.begin(), s3.end())), d3);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s4.begin(), s4.end())), d4);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s5.begin(), s5.end())), d5);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s6.begin(), s6.end())), d6);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search(s.begin(), s.end(), s7.begin(), s7.end())), d7);
+	return;
+}
+
 void TestConstexprStd::testCopy(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](void) constexpr noexcept {

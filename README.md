@@ -90,7 +90,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] find_end
 - [X] find_first_of
 - [X] adjacent_find
-- [ ] search
+- [X] search
 - [ ] search_n
 
 #### Modifying sequence operations
