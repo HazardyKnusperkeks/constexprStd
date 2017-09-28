@@ -473,7 +473,20 @@ void TestConstexprStd::testSetErase(void) const noexcept {
 		citer = cend.erase(std::prev(citer));
 		if ( i % stepSize == 0 ) {
 			auto equal = std::equal(send.begin(), siter, cend.begin(), citer);
-			auto depth = cbegin.checkBlackDepth();
+			auto depth = cend.checkBlackDepth();
+			if ( !equal || !depth ) {
+				QCOMPARE(i, 0);
+			} //if ( !equal || !depth )
+		} //if ( i % stepSize == 0 )
+	} //for ( int i = 1; i <= elements; ++i )
+	
+	//Remove always the middle element
+	for ( int i = 1; i <= elements; ++i ) {
+		smiddle.erase(std::next(smiddle.begin(), (elements - i) / 2));
+		cmiddle.erase(std::next(cmiddle.begin(), (elements - i) / 2));
+		if ( i % stepSize == 0 ) {
+			auto equal = std::equal(smiddle.begin(), smiddle.end(), cmiddle.begin(), cmiddle.end());
+			auto depth = cmiddle.checkBlackDepth();
 			if ( !equal || !depth ) {
 				QCOMPARE(i, 0);
 			} //if ( !equal || !depth )

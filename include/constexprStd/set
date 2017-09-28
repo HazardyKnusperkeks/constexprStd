@@ -257,6 +257,17 @@ class set_base {
 		constexprStd::swap(node1->RightChild, node2->RightChild);
 		constexprStd::swap(node1->Color,      node2->Color);
 		
+		auto correctParentState = [](auto parent, auto child) constexpr noexcept {
+				if ( child ) {
+					child->Parent = parent;
+				} //if ( child )
+				return;
+			};
+		correctParentState(node1, node1->LeftChild);
+		correctParentState(node1, node1->RightChild);
+		correctParentState(node2, node2->LeftChild);
+		correctParentState(node2, node2->RightChild);
+		
 		auto reparent = [this](auto parent, auto dir, auto node) constexpr noexcept {
 				switch ( dir ) {
 					case details::NodeDirection::Left  : parent->adoptLeft(node);  break;
@@ -266,7 +277,17 @@ class set_base {
 				return;
 			};
 		reparent(parent1, dir1, node2);
-		reparent(parent2, dir2, node1);
+		if ( node1 == parent2 ) {
+			//Switching a node with its child
+			switch ( dir2 ) {
+				case details::NodeDirection::Left  : node2->adoptLeft(node1);  break;
+				case details::NodeDirection::Right : node2->adoptRight(node1); break;
+				case details::NodeDirection::None  : std::terminate();
+			} //switch ( dir2 )
+		} //if ( node1 == parent2 )
+		else {
+			reparent(parent2, dir2, node1);
+		} //else -> if ( node1 == parent2 )
 		return;
 	}
 	
