@@ -492,6 +492,19 @@ void TestConstexprStd::testSetErase(void) const noexcept {
 			} //if ( !equal || !depth )
 		} //if ( i % stepSize == 0 )
 	} //for ( int i = 1; i <= elements; ++i )
+	
+	//Remove always the element on 1/4th of the range
+	for ( int i = 1; i <= elements; ++i ) {
+		squarter.erase(std::next(squarter.begin(), (elements - i) / 4));
+		cquarter.erase(std::next(cquarter.begin(), (elements - i) / 4));
+		if ( i % stepSize == 0 ) {
+			auto equal = std::equal(squarter.begin(), squarter.end(), cquarter.begin(), cquarter.end());
+			auto depth = cquarter.checkBlackDepth();
+			if ( !equal || !depth ) {
+				QCOMPARE(i, 0);
+			} //if ( !equal || !depth )
+		} //if ( i % stepSize == 0 )
+	} //for ( int i = 1; i <= elements; ++i )
 	return;
 }
 
@@ -520,40 +533,71 @@ void TestConstexprStd::testSetRandom(void) const noexcept {
 	std::set<int> sset;
 	
 	struct PrintSetOnEarlyExit {
-		std::vector<int> Vec;
+		std::vector<int> Insert;
+		std::vector<int> Erase;
 		bool Print = true;
 		
 		~PrintSetOnEarlyExit(void) noexcept {
 			if ( Print ) {
 				std::cout<<"Insertion order on error: ";
-				for ( const auto& i : Vec ) {
+				for ( const auto& i : Insert ) {
 					std::cout<<i<<", ";
-				} //for ( const auto& i : Vec )
+				} //for ( const auto& i : Insert )
+				std::cout<<"\nErase indicies on error: ";
+				for ( const auto& i : Erase ) {
+					std::cout<<i<<", ";
+				} //for ( const auto& i : Erase )
 				std::cout<<std::endl;
 			} //if ( Print )
 			return;
 		}
 	};
 	
+	constexpr int elements = 30000;
+	
 	PrintSetOnEarlyExit p;
-	p.Vec.reserve(30000);
+	p.Insert.reserve(elements);
+	p.Erase.reserve(elements);
 	std::mt19937 gen{std::random_device{}()};
 	std::uniform_int_distribution<int> distribution{0, 100000};
 	
 	auto citer = cset.end();
 	auto siter = sset.end();
 	
-	for ( int i = 0; i < 30000; ++i ) {
+	for ( int i = 0; i < elements; ++i ) {
 		int rand = distribution(gen);
-		p.Vec.emplace_back(rand);
+		p.Insert.emplace_back(rand);
 		citer = cset.insert(citer, rand);
 		siter = sset.insert(siter, rand);
 		
 //		if ( i % 1000 == 0 ) {
 //			QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
 //		} //if ( i % 1000 == 0 )
-	} //for ( int i = 0; i < 30000; ++i )
+	} //for ( int i = 0; i < elements; ++i )
 	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	QVERIFY(cset.checkBlackDepth());
+	
+	const int elementsInSet = static_cast<int>(sset.size());
+	citer = cset.begin();
+	siter = sset.begin();
+	int oldIndex = 0;
+	for ( int i = 0; i < elementsInSet; ++i ) {
+		int rand = std::uniform_int_distribution<int>{0, elementsInSet - i - 1}(gen);
+		p.Erase.emplace_back(rand);
+		auto diff = rand - oldIndex;
+		std::advance(citer, diff);
+		std::advance(siter, diff);
+		oldIndex = rand;
+		citer = cset.erase(citer);
+		siter = sset.erase(siter);
+		
+//		if ( i % 1000 == 0 ) {
+//			QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+//			QVERIFY(cset.checkBlackDepth());
+//		} //if ( i % 1000 == 0 )
+	} //for ( int i = 0; i < elementsInSet; ++i )
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	QVERIFY(cset.checkBlackDepth());
 	p.Print = false;
 	return;
 }
