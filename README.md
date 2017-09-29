@@ -69,6 +69,16 @@ If you want to use such a type and need direct initialization, add a non trivial
 ### `constexprStd::pair`
 The default constructor is never explicit.
 
+### `constexprStd::set`
+Because it is based on our [Allocator](#Allocator) it's not fully compatible with `std::set`, we do not provide extract() and the corresponding insert() functions.
+And because we can not call a non trivial destructor in constexpr `constexprStd::set` does *NOT* delete the content of the nodes in its destructor.
+In constexpr mode this is not necessary, because only types with a non trivial destructor could leak memory, but if you intend to use the set in run time (which is advised against) you have to manually call clear or use the `constexprStd::setDestroy` wrapper.
+
+Note that emplace() and emplace_hint() are not constexpr, because without copying or moving we could not provide exception safety.
+
+It the provided `constexprStd::allocator` runs out of memory it falls back to `std::allocator`.
+This results in a compile time error, when happening in constexpr mode, in this case you have to increase the preallocated memory.
+
 ## Implementation
 ### [Algorihms library](http://en.cppreference.com/w/cpp/algorithm)
 The execution policies and the overloads for the algorithms are not implemented, because as far as I know, there is no chance of performing paralell computations in `constexpr`.
