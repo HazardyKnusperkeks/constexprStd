@@ -762,6 +762,13 @@ class set_base {
 		return emplaceImpl(Root, std::forward<Args>(args)...);
 	}
 	
+	template<typename... Args>
+	iterator emplace_hint(const const_iterator hint, Args&&... args)
+			noexcept(CmpIsNoexcept<>::value && EmplaceIsNoexcept<Args&&...>::value) {
+		const auto temp = emplaceImpl(hint.Node, std::forward<Args>(args)...);
+		return temp.first;
+	}
+	
 	//No iterator overload needed, because const_iterator and iterator are the same class
 	static_assert(std::is_same_v<iterator, const_iterator>);
 	constexpr iterator erase(const_iterator pos)
