@@ -583,19 +583,22 @@ void TestConstexprStd::testSetRandom(void) const noexcept {
 	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
 	QVERIFY(cset.checkBlackDepth());
 	
-	const int elementsInSet = static_cast<int>(sset.size());
+	int elementsInSet = static_cast<int>(sset.size());
 	citer = cset.begin();
 	siter = sset.begin();
 	int oldIndex = 0;
+	constexpr int elementsDeletedAtOnce = 5;
 	for ( int i = 0; i < elementsInSet; ++i ) {
-		int rand = std::uniform_int_distribution<int>{0, elementsInSet - i - 1}(gen);
-		p.Erase.emplace_back(rand);
-		auto diff = rand - oldIndex;
+		int index = std::uniform_int_distribution<int>{0, std::max(elementsInSet - 1, 0)}(gen);
+		p.Erase.emplace_back(index);
+		auto diff = index - oldIndex;
 		std::advance(citer, diff);
 		std::advance(siter, diff);
-		oldIndex = rand;
-		citer = cset.erase(citer);
-		siter = sset.erase(siter);
+		diff = std::min<int>(elementsDeletedAtOnce, elementsInSet - index);
+		citer = cset.erase(citer, std::next(citer, diff));
+		siter = sset.erase(siter, std::next(siter, diff));
+		oldIndex = index;
+		elementsInSet -= elementsDeletedAtOnce;
 		
 //		if ( i % 1000 == 0 ) {
 //			QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
