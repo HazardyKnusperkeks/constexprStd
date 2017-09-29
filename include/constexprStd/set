@@ -193,7 +193,7 @@ class set_base {
 		return;
 	}
 	
-	[[nodiscard]] constexpr iterator eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
+	[[nodiscard]] constexpr NodeType* eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
 		auto ret = node->next();
 		
 		//Detach end
