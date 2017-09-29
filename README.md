@@ -217,6 +217,11 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 #### Negators
 - [X] not_fn
 
+#### Searchers
+- [X] default_searcher
+- [ ] boyer_moore_searcher
+- [ ] boyer_moore_horspool_searcher
+
 ### [Iterator library](http://en.cppreference.com/w/cpp/iterator)
 #### Iterator primitives
 These can be used directly from the `std::` namespace.

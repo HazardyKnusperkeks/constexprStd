@@ -24,10 +24,13 @@
 #ifndef CONSTEXPRSTD_FUNCTIONAL
 #define CONSTEXPRSTD_FUNCTIONAL
 
+#include <functional>
 #include <type_traits>
 #include <utility>
 
+#include "details/algorithm_forward.hpp"
 #include "details/functional.hpp"
+#include "iterator"
 
 namespace constexprStd {
 template<typename F, typename... Args>
@@ -40,6 +43,66 @@ constexpr decltype(auto) not_fn(F&& f)
 		noexcept(std::is_nothrow_constructible_v<details::NotFnReturnType<F>, decltype(std::forward<F>(f))>) {
 	return details::NotFnReturnType<F>{std::forward<F>(f)};
 }
+
+template<typename ForwardIter, typename BinaryPredicate = std::equal_to<>>
+class default_searcher {
+	private:
+	ForwardIter SFirst;
+	ForwardIter SLast;
+	BinaryPredicate Pred;
+	
+	using DistType = decltype(constexprStd::distance(SFirst, SLast));
+	DistType Dist;
+	
+	using CtorIsNoexcept = std::bool_constant<std::is_nothrow_copy_constructible_v<ForwardIter> &&
+	                                          std::is_nothrow_move_constructible_v<BinaryPredicate> &&
+	                                          noexcept(constexprStd::distance(SFirst, SLast)) &&
+	                                          std::is_nothrow_copy_constructible_v<DistType>>;
+	
+	public:
+	constexpr default_searcher(const ForwardIter pat_first, const ForwardIter pat_last,
+	                           BinaryPredicate pred = BinaryPredicate{}) noexcept(CtorIsNoexcept::value) :
+	                           SFirst(pat_first), SLast(pat_last), Pred(std::move(pred)),
+	                           Dist(constexprStd::distance(SFirst, SLast)) {
+		return;
+	}
+	
+	template<typename Container>
+	constexpr default_searcher(Container&& c, BinaryPredicate pred = BinaryPredicate{})
+			noexcept(CtorIsNoexcept::value && noexcept(std::begin(std::forward<Container>(c))) &&
+			         noexcept(std::end(std::forward<Container>(c)))) :
+			default_searcher(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+			                 std::move(pred)) {
+		return;
+	}
+	
+	template<typename ForwardIter2>
+	constexpr std::pair<ForwardIter2, ForwardIter2> operator()(const ForwardIter2 first, const ForwardIter2 last)
+			noexcept(noexcept(constexprStd::search(first, last, SFirst, SLast, Pred)) &&
+			         noexcept(std::declval<ForwardIter2&>() == last) &&
+			         noexcept(constexprStd::next(std::declval<ForwardIter2&>(), Dist)) &&
+			         std::is_nothrow_constructible_v<std::pair<ForwardIter2, ForwardIter2>,
+			                                         ForwardIter2, ForwardIter2>) {
+		ForwardIter2 iter1 = constexprStd::search(first, last, SFirst, SLast, Pred);
+		if ( iter1 == last ) {
+			return {last, last};
+		} //if ( iter1 == last )
+		return {iter1, constexprStd::next(iter1, Dist)};
+	}
+	
+	template<typename Container>
+	constexpr auto operator()(Container&& c)
+			noexcept(noexcept(std::declval<default_searcher&>().operator()(std::begin(std::forward<Container>(c)),
+			                                                               std::end(std::forward<Container>(c))))) {
+		return operator()(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)));
+	}
+};
+
+template<typename Container, typename BinaryPredicate = std::equal_to<>>
+default_searcher(Container&& c, BinaryPredicate = BinaryPredicate{}) ->
+	default_searcher<decltype(std::begin(std::forward<Container>(c))), BinaryPredicate>;
 } //namespace constexprStd
+
+#include "algorithm"
 
 #endif

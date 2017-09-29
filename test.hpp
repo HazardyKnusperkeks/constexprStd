@@ -62,6 +62,9 @@ class TestConstexprStd : public QObject {
 	//Negators
 	void testNotFn(void) const noexcept;
 	
+	//Searcher
+	void testDefaultSeracher(void) const noexcept;
+	
 	//Iterator lib
 	//Iterator adaptors
 	void testInsert_iterator(void) const noexcept;

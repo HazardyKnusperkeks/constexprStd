@@ -27,6 +27,9 @@
 
 #include <functional>
 
+#include <constexprStd/iterator>
+
+#include "test_constants.hpp"
 #include "test_helper_functions.hpp"
 
 void TestConstexprStd::testInvoke(void) const noexcept {
@@ -192,5 +195,95 @@ void TestConstexprStd::testNotFn(void) const noexcept {
 	constexpr Foo f;
 	static_assert(constexprStd::not_fn(&Foo::func)(f));
 	QVERIFY(std::not_fn(&Foo::func)(f));
+	return;
+}
+
+void TestConstexprStd::testDefaultSeracher(void) const noexcept {
+	auto lambda = [](void) constexpr noexcept {
+			std::array a{1, 2, 3, 4, 5, 1, 2, 5, 4};
+			std::array s1{1, 2};
+			std::array s2{5};
+			std::array s3{7};
+			auto p1 = constexprStd::default_searcher{s1.begin(), s1.end()}(a);
+			auto p2 = constexprStd::default_searcher{s2}(a);
+			auto p3 = constexprStd::default_searcher{s3}(a);
+			auto d11 = constexprStd::distance(a.begin(), p1.first);
+			auto d12 = constexprStd::distance(a.begin(), p1.second);
+			auto d21 = constexprStd::distance(a.begin(), p2.first);
+			auto d22 = constexprStd::distance(a.begin(), p2.second);
+			auto d31 = constexprStd::distance(a.begin(), p3.first);
+			auto d32 = constexprStd::distance(a.begin(), p3.second);
+			return std::tuple{d11, d12, d21, d22, d31, d32};
+		};
+	
+	static_assert(lambda() == std::tuple{0, 2, 4, 5, 9, 9});
+	
+	std::string s = "123 hallo 123";
+	std::string s1 = "123";
+	std::string s2 = "l";
+	std::string s3 = fooString;
+	std::string s4 = " 123";
+	std::string s5 = "123 hallo 123 bar";
+	std::string s6 = "x";
+	std::string s7 = "";
+	
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d11 =  0;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d12 =  3;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d21 =  6;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d22 =  7;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d31 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d32 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d41 =  9;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d42 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d51 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d52 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d61 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d62 = 13;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d71 =  0;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d72 =  0;
+	
+	auto sp1 =          std::default_searcher{s1.begin(), s1.end()}(s.begin(), s.end());
+	auto sp2 =          std::default_searcher{s2.begin(), s2.end()}(s.begin(), s.end());
+	auto sp3 =          std::default_searcher{s3.begin(), s3.end()}(s.begin(), s.end());
+	auto sp4 =          std::default_searcher{s4.begin(), s4.end()}(s.begin(), s.end());
+	auto sp5 =          std::default_searcher{s5.begin(), s5.end()}(s.begin(), s.end());
+	auto sp6 =          std::default_searcher{s6.begin(), s6.end()}(s.begin(), s.end());
+	auto sp7 =          std::default_searcher{s7.begin(), s7.end()}(s.begin(), s.end());
+	auto cp1 = constexprStd::default_searcher{s1.begin(), s1.end()}(s.begin(), s.end());
+	auto cp2 = constexprStd::default_searcher{s2.begin(), s2.end()}(s.begin(), s.end());
+	auto cp3 = constexprStd::default_searcher{s3.begin(), s3.end()}(s.begin(), s.end());
+	auto cp4 = constexprStd::default_searcher{s4.begin(), s4.end()}(s.begin(), s.end());
+	auto cp5 = constexprStd::default_searcher{s5.begin(), s5.end()}(s.begin(), s.end());
+	auto cp6 = constexprStd::default_searcher{s6.begin(), s6.end()}(s.begin(), s.end());
+	auto cp7 = constexprStd::default_searcher{s7.begin(), s7.end()}(s.begin(), s.end());
+	
+	QCOMPARE(std::distance(s.begin(), sp1.first),  d11);
+	QCOMPARE(std::distance(s.begin(), sp1.second), d12);
+	QCOMPARE(std::distance(s.begin(), sp2.first),  d21);
+	QCOMPARE(std::distance(s.begin(), sp2.second), d22);
+	QCOMPARE(std::distance(s.begin(), sp3.first),  d31);
+	QCOMPARE(std::distance(s.begin(), sp3.second), d32);
+	QCOMPARE(std::distance(s.begin(), sp4.first),  d41);
+	QCOMPARE(std::distance(s.begin(), sp4.second), d42);
+	QCOMPARE(std::distance(s.begin(), sp5.first),  d51);
+	QCOMPARE(std::distance(s.begin(), sp5.second), d52);
+	QCOMPARE(std::distance(s.begin(), sp6.first),  d61);
+	QCOMPARE(std::distance(s.begin(), sp6.second), d62);
+	QCOMPARE(std::distance(s.begin(), sp7.first),  d71);
+	QCOMPARE(std::distance(s.begin(), sp7.second), d72);
+	QCOMPARE(std::distance(s.begin(), cp1.first),  d11);
+	QCOMPARE(std::distance(s.begin(), cp1.second), d12);
+	QCOMPARE(std::distance(s.begin(), cp2.first),  d21);
+	QCOMPARE(std::distance(s.begin(), cp2.second), d22);
+	QCOMPARE(std::distance(s.begin(), cp3.first),  d31);
+	QCOMPARE(std::distance(s.begin(), cp3.second), d32);
+	QCOMPARE(std::distance(s.begin(), cp4.first),  d41);
+	QCOMPARE(std::distance(s.begin(), cp4.second), d42);
+	QCOMPARE(std::distance(s.begin(), cp5.first),  d51);
+	QCOMPARE(std::distance(s.begin(), cp5.second), d52);
+	QCOMPARE(std::distance(s.begin(), cp6.first),  d61);
+	QCOMPARE(std::distance(s.begin(), cp6.second), d62);
+	QCOMPARE(std::distance(s.begin(), cp7.first),  d71);
+	QCOMPARE(std::distance(s.begin(), cp7.second), d72);
 	return;
 }
