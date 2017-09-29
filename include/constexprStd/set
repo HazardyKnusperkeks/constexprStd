@@ -720,6 +720,18 @@ class set_base {
 		return eraseImpl(node);
 	}
 	
+	constexpr iterator erase(const const_iterator first, const const_iterator last)
+			noexcept(noexcept(std::declval<set_base&>().eraseImpl(std::declval<NodeType*>()))) {
+		NodeType *node = Root;
+		if ( first.Node != Root ) {
+			node = first.Node->fancyThis();
+		} //if ( first.Node != Root )
+		while ( node != last.Node ) {
+			node = eraseImpl(node);
+		} //while ( node != last.Node )
+		return last;
+	}
+	
 	[[nodiscard]] constexpr size_type count(const Key& key) const noexcept(CmpIsNoexcept<>::value) {
 		const auto ret = findBestNode(key, Root);
 		return ret.second ? 1 : 0;

@@ -181,6 +181,12 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QVERIFY(cset.checkBinarySearchTree());
 	QVERIFY(cset.checkBlackDepth());
 	
+	QCOMPARE(*cset.erase(cset.find("a"), cset.find("f")), "f");
+	QCOMPARE(*sset.erase(sset.find("a"), sset.find("f")), "f");
+	QVERIFY(std::equal(cset.begin(), cset.end(), sset.begin(), sset.end()));
+	QVERIFY(cset.checkBinarySearchTree());
+	QVERIFY(cset.checkBlackDepth());
+	
 	cset.clear();
 	sset.clear();
 	icset.clear();
