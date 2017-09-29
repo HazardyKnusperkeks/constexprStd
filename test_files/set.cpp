@@ -208,6 +208,11 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QCOMPARE(instances, 2); //cstr and sstr on the stack
 	{
 		constexprStd::setDestroy<CountInstances<std::string>, 15> dset;
+		auto hint = dset.end();
+		for ( const auto& s : {"a", "b", "c", "d"} ) {
+			hint = dset.emplace_hint(hint, s);
+		} //for ( const auto& s : {"a", "b", "c", "d"} )
+		QCOMPARE(instances, 6);
 	}
 	QCOMPARE(instances, 2);
 	
