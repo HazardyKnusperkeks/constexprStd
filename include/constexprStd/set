@@ -69,6 +69,8 @@ class set_base {
 		noexcept(std::declval<allocator_type&>().construct(std::declval<NodeType*>(), std::declval<Args&&>()...))>;
 	template<typename T>
 	using InsertIsNoexcept = std::bool_constant<CreateIsNoexcept<details::NodeTag, T&&>::value>;
+	template<typename... Args>
+	using EmplaceIsNoexcept = CreateIsNoexcept<details::NodeTag, Args&&...>;
 	
 	template<typename T>
 	using HasIsTransparent = typename T::is_transparent;
@@ -191,6 +193,51 @@ class set_base {
 		Root->Color = details::NodeColor::Black;
 		Nodes = 1;
 		return;
+	}
+	
+	template<typename... Args>
+	std::pair<iterator, bool> emplaceImpl(const NodeType *hintNode, Args&&... args)
+			noexcept(CmpIsNoexcept<>::value && EmplaceIsNoexcept<Args&&...>::value) {
+		auto newNode = createNode(std::forward<Args>(args)...);
+		
+		if ( empty() ) {
+			Root = newNode;
+			Root->adoptRight(&End);
+			Root->Color = details::NodeColor::Black;
+			Nodes = 1;
+			return {Root, true};
+		} //if ( empty() )
+		
+		try {
+			std::pair<NodeType*, bool> result = findBestNode(newNode->getContent(),
+			                                                 hintNode == Root ? Root : hintNode->fancyThis());
+			NodeType *node = result.first;
+			if ( result.second ) {
+				destroyNode(newNode);
+				return {node, false};
+			} //if ( result.second )
+			
+			++Nodes;
+			if ( Cmp(newNode->getContent(), node->getContent()) ) {
+				node->adoptLeft(newNode);
+			} //if ( Cmp(newNode->getContent(), node->getContent()) )
+			else {
+				const bool adaptEnd = node->isRightChild(&End);
+				if ( adaptEnd ) {
+					End.markForAdoption();
+				} //if ( adaptEnd )
+				node->adoptRight(newNode);
+				if ( adaptEnd ) {
+					newNode->adoptRight(&End);
+				} //if ( adaptEnd )
+			} //else -> if ( Cmp(newNode->getContent(), node->getContent()) )
+			rebalanceTreeAfterInsert(newNode);
+			return {newNode, true};
+		} //try
+		catch ( ... ) {
+			destroyNode(newNode);
+			throw;
+		} //catch ( ... )
 	}
 	
 	constexpr NodeType* eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
@@ -707,6 +754,12 @@ class set_base {
 			noexcept(noexcept(std::declval<set_base&>().insert(il.begin(), il.end()))) {
 		insert(il.begin(), il.end());
 		return;
+	}
+	
+	template<typename... Args>
+	std::pair<iterator, bool> emplace(Args&&... args)
+			noexcept(CmpIsNoexcept<>::value && EmplaceIsNoexcept<Args&&...>::value) {
+		return emplaceImpl(Root, std::forward<Args>(args)...);
 	}
 	
 	//No iterator overload needed, because const_iterator and iterator are the same class

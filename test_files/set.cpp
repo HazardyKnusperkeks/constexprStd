@@ -192,6 +192,13 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QCOMPARE(cset.erase(fooString), 0u);
 	QCOMPARE(sset.erase(fooString), 0u);
 	
+	QCOMPARE(cset.count(fooString), 0u);
+	QCOMPARE(sset.count(fooString), 0u);
+	cset.emplace(fooString);
+	sset.emplace(fooString);
+	QCOMPARE(cset.count(fooString), 1u);
+	QCOMPARE(sset.count(fooString), 1u);
+	
 	cset.clear();
 	sset.clear();
 	icset.clear();
