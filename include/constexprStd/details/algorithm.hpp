@@ -27,24 +27,8 @@
 #include <type_traits>
 
 #include "../iterator"
+#include "algorithm_forward.hpp"
 #include "helper.hpp"
-
-//Declarations
-namespace constexprStd {
-template<typename IterT1, typename IterT2, typename BinaryPredicate>
-constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const BinaryPredicate pred)
-		noexcept(noexcept(first1 != last1) && noexcept(++first1, ++first2) && noexcept(pred(*first1, *first2)));
-
-template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
-constexpr ForwardIter1 search(ForwardIter1 first, const ForwardIter1 last,
-                              const ForwardIter2 s_first, const ForwardIter2 s_last, BinaryPredicate pred)
-		noexcept(noexcept(first != last) && noexcept(++first) && std::is_nothrow_copy_constructible_v<ForwardIter1> &&
-		         std::is_nothrow_copy_constructible_v<ForwardIter2> &&
-		         noexcept(first != last && std::declval<ForwardIter2&>() != s_last &&
-		                  pred(*first, *std::declval<ForwardIter2&>())) &&
-		         noexcept(++first, ++std::declval<ForwardIter2&>()) &&
-		         noexcept(std::declval<ForwardIter2&>() == s_last) && noexcept(first == last));
-} //namespace constexpr
 
 namespace constexprStd::details {
 namespace cmp {
