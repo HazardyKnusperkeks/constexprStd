@@ -441,7 +441,7 @@ void TestConstexprStd::testSetTransparentCompare(void) const noexcept {
 
 void TestConstexprStd::testSetErase(void) const noexcept {
 	constexpr int elements = 10000;
-	constexpr int stepSize = 10;
+	constexpr int stepSize = 1000;
 	
 	//Try to produce all cases of erase
 	std::set<int> sbegin;
@@ -553,7 +553,7 @@ void TestConstexprStd::testSetRandom(void) const noexcept {
 		}
 	};
 	
-	constexpr int elements = 30000;
+	constexpr int elements = 10000;
 	
 	PrintSetOnEarlyExit p;
 	p.Insert.reserve(elements);
