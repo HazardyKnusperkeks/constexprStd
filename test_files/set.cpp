@@ -187,6 +187,11 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QVERIFY(cset.checkBinarySearchTree());
 	QVERIFY(cset.checkBlackDepth());
 	
+	QCOMPARE(cset.erase(fooString), 1u);
+	QCOMPARE(sset.erase(fooString), 1u);
+	QCOMPARE(cset.erase(fooString), 0u);
+	QCOMPARE(sset.erase(fooString), 0u);
+	
 	cset.clear();
 	sset.clear();
 	icset.clear();

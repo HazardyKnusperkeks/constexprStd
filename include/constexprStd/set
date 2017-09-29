@@ -193,7 +193,7 @@ class set_base {
 		return;
 	}
 	
-	[[nodiscard]] constexpr NodeType* eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
+	constexpr NodeType* eraseImpl(NodeType *node) noexcept(DestroyIsNoexcept::value) {
 		auto ret = node->next();
 		
 		//Detach end
@@ -730,6 +730,17 @@ class set_base {
 			node = eraseImpl(node);
 		} //while ( node != last.Node )
 		return last;
+	}
+	
+	constexpr size_type erase(const key_type& key)
+			noexcept(CmpIsNoexcept<key_type>::value &&
+	                 noexcept(std::declval<set_base&>().eraseImpl(std::declval<NodeType*>()))) {
+		const auto ret = findBestNode(key, Root);
+		if ( ret.second ) {
+			eraseImpl(ret.first);
+			return 1;
+		} //if ( ret.second )
+		return 0;
 	}
 	
 	[[nodiscard]] constexpr size_type count(const Key& key) const noexcept(CmpIsNoexcept<>::value) {
