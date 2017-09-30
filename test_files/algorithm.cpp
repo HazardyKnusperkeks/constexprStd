@@ -869,6 +869,151 @@ void TestConstexprStd::testGenerateN(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			std::array<int,       3> a1{1, 2, 3};
+			std::array<long long, 3> a2{1, 2, 3};
+			std::array<long long, 4> a3{1, 2, 3, 4};
+			std::array<int,       3> a4{3, 2, 3};
+			std::array<int,       0> a5{};
+			
+			bool b1 = constexprStd::lexicographical_compare(a1, a1);
+			bool b2 = constexprStd::lexicographical_compare(a1, a2);
+			bool b3 = constexprStd::lexicographical_compare(a1, a3);
+			bool b4 = constexprStd::lexicographical_compare(a1, a4);
+			bool b5 = constexprStd::lexicographical_compare(a1, a5);
+			auto t1 = std::tuple{b1, b2, b3, b4, b5};
+			
+			b1 = constexprStd::lexicographical_compare(a2, a1);
+			b2 = constexprStd::lexicographical_compare(a2, a2);
+			b3 = constexprStd::lexicographical_compare(a2, a3);
+			b4 = constexprStd::lexicographical_compare(a2, a4);
+			b5 = constexprStd::lexicographical_compare(a2, a5);
+			auto t2 = std::tuple{b1, b2, b3, b4, b5};
+			
+			b1 = constexprStd::lexicographical_compare(a3, a1);
+			b2 = constexprStd::lexicographical_compare(a3, a2);
+			b3 = constexprStd::lexicographical_compare(a3, a3);
+			b4 = constexprStd::lexicographical_compare(a3, a4);
+			b5 = constexprStd::lexicographical_compare(a3, a5);
+			auto t3 = std::tuple{b1, b2, b3, b4, b5};
+			
+			b1 = constexprStd::lexicographical_compare(a4, a1);
+			b2 = constexprStd::lexicographical_compare(a4, a2);
+			b3 = constexprStd::lexicographical_compare(a4, a3);
+			b4 = constexprStd::lexicographical_compare(a4, a4);
+			b5 = constexprStd::lexicographical_compare(a4, a5);
+			auto t4 = std::tuple{b1, b2, b3, b4, b5};
+			
+			b1 = constexprStd::lexicographical_compare(a5, a1);
+			b2 = constexprStd::lexicographical_compare(a5, a2);
+			b3 = constexprStd::lexicographical_compare(a5, a3);
+			b4 = constexprStd::lexicographical_compare(a5, a4);
+			b5 = constexprStd::lexicographical_compare(a5, a5);
+			auto t5 = std::tuple{b1, b2, b3, b4, b5};
+			
+			return std::tuple_cat(t1, t2, t3, t4, t5);
+		};
+	
+	static_assert(l() == std::tuple{false, false, true,  true,  false,
+	                                false, false, true,  true,  false,
+	                                false, false, false, true,  false,
+	                                false, false, false, false, false,
+	                                true,  true,  true,  true,  false});
+	
+	std::string s1{fooString};
+	std::string s2{barString};
+	std::string s3{bazString};
+	std::string s4{"foos"};
+	std::string s5{emptyString};
+	
+	constexpr bool b11 = false;
+	constexpr bool b12 = false;
+	constexpr bool b13 = false;
+	constexpr bool b14 = true;
+	constexpr bool b15 = false;
+	
+	constexpr bool b21 = true;
+	constexpr bool b22 = false;
+	constexpr bool b23 = true;
+	constexpr bool b24 = true;
+	constexpr bool b25 = false;
+	
+	constexpr bool b31 = true;
+	constexpr bool b32 = false;
+	constexpr bool b33 = false;
+	constexpr bool b34 = true;
+	constexpr bool b35 = false;
+	
+	constexpr bool b41 = false;
+	constexpr bool b42 = false;
+	constexpr bool b43 = false;
+	constexpr bool b44 = false;
+	constexpr bool b45 = false;
+	
+	constexpr bool b51 = true;
+	constexpr bool b52 = true;
+	constexpr bool b53 = true;
+	constexpr bool b54 = true;
+	constexpr bool b55 = false;
+	
+	QCOMPARE(         std::lexicographical_compare(s1.begin(), s1.end(), s1.begin(), s1.end()), b11);
+	QCOMPARE(         std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end()), b12);
+	QCOMPARE(         std::lexicographical_compare(s1.begin(), s1.end(), s3.begin(), s3.end()), b13);
+	QCOMPARE(         std::lexicographical_compare(s1.begin(), s1.end(), s4.begin(), s4.end()), b14);
+	QCOMPARE(         std::lexicographical_compare(s1.begin(), s1.end(), s5.begin(), s5.end()), b15);
+	QCOMPARE(constexprStd::lexicographical_compare(s1.begin(), s1.end(), s1.begin(), s1.end()), b11);
+	QCOMPARE(constexprStd::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end()), b12);
+	QCOMPARE(constexprStd::lexicographical_compare(s1.begin(), s1.end(), s3.begin(), s3.end()), b13);
+	QCOMPARE(constexprStd::lexicographical_compare(s1.begin(), s1.end(), s4.begin(), s4.end()), b14);
+	QCOMPARE(constexprStd::lexicographical_compare(s1.begin(), s1.end(), s5.begin(), s5.end()), b15);
+	
+	QCOMPARE(         std::lexicographical_compare(s2.begin(), s2.end(), s1.begin(), s1.end()), b21);
+	QCOMPARE(         std::lexicographical_compare(s2.begin(), s2.end(), s2.begin(), s2.end()), b22);
+	QCOMPARE(         std::lexicographical_compare(s2.begin(), s2.end(), s3.begin(), s3.end()), b23);
+	QCOMPARE(         std::lexicographical_compare(s2.begin(), s2.end(), s4.begin(), s4.end()), b24);
+	QCOMPARE(         std::lexicographical_compare(s2.begin(), s2.end(), s5.begin(), s5.end()), b25);
+	QCOMPARE(constexprStd::lexicographical_compare(s2.begin(), s2.end(), s1.begin(), s1.end()), b21);
+	QCOMPARE(constexprStd::lexicographical_compare(s2.begin(), s2.end(), s2.begin(), s2.end()), b22);
+	QCOMPARE(constexprStd::lexicographical_compare(s2.begin(), s2.end(), s3.begin(), s3.end()), b23);
+	QCOMPARE(constexprStd::lexicographical_compare(s2.begin(), s2.end(), s4.begin(), s4.end()), b24);
+	QCOMPARE(constexprStd::lexicographical_compare(s2.begin(), s2.end(), s5.begin(), s5.end()), b25);
+	
+	QCOMPARE(         std::lexicographical_compare(s3.begin(), s3.end(), s1.begin(), s1.end()), b31);
+	QCOMPARE(         std::lexicographical_compare(s3.begin(), s3.end(), s2.begin(), s2.end()), b32);
+	QCOMPARE(         std::lexicographical_compare(s3.begin(), s3.end(), s3.begin(), s3.end()), b33);
+	QCOMPARE(         std::lexicographical_compare(s3.begin(), s3.end(), s4.begin(), s4.end()), b34);
+	QCOMPARE(         std::lexicographical_compare(s3.begin(), s3.end(), s5.begin(), s5.end()), b35);
+	QCOMPARE(constexprStd::lexicographical_compare(s3.begin(), s3.end(), s1.begin(), s1.end()), b31);
+	QCOMPARE(constexprStd::lexicographical_compare(s3.begin(), s3.end(), s2.begin(), s2.end()), b32);
+	QCOMPARE(constexprStd::lexicographical_compare(s3.begin(), s3.end(), s3.begin(), s3.end()), b33);
+	QCOMPARE(constexprStd::lexicographical_compare(s3.begin(), s3.end(), s4.begin(), s4.end()), b34);
+	QCOMPARE(constexprStd::lexicographical_compare(s3.begin(), s3.end(), s5.begin(), s5.end()), b35);
+	
+	QCOMPARE(         std::lexicographical_compare(s4.begin(), s4.end(), s1.begin(), s1.end()), b41);
+	QCOMPARE(         std::lexicographical_compare(s4.begin(), s4.end(), s2.begin(), s2.end()), b42);
+	QCOMPARE(         std::lexicographical_compare(s4.begin(), s4.end(), s3.begin(), s3.end()), b43);
+	QCOMPARE(         std::lexicographical_compare(s4.begin(), s4.end(), s4.begin(), s4.end()), b44);
+	QCOMPARE(         std::lexicographical_compare(s4.begin(), s4.end(), s5.begin(), s5.end()), b45);
+	QCOMPARE(constexprStd::lexicographical_compare(s4.begin(), s4.end(), s1.begin(), s1.end()), b41);
+	QCOMPARE(constexprStd::lexicographical_compare(s4.begin(), s4.end(), s2.begin(), s2.end()), b42);
+	QCOMPARE(constexprStd::lexicographical_compare(s4.begin(), s4.end(), s3.begin(), s3.end()), b43);
+	QCOMPARE(constexprStd::lexicographical_compare(s4.begin(), s4.end(), s4.begin(), s4.end()), b44);
+	QCOMPARE(constexprStd::lexicographical_compare(s4.begin(), s4.end(), s5.begin(), s5.end()), b45);
+	
+	QCOMPARE(         std::lexicographical_compare(s5.begin(), s5.end(), s1.begin(), s1.end()), b51);
+	QCOMPARE(         std::lexicographical_compare(s5.begin(), s5.end(), s2.begin(), s2.end()), b52);
+	QCOMPARE(         std::lexicographical_compare(s5.begin(), s5.end(), s3.begin(), s3.end()), b53);
+	QCOMPARE(         std::lexicographical_compare(s5.begin(), s5.end(), s4.begin(), s4.end()), b54);
+	QCOMPARE(         std::lexicographical_compare(s5.begin(), s5.end(), s5.begin(), s5.end()), b55);
+	QCOMPARE(constexprStd::lexicographical_compare(s5.begin(), s5.end(), s1.begin(), s1.end()), b51);
+	QCOMPARE(constexprStd::lexicographical_compare(s5.begin(), s5.end(), s2.begin(), s2.end()), b52);
+	QCOMPARE(constexprStd::lexicographical_compare(s5.begin(), s5.end(), s3.begin(), s3.end()), b53);
+	QCOMPARE(constexprStd::lexicographical_compare(s5.begin(), s5.end(), s4.begin(), s4.end()), b54);
+	QCOMPARE(constexprStd::lexicographical_compare(s5.begin(), s5.end(), s5.begin(), s5.end()), b55);
+	return;
+}
+
 void TestConstexprStd::testIsPermutation(void) const noexcept {
 	constexpr std::array sa1{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10};
 	constexpr std::array sa2{ 1,  2,  3,  4,  5,  6,  7,  9,  8, 10};

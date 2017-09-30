@@ -606,6 +606,37 @@ constexpr auto adjacent_find(Container&& c)
 	return constexprStd::adjacent_find(std::forward<Container>(c), details::cmp::Equal{});
 }
 
+/*****                                        Minimum/Maximum Operations                                          *****/
+
+template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
+constexpr bool lexicographical_compare(InputIter1 first1, const InputIter1 last1,
+                                       InputIter2 first2, const InputIter2 last2, Compare comp = Compare{})
+noexcept(noexcept(first1 != last1 && first2 != last2) && noexcept(++first1, ++first2) &&
+         noexcept(comp(*first1, *first2)) && noexcept(comp(*first2, *first1)) && noexcept(first1 == last1)) {
+	for ( ; first1 != last1 && first2 != last2; ++first1, ++first2 ) {
+		if ( comp(*first1, *first2) ) {
+			return true;
+		} //if ( comp(*first1, *first2) )
+		if ( comp(*first2, *first1) ) {
+			return false;
+		} //if ( comp(*first2, *first1) )
+	} //for ( ; first1 != last1 && first2 != last2; ++first1, ++first2 )
+	return first1 == last1 && (first2 != last2);
+}
+
+template<typename Container1, typename Container2, typename Compare = std::less<>>
+constexpr bool lexicographical_compare(Container1&& c1, Container2&& c2, Compare comp = Compare{})
+		noexcept(noexcept(constexprStd::lexicographical_compare(std::begin(std::forward<Container1>(c1)),
+		                                                        std::end(std::forward<Container1>(c1)),
+		                                                        std::begin(std::forward<Container2>(c2)),
+		                                                        std::end(std::forward<Container2>(c2)),
+		                                                        std::move(comp)))) {
+	return constexprStd::lexicographical_compare(std::begin(std::forward<Container1>(c1)),
+	                                             std::end(std::forward<Container1>(c1)),
+	                                             std::begin(std::forward<Container2>(c2)),
+	                                             std::end(std::forward<Container2>(c2)), std::move(comp));
+}
+
 /*****                                               Permutations                                                 *****/
 
 template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>

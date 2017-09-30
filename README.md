@@ -182,7 +182,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] minmax
 - [ ] minmax_element
 - [ ] clamp
-- [ ] lexicographical_compare
+- [X] lexicographical_compare
 
 #### Permutations
 - [X] is_permutation

@@ -52,6 +52,9 @@ class TestConstexprStd : public QObject {
 	void testMove(void) const noexcept;
 	void testGenerateN(void) const noexcept;
 	
+	//Minimum/maximum operations
+	void testLexicographicalCompare(void) const noexcept;
+	
 	//Permutations
 	void testIsPermutation(void) const noexcept;
 	
