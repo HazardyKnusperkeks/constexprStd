@@ -94,9 +94,9 @@ class set_base {
 				} //if ( auto prev = hintNode->prev(); prev && Cmp(key, prev->getContent()) )
 			} //if ( Cmp(key, hintNode->getContent()) )
 			else {
-				if ( auto next = hintNode->next(); next && !Cmp(key, next->getContent()) ) {
+				if ( auto next = hintNode->next(); next && !next->PastEnd && !Cmp(key, next->getContent()) ) {
 					hintNode = Root;
-				} //if ( auto next = hintNode->next(); next && !Cmp(key, next->getContent()) )
+				} //if ( auto next = hintNode->next(); next && !next->PastEnd && !Cmp(key, next->getContent()) )
 			} //else -> if ( Cmp(key, hintNode->getContent()) )
 		} //if ( hintNode != Root )
 		return findBestNode(hintNode, key);
