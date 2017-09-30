@@ -531,6 +531,57 @@ void TestConstexprStd::testSetErase(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testSetComparisonOperators(void) const noexcept {
+	constexprStd::set<int, 10>         cset1{1, 2, 3};
+	constexprStd::setDestroy<int, 10>  cset2{1, 1, 2};
+	constexprStd::set_base             cset3{cset1}; cset3.insert(4);
+	
+	std::set<int> sset1{1, 2, 3};
+	std::set<int> sset2{1, 1, 2};
+	std::set<int> sset3{1, 2, 3, 4};
+	
+	QVERIFY( (sset1 == sset1)); QVERIFY(!(sset2 == sset1)); QVERIFY(!(sset3 == sset1));
+	QVERIFY(!(sset1 <  sset1)); QVERIFY( (sset2 <  sset1)); QVERIFY(!(sset3 <  sset1));
+	QVERIFY( (sset1 >= sset1)); QVERIFY(!(sset2 >= sset1)); QVERIFY( (sset3 >= sset1));
+	QVERIFY(!(sset1 == sset2)); QVERIFY( (sset2 == sset2)); QVERIFY(!(sset3 == sset2));
+	QVERIFY(!(sset1 <  sset2)); QVERIFY(!(sset2 <  sset2)); QVERIFY(!(sset3 <  sset2));
+	QVERIFY( (sset1 >= sset2)); QVERIFY( (sset2 >= sset2)); QVERIFY( (sset3 >= sset2));
+	QVERIFY(!(sset1 == sset3)); QVERIFY(!(sset2 == sset3)); QVERIFY( (sset3 == sset3));
+	QVERIFY( (sset1 <  sset3)); QVERIFY( (sset2 <  sset3)); QVERIFY(!(sset3 <  sset3));
+	QVERIFY(!(sset1 >= sset3)); QVERIFY(!(sset2 >= sset3)); QVERIFY( (sset3 >= sset3));
+	
+	QVERIFY( (cset1 == cset1)); QVERIFY(!(cset2 == cset1)); QVERIFY(!(cset3 == cset1));
+	QVERIFY(!(cset1 <  cset1)); QVERIFY( (cset2 <  cset1)); QVERIFY(!(cset3 <  cset1));
+	QVERIFY( (cset1 >= cset1)); QVERIFY(!(cset2 >= cset1)); QVERIFY( (cset3 >= cset1));
+	QVERIFY(!(cset1 == cset2)); QVERIFY( (cset2 == cset2)); QVERIFY(!(cset3 == cset2));
+	QVERIFY(!(cset1 <  cset2)); QVERIFY(!(cset2 <  cset2)); QVERIFY(!(cset3 <  cset2));
+	QVERIFY( (cset1 >= cset2)); QVERIFY( (cset2 >= cset2)); QVERIFY( (cset3 >= cset2));
+	QVERIFY(!(cset1 == cset3)); QVERIFY(!(cset2 == cset3)); QVERIFY( (cset3 == cset3));
+	QVERIFY( (cset1 <  cset3)); QVERIFY( (cset2 <  cset3)); QVERIFY(!(cset3 <  cset3));
+	QVERIFY(!(cset1 >= cset3)); QVERIFY(!(cset2 >= cset3)); QVERIFY( (cset3 >= cset3));
+	
+	QVERIFY( (cset1 == sset1)); QVERIFY(!(cset2 == sset1)); QVERIFY(!(cset3 == sset1));
+	QVERIFY(!(cset1 <  sset1)); QVERIFY( (cset2 <  sset1)); QVERIFY(!(cset3 <  sset1));
+	QVERIFY( (cset1 >= sset1)); QVERIFY(!(cset2 >= sset1)); QVERIFY( (cset3 >= sset1));
+	QVERIFY(!(cset1 == sset2)); QVERIFY( (cset2 == sset2)); QVERIFY(!(cset3 == sset2));
+	QVERIFY(!(cset1 <  sset2)); QVERIFY(!(cset2 <  sset2)); QVERIFY(!(cset3 <  sset2));
+	QVERIFY( (cset1 >= sset2)); QVERIFY( (cset2 >= sset2)); QVERIFY( (cset3 >= sset2));
+	QVERIFY(!(cset1 == sset3)); QVERIFY(!(cset2 == sset3)); QVERIFY( (cset3 == sset3));
+	QVERIFY( (cset1 <  sset3)); QVERIFY( (cset2 <  sset3)); QVERIFY(!(cset3 <  sset3));
+	QVERIFY(!(cset1 >= sset3)); QVERIFY(!(cset2 >= sset3)); QVERIFY( (cset3 >= sset3));
+	
+	QVERIFY( (sset1 == cset1)); QVERIFY(!(sset2 == cset1)); QVERIFY(!(sset3 == cset1));
+	QVERIFY(!(sset1 <  cset1)); QVERIFY( (sset2 <  cset1)); QVERIFY(!(sset3 <  cset1));
+	QVERIFY( (sset1 >= cset1)); QVERIFY(!(sset2 >= cset1)); QVERIFY( (sset3 >= cset1));
+	QVERIFY(!(sset1 == cset2)); QVERIFY( (sset2 == cset2)); QVERIFY(!(sset3 == cset2));
+	QVERIFY(!(sset1 <  cset2)); QVERIFY(!(sset2 <  cset2)); QVERIFY(!(sset3 <  cset2));
+	QVERIFY( (sset1 >= cset2)); QVERIFY( (sset2 >= cset2)); QVERIFY( (sset3 >= cset2));
+	QVERIFY(!(sset1 == cset3)); QVERIFY(!(sset2 == cset3)); QVERIFY( (sset3 == cset3));
+	QVERIFY( (sset1 <  cset3)); QVERIFY( (sset2 <  cset3)); QVERIFY(!(sset3 <  cset3));
+	QVERIFY(!(sset1 >= cset3)); QVERIFY(!(sset2 >= cset3)); QVERIFY( (sset3 >= cset3));
+	return;
+}
+
 void TestConstexprStd::testSetFailCaseOne(void) const noexcept {
 	constexpr std::array a{5, 4, 3, 2, 3, 2, 3};
 	constexprStd::setDestroy<int, 10> cset;

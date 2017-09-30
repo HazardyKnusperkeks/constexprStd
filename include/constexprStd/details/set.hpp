@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <iterator>
+#include <set>
 #include <type_traits>
 #include <utility>
 
@@ -35,9 +36,31 @@
 namespace constexprStd {
 template<typename, std::size_t, typename, template<typename, std::size_t> typename, typename, std::size_t>
 class set_base;
+
+template<typename, std::size_t, typename, template<typename, std::size_t> typename>
+class set;
+
+template<typename, std::size_t, typename, template<typename, std::size_t> typename>
+class setDestroy;
 } //namespace constexprStd
 
 namespace constexprStd::details {
+template<typename T>
+struct IsSet : std::false_type { };
+
+template<typename Key, std::size_t N, typename Compare, template<typename, std::size_t> typename Allocator,
+         typename NodeType, std::size_t AllocN>
+struct IsSet<set_base<Key, N, Compare, Allocator, NodeType, AllocN>> : std::true_type { };
+
+template<typename Key, std::size_t N, typename Compare, template<typename, std::size_t> typename Allocator>
+struct IsSet<set<Key, N, Compare, Allocator>> : std::true_type { };
+
+template<typename Key, std::size_t N, typename Compare, template<typename, std::size_t> typename Allocator>
+struct IsSet<setDestroy<Key, N, Compare, Allocator>> : std::true_type { };
+
+template<typename Key, typename Compare, typename Allocator>
+struct IsSet<std::set<Key, Compare, Allocator>> : std::true_type { };
+
 struct NodeTag {};
 
 enum class NodeColor {

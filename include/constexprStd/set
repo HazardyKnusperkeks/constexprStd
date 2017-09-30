@@ -1084,6 +1084,43 @@ class setDestroy : public set<Key, N, Compare, Allocator> {
 		return;
 	}
 };
+
+template<typename Set1, typename Set2,
+         std::enable_if_t<std::conjunction_v<details::IsSet<Set1>, details::IsSet<Set2>>>* = nullptr>
+constexpr bool operator==(const Set1& set1, const Set2& set2) noexcept(noexcept(constexprStd::equal(set1, set2))) {
+	return constexprStd::equal(set1, set2);
+}
+
+template<typename Set1, typename Set2,
+         std::enable_if_t<std::conjunction_v<details::IsSet<Set1>, details::IsSet<Set2>>>* = nullptr>
+constexpr bool operator!=(const Set1& set1, const Set2& set2) noexcept(noexcept(set1 == set2)) {
+	return !(set1 == set2);
+}
+
+template<typename Set1, typename Set2,
+         std::enable_if_t<std::conjunction_v<details::IsSet<Set1>, details::IsSet<Set2>>>* = nullptr>
+constexpr bool operator<(const Set1& set1, const Set2& set2)
+		noexcept(noexcept(constexprStd::lexicographical_compare(set1, set2))) {
+	return constexprStd::lexicographical_compare(set1, set2);
+}
+
+template<typename Set1, typename Set2,
+         std::enable_if_t<std::conjunction_v<details::IsSet<Set1>, details::IsSet<Set2>>>* = nullptr>
+constexpr bool operator>(const Set1& set1, const Set2& set2) noexcept(noexcept(set2 < set1)) {
+	return set2 < set1;
+}
+
+template<typename Set1, typename Set2,
+         std::enable_if_t<std::conjunction_v<details::IsSet<Set1>, details::IsSet<Set2>>>* = nullptr>
+constexpr bool operator<=(const Set1& set1, const Set2& set2) noexcept(noexcept(set2 < set1)) {
+	return !(set2 < set1);
+}
+
+template<typename Set1, typename Set2,
+         std::enable_if_t<std::conjunction_v<details::IsSet<Set1>, details::IsSet<Set2>>>* = nullptr>
+constexpr bool operator>=(const Set1& set1, const Set2& set2) noexcept(noexcept(set1 < set2)) {
+	return !(set1 < set2);
+}
 } //namespace constexprStd
 
 #endif
