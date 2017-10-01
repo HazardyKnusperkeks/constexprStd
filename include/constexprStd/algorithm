@@ -549,7 +549,10 @@ constexpr auto search(Container&& c, const ForwardIter2 s_first, const ForwardIt
 	                            s_first, s_last, details::cmp::Equal{});
 }
 
-template<typename Container, typename SearchContainer>
+template<typename Container, typename SearchContainer,
+         std::enable_if_t<std::negation_v<details::IsSearcher<SearchContainer,
+                                                              decltype(std::begin(std::declval<Container&&>()))>>>* =
+         nullptr>
 constexpr auto search(Container&& c, SearchContainer&& s)
 		noexcept(noexcept(constexprStd::search(std::begin(std::forward<Container>(c)),
 		                                       std::end(std::forward<Container>(c)),
@@ -558,6 +561,20 @@ constexpr auto search(Container&& c, SearchContainer&& s)
 	return constexprStd::search(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
 	                            std::begin(std::forward<SearchContainer>(s)),
 	                            std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{});
+}
+
+template<typename ForwardIter, typename Searcher>
+constexpr ForwardIter search(const ForwardIter first, const ForwardIter last, const Searcher& searcher)
+		noexcept(noexcept(searcher(first, last).first)) {
+	return searcher(first, last).first;
+}
+
+template<typename Container, typename Searcher,
+         std::enable_if_t<details::IsSearcherV<Searcher, decltype(std::begin(std::declval<Container&&>()))>>* = nullptr>
+constexpr auto search(Container&& c, const Searcher& searcher)
+		noexcept(noexcept(constexprStd::search(std::begin(std::forward<Container>(c)),
+		                                       std::end(std::forward<Container>(c)), searcher))) {
+	return constexprStd::search(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), searcher);
 }
 
 /*****                                       Modifying sequence operations                                        *****/

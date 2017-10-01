@@ -86,6 +86,15 @@ struct IsPair<std::pair<T1, T2>> : std::true_type { };
 template<typename T1, typename T2>
 struct IsPair<constexprStd::pair<T1, T2>> : std::true_type { };
 
+template<typename T, typename Iter>
+using IsSearcherType = decltype(std::declval<const T&>()(std::declval<Iter>(), std::declval<Iter>()));
+
+template<typename T, typename Iter>
+using IsSearcher = typename std::experimental::is_detected_exact<std::pair<Iter, Iter>, IsSearcherType, T, Iter>;
+
+template<typename T, typename Iter>
+constexpr inline auto IsSearcherV = IsSearcher<T, Iter>::value;
+
 struct EnableDefaultCtorTag {
 	explicit constexpr EnableDefaultCtorTag(void) = default;
 };
