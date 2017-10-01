@@ -77,7 +77,7 @@ class default_searcher {
 	}
 	
 	template<typename ForwardIter2>
-	constexpr std::pair<ForwardIter2, ForwardIter2> operator()(const ForwardIter2 first, const ForwardIter2 last)
+	constexpr std::pair<ForwardIter2, ForwardIter2> operator()(const ForwardIter2 first, const ForwardIter2 last) const
 			noexcept(noexcept(constexprStd::search(first, last, SFirst, SLast, Pred)) &&
 			         noexcept(std::declval<ForwardIter2&>() == last) &&
 			         noexcept(constexprStd::next(std::declval<ForwardIter2&>(), Dist)) &&
@@ -91,7 +91,7 @@ class default_searcher {
 	}
 	
 	template<typename Container>
-	constexpr auto operator()(Container&& c)
+	constexpr auto operator()(Container&& c) const
 			noexcept(noexcept(std::declval<default_searcher&>().operator()(std::begin(std::forward<Container>(c)),
 			                                                               std::end(std::forward<Container>(c))))) {
 		return operator()(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)));
