@@ -448,6 +448,43 @@ constexpr auto find_first_of(Container&& c, SearchContainer&& s)
 	                              std::end(std::forward<SearchContainer>(s)), details::cmp::Equal{});
 }
 
+template<typename ForwardIter, typename BinaryPredicate>
+constexpr ForwardIter adjacent_find(ForwardIter first, const ForwardIter last, BinaryPredicate pred)
+		noexcept(noexcept(first == last) && noexcept(constexprStd::next(first)) && noexcept(first != last) &&
+		         noexcept(++first, ++first) && noexcept(pred(*first, *first))) {
+	if ( first == last ) {
+		return last;
+	} //if ( first == last )
+	
+	for ( auto scan = constexprStd::next(first); scan != last; ++scan, ++first ) {
+		if ( pred(*first, *scan) ) {
+			return first;
+		} //if ( pred(*first, *scan) )
+	} //for ( auto scan = constexprStd::next(first); scan != last; ++scan, ++first )
+	return last;
+}
+
+template<typename Container, typename BinaryPredicate,
+         std::enable_if_t<std::negation_v<details::IsIter<Container>>>* = nullptr>
+constexpr auto adjacent_find(Container&& c, BinaryPredicate pred)
+			noexcept(noexcept(constexprStd::adjacent_find(std::begin(std::forward<Container>(c)),
+			                                              std::end(std::forward<Container>(c)), std::move(pred)))) {
+	return constexprStd::adjacent_find(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                   std::move(pred));
+}
+
+template<typename ForwardIter, std::enable_if_t<details::IsIterV<ForwardIter>>* = nullptr>
+constexpr ForwardIter adjacent_find(const ForwardIter first, const ForwardIter last)
+		noexcept(noexcept(constexprStd::adjacent_find(first, last, details::cmp::Equal{}))) {
+	return constexprStd::adjacent_find(first, last, details::cmp::Equal{});
+}
+
+template<typename Container>
+constexpr auto adjacent_find(Container&& c)
+		noexcept(noexcept(constexprStd::adjacent_find(std::forward<Container>(c), details::cmp::Equal{}))) {
+	return constexprStd::adjacent_find(std::forward<Container>(c), details::cmp::Equal{});
+}
+
 template<typename ForwardIter1, typename ForwardIter2, typename BinaryPredicate>
 constexpr ForwardIter1 search(ForwardIter1 first, const ForwardIter1 last,
                               const ForwardIter2 s_first, const ForwardIter2 s_last, BinaryPredicate pred)
@@ -567,43 +604,6 @@ constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 		++first;
 	} //while ( count-- > 0 )
 	return first;
-}
-
-template<typename ForwardIter, typename BinaryPredicate>
-constexpr ForwardIter adjacent_find(ForwardIter first, const ForwardIter last, BinaryPredicate pred)
-		noexcept(noexcept(first == last) && noexcept(constexprStd::next(first)) && noexcept(first != last) &&
-		         noexcept(++first, ++first) && noexcept(pred(*first, *first))) {
-	if ( first == last ) {
-		return last;
-	} //if ( first == last )
-	
-	for ( auto scan = constexprStd::next(first); scan != last; ++scan, ++first ) {
-		if ( pred(*first, *scan) ) {
-			return first;
-		} //if ( pred(*first, *scan) )
-	} //for ( auto scan = constexprStd::next(first); scan != last; ++scan, ++first )
-	return last;
-}
-
-template<typename Container, typename BinaryPredicate,
-         std::enable_if_t<std::negation_v<details::IsIter<Container>>>* = nullptr>
-constexpr auto adjacent_find(Container&& c, BinaryPredicate pred)
-			noexcept(noexcept(constexprStd::adjacent_find(std::begin(std::forward<Container>(c)),
-			                                              std::end(std::forward<Container>(c)), std::move(pred)))) {
-	return constexprStd::adjacent_find(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
-	                                   std::move(pred));
-}
-
-template<typename ForwardIter, std::enable_if_t<details::IsIterV<ForwardIter>>* = nullptr>
-constexpr ForwardIter adjacent_find(const ForwardIter first, const ForwardIter last)
-		noexcept(noexcept(constexprStd::adjacent_find(first, last, details::cmp::Equal{}))) {
-	return constexprStd::adjacent_find(first, last, details::cmp::Equal{});
-}
-
-template<typename Container>
-constexpr auto adjacent_find(Container&& c)
-		noexcept(noexcept(constexprStd::adjacent_find(std::forward<Container>(c), details::cmp::Equal{}))) {
-	return constexprStd::adjacent_find(std::forward<Container>(c), details::cmp::Equal{});
 }
 
 /*****                                        Minimum/Maximum Operations                                          *****/
