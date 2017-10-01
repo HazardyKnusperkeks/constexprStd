@@ -650,6 +650,21 @@ class set_base {
 		return;
 	}
 	
+	constexpr set_base& operator=(const set_base& that)
+			noexcept(std::is_nothrow_constructible_v<set_base, Compare, allocator_type&> &&
+			         noexcept(std::declval<set_base&>().copyFrom(that)) &&
+			         noexcept(std::declval<set_base&>().clear()) &&
+			         noexcept(std::declval<set_base&>().moveFrom(std::declval<set_base&&>())) &&
+			         std::is_nothrow_move_assignable_v<Compare>) {
+		set_base copy{that.Cmp, Alloc};
+		copy.copyFrom(that);
+		clear();
+		moveFrom(std::move(copy));
+		Cmp = std::move(copy.Cmp);
+		copy.clear();
+		return *this;
+	}
+	
 	constexpr void copyFrom(const set_base& that) noexcept(CreateIsNoexcept<const value_type&>::value) {
 		if ( that.Root->PastEnd ) {
 			return;
@@ -1121,6 +1136,11 @@ class set : public set_base<Key, N, Compare, Allocator> {
 			set() {
 		Base::insert(il);
 		return;
+	}
+	
+	constexpr set& operator=(const set& that) noexcept(noexcept(std::declval<Base&>().operator=(that))) {
+		Base::operator=(that);
+		return *this;
 	}
 };
 
