@@ -66,11 +66,12 @@ class set_base {
 		noexcept(std::declval<allocator_type&>().destroy(std::declval<NodeType*>()))>;
 	template<typename... Args>
 	using CreateIsNoexcept = std::bool_constant<
-		noexcept(std::declval<allocator_type&>().construct(std::declval<NodeType*>(), std::declval<Args&&>()...))>;
+		noexcept(std::declval<allocator_type&>().construct(std::declval<NodeType*>(), std::declval<details::NodeTag>(),
+		                                                   std::declval<Args&&>()...))>;
 	template<typename T>
-	using InsertIsNoexcept = std::bool_constant<CreateIsNoexcept<details::NodeTag, T&&>::value>;
+	using InsertIsNoexcept = std::bool_constant<CreateIsNoexcept<T&&>::value>;
 	template<typename... Args>
-	using EmplaceIsNoexcept = CreateIsNoexcept<details::NodeTag, Args&&...>;
+	using EmplaceIsNoexcept = CreateIsNoexcept<Args&&...>;
 	
 	template<typename T>
 	using HasIsTransparent = typename T::is_transparent;
@@ -135,7 +136,7 @@ class set_base {
 	
 	template<typename... Args>
 	[[nodiscard]] constexpr NodeType* createNode(Args&&... args)
-			noexcept(AllocIsNoexcept::value && CreateIsNoexcept<details::NodeTag, Args&&...>::value) {
+			noexcept(AllocIsNoexcept::value && CreateIsNoexcept<Args&&...>::value) {
 		NodeType *ret = Alloc.allocate(1);
 		Alloc.construct(ret, details::NodeTag{}, std::forward<Args>(args)...);
 		return ret;
@@ -586,6 +587,48 @@ class set_base {
 		return;
 	}
 	
+	[[nodiscard]] constexpr NodeType* copyNode(const NodeType *node)
+			noexcept(CreateIsNoexcept<const value_type&>::value) {
+		auto ret = createNode(node->getContent());
+		ret->Color = node->Color;
+		return ret;
+	}
+	
+	constexpr void copyLeft(NodeType *parent, const NodeType *copyParent)
+			noexcept(CreateIsNoexcept<const value_type&>::value) {
+		if ( !copyParent->hasLeftChild() ) {
+			return;
+		} //if ( !copyParent->hasLeftChild() )
+		
+		auto copyChild = copyParent->LeftChild;
+		auto child = copyNode(copyChild);
+		parent->adoptLeft(child);
+		
+		copyLeft (child, copyChild);
+		copyRight(child, copyChild);
+		return;
+	}
+	
+	constexpr void copyRight(NodeType *parent, const NodeType *copyParent)
+			noexcept(CreateIsNoexcept<const value_type&>::value) {
+		if ( !copyParent->hasRightChild() ) {
+			return;
+		} //if ( !copyParent->hasRightChild() )
+		
+		auto copyChild = copyParent->RightChild;
+		if ( copyChild->PastEnd ) {
+			parent->adoptRight(&End);
+			return;
+		} //if ( copyChild->PastEnd )
+		
+		auto child = copyNode(copyChild);
+		parent->adoptRight(child);
+		
+		copyLeft (child, copyChild);
+		copyRight(child, copyChild);
+		return;
+	}
+	
 	public:
 	constexpr set_base(Compare cmp, allocator_type& alloc) noexcept(std::is_nothrow_move_constructible_v<Compare>) :
 			Alloc{alloc}, Cmp{std::move(cmp)} {
@@ -596,7 +639,7 @@ class set_base {
 			noexcept(std::is_nothrow_copy_constructible_v<Compare> &&
 			         noexcept(std::declval<set_base&>().insert(that.begin(), that.end()))) :
 			set_base{that.Cmp, that.Alloc} {
-		insert(that.begin(), that.end());
+		copyFrom(that);
 		return;
 	}
 	
@@ -604,6 +647,19 @@ class set_base {
 			noexcept(std::is_nothrow_copy_constructible_v<Compare> &&
 	                 noexcept(std::declval<set_base&>().takeTree(std::move(that)))) : set_base{that.Cmp, that.Alloc} {
 		takeTree(std::move(that));
+		return;
+	}
+	
+	constexpr void copyFrom(const set_base& that) noexcept(CreateIsNoexcept<const value_type&>::value) {
+		if ( that.Root->PastEnd ) {
+			return;
+		} //if ( that.Root->PastEnd )
+		
+		Root = copyNode(that.Root);
+		copyLeft (Root, that.Root);
+		copyRight(Root, that.Root);
+		
+		Nodes = that.Nodes;
 		return;
 	}
 	
@@ -1048,8 +1104,8 @@ class set : public set_base<Key, N, Compare, Allocator> {
 	
 	constexpr set(const set& that)
 			noexcept(std::is_nothrow_copy_constructible_v<Compare> && std::is_nothrow_move_constructible_v<Compare> &&
-			         noexcept(std::declval<Base&>().insert(that.begin(), that.end()))) : set(that.key_comp()) {
-		Base::insert(that.begin(), that.end());
+			         noexcept(std::declval<Base&>().copyFrom(that))) : set(that.key_comp()) {
+		Base::copyFrom(that);
 		return;
 	}
 	
