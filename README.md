@@ -305,3 +305,6 @@ These can be used directly from the `std::` namespace.
 
 #### Hash support
 - [ ] hash
+
+### [Containers Library](http://en.cppreference.com/w/cpp/container)
+- [X] set
