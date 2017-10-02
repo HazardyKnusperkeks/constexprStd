@@ -665,6 +665,14 @@ class set_base {
 		return *this;
 	}
 	
+	constexpr set_base& operator=(set_base&& that)
+			noexcept(noexcept(std::declval<set_base&>().clear()) &&
+			         noexcept(std::declval<set_base&>().moveFrom(std::move(that)))) {
+		clear();
+		moveFrom(std::move(that));
+		return *this;
+	}
+	
 	constexpr void copyFrom(const set_base& that) noexcept(CreateIsNoexcept<const value_type&>::value) {
 		if ( that.Root->PastEnd ) {
 			return;
@@ -1140,6 +1148,11 @@ class set : public set_base<Key, N, Compare, Allocator> {
 	
 	constexpr set& operator=(const set& that) noexcept(noexcept(std::declval<Base&>().operator=(that))) {
 		Base::operator=(that);
+		return *this;
+	}
+	
+	constexpr set& operator=(set&& that) noexcept(noexcept(std::declval<Base&>().operator=(std::move(that)))) {
+		Base::operator=(std::move(that));
 		return *this;
 	}
 };

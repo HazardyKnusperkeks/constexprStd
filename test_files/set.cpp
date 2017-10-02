@@ -244,10 +244,21 @@ void TestConstexprStd::testSet(void) const noexcept {
 	QVERIFY(std::equal(cset.begin(), cset.end(), copy.begin(), copy.end()));
 	QCOMPARE(instances, 2 + 26 * 30 * 4);
 	
+	copy.clear();
+	QCOMPARE(instances, 2 + 26 * 30 * 3);
+	copy = std::move(moveBase);
+	QCOMPARE(instances, 2 + 26 * 30 * 3);
+	QVERIFY(std::equal(moveSet.begin(), moveSet.end(), copy.begin(), copy.end()));
+	QVERIFY(moveBase.empty());
+	
 	decltype(cset) copyCset;
 	copyCset = cset;
 	QVERIFY(std::equal(cset.begin(), cset.end(), copyCset.begin(), copyCset.end()));
-	QCOMPARE(instances, 2 + 26 * 30 * 5);
+	QCOMPARE(instances, 2 + 26 * 30 * 4);
+	copyCset.clear();
+	QCOMPARE(instances, 2 + 26 * 30 * 3);
+	copyCset = std::move(cset);
+	QCOMPARE(instances, 2 + 26 * 30 * 4);
 	
 	cset.clear();
 	copy.clear();
