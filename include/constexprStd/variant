@@ -454,13 +454,13 @@ struct variant_alternative<I, const volatile constexprStd::variant<Types...>&> :
 	std::variant_alternative<I, const volatile std::variant<Types...>> {};
 
 template<std::size_t I, typename Variant,
-         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
+         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>*>
 constexpr decltype(auto) get(Variant&& v) {
 	return constexprStd::get<I>(std::forward<Variant>(v));
 }
 
 template<typename T, typename Variant,
-         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>* = nullptr>
+         std::enable_if_t<constexprStd::details::IsVariantV<std::decay_t<Variant>>>*>
 constexpr decltype(auto) get(Variant&& v) {
 	return constexprStd::get<T>(std::forward<Variant>(v));
 }
