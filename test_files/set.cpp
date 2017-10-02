@@ -266,6 +266,16 @@ void TestConstexprStd::testSet(void) const noexcept {
 	moveSet.clear();
 	moveBase.clear();
 	QCOMPARE(instances, 2);
+	
+	copy = {fooString, barString};
+	QCOMPARE(instances, 4);
+	
+	cset = {fooString, barString};
+	QCOMPARE(instances, 6);
+	
+	cset.clear();
+	copy.clear();
+	QCOMPARE(instances, 2);
 	return;
 }
 
