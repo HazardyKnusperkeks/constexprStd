@@ -258,7 +258,7 @@ void TestConstexprStd::testSet(void) const noexcept {
 	copyCset.clear();
 	QCOMPARE(instances, 2 + 26 * 30 * 3);
 	copyCset = std::move(cset);
-	QCOMPARE(instances, 2 + 26 * 30 * 4);
+	QCOMPARE(instances, 2 + 26 * 30 * 3);
 	
 	cset.clear();
 	copy.clear();
