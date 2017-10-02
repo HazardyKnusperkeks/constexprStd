@@ -577,6 +577,45 @@ constexpr auto search(Container&& c, const Searcher& searcher)
 	return constexprStd::search(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), searcher);
 }
 
+template<typename ForwardIter, typename Count, typename T, typename BinaryPredicate = std::equal_to<>>
+constexpr ForwardIter search_n(ForwardIter first, const ForwardIter last, const Count count, const T& value,
+                               BinaryPredicate pred = {})
+		noexcept(noexcept(first != last) && std::is_nothrow_copy_constructible_v<ForwardIter> &&
+		         std::is_nothrow_constructible_v<Count, int> &&
+		         noexcept(std::declval<Count&>() < count && first != last) &&
+		         noexcept(++std::declval<Count&>(), ++first) && noexcept(!pred(*first, value)) &&
+		         noexcept(std::declval<Count&>() == count) && noexcept(++first) &&
+		         std::is_nothrow_copy_assignable_v<ForwardIter>) {
+	while ( first != last ) {
+		auto scan = first;
+		Count i = 0;
+		for ( ; i < count && scan != last; ++i, ++scan ) {
+			if ( !pred(*scan, value) ) {
+				break;
+			} //if ( !pred(*scan, value) )
+		} //for ( ; i < count && scan != last; ++i, ++scan )
+		
+		if ( i == count ) {
+			return first;
+		} //if ( i == count )
+		
+		if ( scan == last ) {
+			return last;
+		} //if ( scan == last )
+		
+		first = ++scan;
+	} //while ( first != last )
+	return last;
+}
+
+template<typename Container, typename Count, typename T, typename BinaryPredicate = std::equal_to<>>
+constexpr auto search_n(Container&& c, const Count count, const T& value, BinaryPredicate pred = {})
+		noexcept(noexcept(constexprStd::search_n(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)), count, value, std::move(pred)))) {
+	return constexprStd::search_n(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), count,
+	                              value, std::move(pred));
+}
+
 /*****                                       Modifying sequence operations                                        *****/
 
 template<typename InputIterator, typename OutputIterator>

@@ -47,6 +47,7 @@ class TestConstexprStd : public QObject {
 	void testAdjacentFind(void) const noexcept;
 	void testSearch(void) const noexcept;
 	void testSearchSearcher(void) const noexcept;
+	void testSearchN(void) const noexcept;
 	
 	//Modifying sequence operations
 	void testCopy(void) const noexcept;

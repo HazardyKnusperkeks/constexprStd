@@ -792,6 +792,54 @@ void TestConstexprStd::testSearchSearcher(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testSearchN(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			std::array a{3, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2};
+			auto d1 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 1, 1));
+			auto d2 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 2, 1));
+			auto d3 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 3, 1));
+			auto d4 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 4, 1));
+			auto d5 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 5, 1));
+			auto d6 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 6, 1));
+			auto d7 = constexprStd::distance(a.begin(), constexprStd::search_n(a, 7, 1));
+			return std::tuple{d1, d2, d3, d4, d5, d6, d7};
+		};
+	
+	static_assert(l() == std::tuple{1, 1, 1, 5, 5, 5, 12});
+	
+	std::string s = "foobooooboobooooooo";
+	
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d0 =  0;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d1 =  1;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d2 =  1;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d3 =  4;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d4 =  4;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d5 = 12;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d6 = 12;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d7 = 12;
+	constexpr std::iterator_traits<std::string::iterator>::difference_type d8 = 19;
+	
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 0, 'o')), d0);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 1, 'o')), d1);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 2, 'o')), d2);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 3, 'o')), d3);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 4, 'o')), d4);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 5, 'o')), d5);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 6, 'o')), d6);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 7, 'o')), d7);
+	QCOMPARE(std::distance(s.begin(),          std::search_n(s.begin(), s.end(), 8, 'o')), d8);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 0, 'o')), d0);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 1, 'o')), d1);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 2, 'o')), d2);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 3, 'o')), d3);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 4, 'o')), d4);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 5, 'o')), d5);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 6, 'o')), d6);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 7, 'o')), d7);
+	QCOMPARE(std::distance(s.begin(), constexprStd::search_n(s.begin(), s.end(), 8, 'o')), d8);
+	return;
+}
+
 void TestConstexprStd::testCopy(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](void) constexpr noexcept {
