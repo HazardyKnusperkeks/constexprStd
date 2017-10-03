@@ -37,6 +37,19 @@ class TestContainer : public std::array<int, 10> {
 		return;
 	}
 	
+	template<std::size_t N>
+	constexpr TestContainer(std::array<int, N> a) noexcept : std::array<int, 10>{} {
+		auto externalBegin = a.begin();
+		const auto externalEnd = a.end();
+		auto internalBegin = begin();
+		const auto internalEnd = end();
+		
+		for ( ; externalBegin != externalEnd && internalBegin != internalEnd; ++externalBegin, ++internalBegin ) {
+			*internalBegin = *externalBegin;
+		} //for ( ; externalBegin != externalEnd && internalBegin != internalEnd; ++externalBegin, ++internalBegin )
+		return;
+	}
+	
 	constexpr TestContainer(void) noexcept : std::array<int, 10>{{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}} {
 		return;
 	}

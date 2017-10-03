@@ -45,4 +45,17 @@ constexpr int fib(const int i) noexcept {
 	return fib(i-1) + fib(i-2);
 }
 
+constexpr bool isFib(const int i) noexcept {
+	if ( i < 0 ) {
+		return false;
+	} //if ( i < 0 )
+	
+	int c = 0;
+	int f = fib(0);
+	while ( f < i ) {
+		f = fib(++c);
+	} //while ( f < i )
+	return f == i;
+}
+
 #endif

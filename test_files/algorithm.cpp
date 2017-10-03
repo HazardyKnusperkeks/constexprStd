@@ -885,6 +885,27 @@ void TestConstexprStd::testCopy(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testCopyIf(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c{};
+			std::array<int, 5> a{};
+			constexprStd::copy_if(c, a.begin(), isOdd);
+			return a;
+		};
+	static_assert(TestContainer(l()) == TestContainer{1, 3, 5, 7, 9});
+	
+	std::array<int, 40> a;
+	std::generate(a.begin(), a.end(), [i = -2](void) mutable noexcept  { return ++i; });
+	
+	std::vector<int> cv;
+	std::vector<int> sv;
+	
+	constexprStd::copy_if(a.begin(), a.end(), std::back_inserter(cv), isFib);
+	         std::copy_if(a.begin(), a.end(), std::back_inserter(sv), isFib);
+	QVERIFY(cv == sv);
+	return;
+}
+
 void TestConstexprStd::testMove(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](void) constexpr noexcept {
