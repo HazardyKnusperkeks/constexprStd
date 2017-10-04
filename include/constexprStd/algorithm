@@ -657,6 +657,17 @@ constexpr OutputIterator copy_if(Container&& c, OutputIterator destination, Unar
 	               std::move(pred));
 }
 
+template<typename InputIter, typename Size, typename OutputIter>
+constexpr OutputIter copy_n(InputIter first, Size count, OutputIter result)
+		noexcept(noexcept(count-- > 0) && noexcept(*result = *first) && noexcept(++result) && noexcept(++first)) {
+	while ( count-- > 0 ) {
+		*result = *first;
+		++result;
+		++first;
+	} //while ( count-- > 0 )
+	return result;
+}
+
 template<typename InputIterator, typename OutputIterator>
 constexpr OutputIterator move(InputIterator sourceFirst, const InputIterator sourceLast, OutputIterator destination)
 		noexcept(noexcept(sourceFirst != sourceLast) && noexcept(++sourceFirst) && noexcept(++destination) &&

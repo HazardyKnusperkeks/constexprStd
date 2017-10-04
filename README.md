@@ -106,7 +106,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 #### Modifying sequence operations
 - [X] copy
 - [X] copy_if
-- [ ] copy_n
+- [X] copy_n
 - [ ] copy_backward
 - [X] move
 - [ ] move_backward

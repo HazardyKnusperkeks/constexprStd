@@ -906,6 +906,42 @@ void TestConstexprStd::testCopyIf(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testCopyN(void) const noexcept {
+	//Test the acutal constexprness
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			std::array a{42, 66, 0x185, 1337};
+			constexprStd::copy_n(a.begin(), 3, c.begin());
+			return c;
+		};
+	static_assert(l() == TestContainer{std::array{42, 66, 0x185, 4, 5, 6, 7, 8, 9, 10}});
+	
+	//Test runtime behavior and compare against std::copy.
+	TestContainer cc;
+	TestContainer sc;
+	const std::array sa{19, 97};
+	int ba[2] = {18, 85};
+	const TestContainer expected1;
+	const TestContainer expected2{std::array{19,  2,  3,  4,  5,  6,  7,  8,  9, 10}};
+	const TestContainer expected3{std::array{19, 18, 85,  4,  5,  6,  7,  8,  9, 10}};
+	auto citer = cc.begin();
+	auto siter = sc.begin();
+	
+	QCOMPARE(cc, expected1);
+	QCOMPARE(sc, expected1);
+	
+	citer = constexprStd::copy_n(sa.begin(), 1, citer);
+	siter =          std::copy_n(sa.begin(), 1, siter);
+	QCOMPARE(cc, expected2);
+	QCOMPARE(sc, expected2);
+	
+	citer = constexprStd::copy_n(&ba[0], 2, citer);
+	siter =          std::copy_n(&ba[0], 2, siter);
+	QCOMPARE(cc, expected3);
+	QCOMPARE(sc, expected3);
+	return;
+}
+
 void TestConstexprStd::testMove(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](void) constexpr noexcept {
