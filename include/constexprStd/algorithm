@@ -629,10 +629,11 @@ constexpr OutputIterator copy(InputIterator sourceFirst, const InputIterator sou
 }
 
 template<typename Container, typename OutputIterator>
-constexpr OutputIterator copy(Container&& c, OutputIterator destination)
-		noexcept(noexcept(copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
-		                       destination))) {
-	return copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination);
+constexpr OutputIterator copy(Container&& c, const OutputIterator destination)
+		noexcept(noexcept(constexprStd::copy(std::begin(std::forward<Container>(c)),
+		                                     std::end(std::forward<Container>(c)), destination))) {
+	return constexprStd::copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                          destination);
 }
 
 template<typename InputIterator, typename OutputIterator, typename UnaryPredicate>
@@ -650,11 +651,11 @@ constexpr OutputIterator copy_if(InputIterator sourceFirst, const InputIterator 
 }
 
 template<typename Container, typename OutputIterator, typename UnaryPredicate>
-constexpr OutputIterator copy_if(Container&& c, OutputIterator destination, UnaryPredicate pred)
-		noexcept(noexcept(copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
-		                          destination, std::move(pred)))) {
-	return copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination,
-	               std::move(pred));
+constexpr OutputIterator copy_if(Container&& c, const OutputIterator destination, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::copy_if(std::begin(std::forward<Container>(c)),
+		                                        std::end(std::forward<Container>(c)), destination, std::move(pred)))) {
+	return constexprStd::copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                             destination, std::move(pred));
 }
 
 template<typename InputIter, typename Size, typename OutputIter>
@@ -696,10 +697,11 @@ constexpr OutputIterator move(InputIterator sourceFirst, const InputIterator sou
 }
 
 template<typename Container, typename OutputIterator>
-constexpr OutputIterator move(Container&& c, OutputIterator destination)
-		noexcept(noexcept(move(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
-		                       destination))) {
-	return move(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), destination);
+constexpr OutputIterator move(Container&& c, const OutputIterator destination)
+		noexcept(noexcept(constexprStd::move(std::begin(std::forward<Container>(c)),
+		                                     std::end(std::forward<Container>(c)), destination))) {
+	return constexprStd::move(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                          destination);
 }
 
 template<typename OutputIter, typename Size, typename Generator>
