@@ -942,6 +942,31 @@ void TestConstexprStd::testCopyN(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testCopyBackward(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			auto middle = constexprStd::next(c.begin(), 5);
+			constexprStd::copy_backward(c.begin(), middle, c.end());
+			return c;
+		};
+	
+	static_assert(l() == TestContainer{1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
+	
+	TestContainer c, s;
+	auto citer = c.begin();
+	auto siter = s.begin();
+	const auto cend = std::prev(c.end());
+	const auto send = std::prev(s.end());
+	
+	for ( ; citer != cend && siter != send; ++citer, ++siter ) {
+		constexprStd::copy_backward(citer, cend, c.end());
+		         std::copy_backward(siter, send, s.end());
+		QVERIFY(c == s);
+	} //for ( ; citer != cend && siter != send; ++citer, ++siter )
+	QVERIFY(std::all_of(c.begin(), c.end(), constexprStd::details::cmp::EqualToValue{1}));
+	return;
+}
+
 void TestConstexprStd::testMove(void) const noexcept {
 	//Test the acutal constexprness
 	auto l = [](void) constexpr noexcept {

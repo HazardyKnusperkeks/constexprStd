@@ -668,6 +668,23 @@ constexpr OutputIter copy_n(InputIter first, Size count, OutputIter result)
 	return result;
 }
 
+template<typename BidirIter1, typename BidirIter2>
+constexpr BidirIter2 copy_backward(const BidirIter1 first, BidirIter1 last, BidirIter2 d_last)
+		noexcept(noexcept(first != last) && noexcept(*--d_last = *--last)) {
+	while ( first != last ) {
+		*--d_last = *--last;
+	} //while ( first != last )
+	return d_last;
+}
+
+template<typename Container, typename BidirIter2>
+constexpr BidirIter2 copy_backward(Container&& c, const BidirIter2 d_last)
+		noexcept(noexcept(constexprStd::copy_backward(std::begin(std::forward<Container>(c)),
+		                                              std::end(std::forward<Container>(c)), d_last))) {
+	return constexprStd::copy_backward(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                   d_last);
+}
+
 template<typename InputIterator, typename OutputIterator>
 constexpr OutputIterator move(InputIterator sourceFirst, const InputIterator sourceLast, OutputIterator destination)
 		noexcept(noexcept(sourceFirst != sourceLast) && noexcept(++sourceFirst) && noexcept(++destination) &&
