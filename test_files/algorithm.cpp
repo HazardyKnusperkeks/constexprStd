@@ -1021,6 +1021,19 @@ void TestConstexprStd::testMove(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testMoveBackward(void) const noexcept {
+	std::array<std::string, 5> c{fooString, barString, longString};
+	std::array<std::string, 5> s{c};
+	const std::array<std::string, 5> expected{emptyString, emptyString, fooString, barString, longString};
+	
+	constexprStd::move_backward(c.begin(), std::next(c.begin(), 3), c.end());
+	         std::move_backward(s.begin(), std::next(s.begin(), 3), s.end());
+	
+	QCOMPARE(c, expected);
+	QCOMPARE(s, expected);
+	return;
+}
+
 void TestConstexprStd::testGenerateN(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int, 10> a{};

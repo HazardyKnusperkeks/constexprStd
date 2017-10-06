@@ -109,7 +109,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] copy_n
 - [X] copy_backward
 - [X] move
-- [ ] move_backward
+- [X] move_backward
 - [ ] fill
 - [ ] fill_n
 - [ ] transform

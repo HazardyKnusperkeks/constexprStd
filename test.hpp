@@ -55,6 +55,7 @@ class TestConstexprStd : public QObject {
 	void testCopyN(void) const noexcept;
 	void testCopyBackward(void) const noexcept;
 	void testMove(void) const noexcept;
+	void testMoveBackward(void) const noexcept;
 	void testGenerateN(void) const noexcept;
 	
 	//Minimum/maximum operations

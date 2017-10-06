@@ -714,6 +714,23 @@ constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 	return first;
 }
 
+template<typename BidirIter1, typename BidirIter2>
+constexpr BidirIter2 move_backward(const BidirIter1 first, BidirIter1 last, BidirIter2 d_last)
+		noexcept(noexcept(first != last) && noexcept(*--d_last = std::move(*--last))) {
+	while ( first != last ) {
+		*--d_last = std::move(*--last);
+	} //while ( first != last )
+	return d_last;
+}
+
+template<typename Container, typename BidirIter2>
+constexpr BidirIter2 move_backward(Container&& c, const BidirIter2 d_last)
+		noexcept(noexcept(constexprStd::move_backward(std::begin(std::forward<Container>(c)),
+		                                              std::end(std::forward<Container>(c)), d_last))) {
+	return constexprStd::move_backward(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                   d_last);
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
