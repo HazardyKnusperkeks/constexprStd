@@ -1034,6 +1034,26 @@ void TestConstexprStd::testMoveBackward(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testFill(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::fill(c, 17);
+			return c;
+		};
+	static_assert(l() == TestContainer{17, 17, 17, 17, 17, 17, 17, 17, 17, 17});
+	
+	int c[50];
+	int s[50];
+	
+	constexprStd::fill(std::begin(c), std::end(c), 22);
+	         std::fill(std::begin(s), std::end(s), 22);
+	
+	constexprStd::details::cmp::EqualToValue is22{22};
+	QVERIFY(std::all_of(std::begin(c), std::end(c), is22));
+	QVERIFY(std::all_of(std::begin(s), std::end(s), is22));
+	return;
+}
+
 void TestConstexprStd::testGenerateN(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int, 10> a{};

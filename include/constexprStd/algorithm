@@ -721,6 +721,23 @@ constexpr BidirIter2 move_backward(Container&& c, const BidirIter2 d_last)
 	                                   d_last);
 }
 
+template<typename ForwardIter, typename T>
+constexpr void fill(ForwardIter first, const ForwardIter last, const T& value)
+		noexcept(noexcept(first != last) && noexcept(++first) && noexcept(*first = value)) {
+	for ( ; first != last; ++first ) {
+		*first = value;
+	} //for ( ; first != last; ++first )
+	return;
+}
+
+template<typename Container, typename T>
+constexpr void fill(Container&& c, const T& value)
+		noexcept(noexcept(constexprStd::fill(std::begin(std::forward<Container>(c)),
+		                                     std::end(std::forward<Container>(c)), value))) {
+	constexprStd::fill(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), value);
+	return;
+}
+
 template<typename OutputIter, typename Size, typename Generator>
 constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 		noexcept(noexcept(count-- > 0) && noexcept(*first = g()) && noexcept(++first)) {

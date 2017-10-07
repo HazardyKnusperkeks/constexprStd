@@ -110,7 +110,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] copy_backward
 - [X] move
 - [X] move_backward
-- [ ] fill
+- [X] fill
 - [ ] fill_n
 - [ ] transform
 - [ ] generate
