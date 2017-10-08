@@ -738,6 +738,16 @@ constexpr void fill(Container&& c, const T& value)
 	return;
 }
 
+template<typename OutputIter, typename Size, typename T>
+constexpr OutputIter fill_n(OutputIter first, Size count, const T& value)
+		noexcept(noexcept(count-- > 0) && noexcept(*first = value) && noexcept(++first)) {
+	while ( count-- > 0 ) {
+		*first = value;
+		++first;
+	} //while ( count-- > 0 )
+	return first;
+}
+
 template<typename OutputIter, typename Size, typename Generator>
 constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 		noexcept(noexcept(count-- > 0) && noexcept(*first = g()) && noexcept(++first)) {

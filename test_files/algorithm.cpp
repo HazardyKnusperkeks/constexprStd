@@ -1054,6 +1054,32 @@ void TestConstexprStd::testFill(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testFillN(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::fill_n(c.begin(), 4, 17);
+			return c;
+		};
+	static_assert(l() == TestContainer{17, 17, 17, 17, 5, 6, 7, 8, 9, 10});
+	
+	int c[50];
+	int s[50];
+	
+	constexprStd::fill(std::begin(c), std::end(c), 22);
+	         std::fill(std::begin(s), std::end(s), 22);
+	
+	constexprStd::details::cmp::EqualToValue is22{22};
+	QVERIFY(std::all_of(std::begin(c), std::end(c), is22));
+	QVERIFY(std::all_of(std::begin(s), std::end(s), is22));
+	
+	constexprStd::fill_n(std::begin(c), 23, 88);
+	         std::fill_n(std::begin(s), 23, 88);
+	
+	QCOMPARE(std::count(std::begin(c), std::end(c), 88), 23);
+	QCOMPARE(std::count(std::begin(s), std::end(s), 88), 23);
+	return;
+}
+
 void TestConstexprStd::testGenerateN(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int, 10> a{};
