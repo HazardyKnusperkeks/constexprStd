@@ -1080,6 +1080,59 @@ void TestConstexprStd::testFillN(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testTransform(void) const noexcept {
+	auto unary = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::transform(c, c.begin(), [](const int i) constexpr noexcept { return i * 5; });
+			return c;
+		};
+	static_assert(unary() == TestContainer{5, 10, 15, 20, 25, 30, 35, 40, 45, 50});
+	
+	auto binary = [unary](void) constexpr noexcept {
+			TestContainer c1{unary()};
+			TestContainer c2{17, 29, 30, 23, 3, 99, 35, 65, 98, 100};
+			TestContainer ret;
+			auto l = [](const int i, const int j) {
+					if ( isOdd(i) && isOdd(j) ) {
+						return i + j;
+					} //if ( isOdd(i) && isOdd(j) )
+					return 0;
+				};
+			constexprStd::transform(c1, c2.begin(), ret.begin(), l);
+			return ret;
+		};
+	static_assert(binary() == TestContainer{22, 0, 0, 0, 28, 0, 70, 0, 0, 0});
+	
+	auto countVocals = [count = 0](const std::string& s) mutable noexcept {
+			return count += static_cast<int>(std::count_if(s.begin(), s.end(), isVocal));
+		};
+	
+	std::array<std::string, 5> strings{fooString, barString, longString, emptyString, "abcdefg"};
+	std::vector<int> c, s;
+	
+	         std::transform(strings.begin(), strings.end(), std::back_inserter(s), countVocals);
+	constexprStd::transform(strings.begin(), strings.end(), std::back_inserter(c), countVocals);
+	
+	QCOMPARE(s.size(), 5u);
+	QCOMPARE(s, (std::vector{2, 3, 18, 18, 20}));
+	QVERIFY(c == s);
+	
+	const char chars[] = "abcde";
+	std::array<std::string, 5> cs, ss;
+	
+	auto gen = [](const int count, const char ch) noexcept {
+			return std::string(static_cast<std::string::size_type>(count), ch);
+		};
+	
+	         std::transform(c.begin(), c.end(), std::begin(chars), ss.begin(), gen);
+	constexprStd::transform(c.begin(), c.end(), std::begin(chars), cs.begin(), gen);
+	
+	QCOMPARE(ss, (std::array<std::string, 5>{"aa", "bbb", "cccccccccccccccccc", "dddddddddddddddddd",
+	                                         "eeeeeeeeeeeeeeeeeeee"}));
+	QVERIFY(cs == ss);
+	return;
+}
+
 void TestConstexprStd::testGenerateN(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int, 10> a{};

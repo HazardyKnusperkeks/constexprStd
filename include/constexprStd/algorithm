@@ -748,6 +748,44 @@ constexpr OutputIter fill_n(OutputIter first, Size count, const T& value)
 	return first;
 }
 
+template<typename ForwardIter, typename OutputIter, typename UnaryOperation>
+constexpr OutputIter transform(ForwardIter first, const ForwardIter last, OutputIter d_first, UnaryOperation unary_op)
+		noexcept(noexcept(first != last) && noexcept(++first, ++d_first) && noexcept(*d_first = unary_op(*first))) {
+	for ( ; first != last; ++first, ++d_first ) {
+		*d_first = unary_op(*first);
+	} //for ( ; first != last; ++first, ++d_first )
+	return d_first;
+}
+
+template<typename Container, typename OutputIter, typename UnaryOperation>
+constexpr auto transform(Container&& c, const OutputIter d_first, UnaryOperation unary_op)
+		noexcept(noexcept(constexprStd::transform(std::begin(std::forward<Container>(c)),
+		                                          std::end(std::forward<Container>(c)),
+		                                          d_first, std::move(unary_op)))) {
+	return constexprStd::transform(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                               d_first, std::move(unary_op));
+}
+
+template<typename ForwardIter1, typename ForwardIter2, typename OutputIter, typename BinaryOperation>
+constexpr OutputIter transform(ForwardIter1 first1, const ForwardIter1 last1, ForwardIter2 first2, OutputIter d_first,
+                               BinaryOperation binary_op)
+		noexcept(noexcept(first1 != last1) && noexcept(++first1, ++first2, ++d_first) &&
+		         noexcept(*d_first = binary_op(*first1, *first2))) {
+	for ( ; first1 != last1; ++first1, ++first2, ++d_first ) {
+		*d_first = binary_op(*first1, *first2);
+	} //for ( ; first1 != last1; ++first1, ++first2, ++d_first )
+	return d_first;
+}
+
+template<typename Container, typename ForwardIter2, typename OutputIter, typename BinaryOperation>
+constexpr auto transform(Container&& c, const ForwardIter2 first2, const OutputIter d_first, BinaryOperation binary_op)
+		noexcept(noexcept(constexprStd::transform(std::begin(std::forward<Container>(c)),
+		                                          std::end(std::forward<Container>(c)),
+		                                          first2, d_first, std::move(binary_op)))) {
+	return constexprStd::transform(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                               first2, d_first, std::move(binary_op));
+}
+
 template<typename OutputIter, typename Size, typename Generator>
 constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 		noexcept(noexcept(count-- > 0) && noexcept(*first = g()) && noexcept(++first)) {
