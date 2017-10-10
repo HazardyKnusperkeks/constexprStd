@@ -1133,6 +1133,26 @@ void TestConstexprStd::testTransform(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testGenerate(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::generate(c, [v = 10](void) mutable noexcept { return v--; });
+			return c;
+		};
+	static_assert(l() == TestContainer{10, 9, 8, 7, 6, 5, 4, 3, 2, 1});
+	
+	std::array<int, 20> c{}, s{};
+	
+	auto makeFib = [i = 0](void) mutable { return fib(i++); };
+	
+	         std::generate(s.begin(), s.end(), makeFib);
+	constexprStd::generate(c.begin(), c.end(), makeFib);
+	
+	QVERIFY(std::all_of(s.begin(), s.end(), isFib));
+	QVERIFY(s == c);
+	return;
+}
+
 void TestConstexprStd::testGenerateN(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int, 10> a{};

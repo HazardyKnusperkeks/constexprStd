@@ -786,6 +786,23 @@ constexpr auto transform(Container&& c, const ForwardIter2 first2, const OutputI
 	                               first2, d_first, std::move(binary_op));
 }
 
+template<typename ForwardIter, typename Generator>
+constexpr void generate(ForwardIter first, const ForwardIter last, Generator gen)
+		noexcept(noexcept(first != last) && noexcept(++first) && noexcept(*first = gen())) {
+	for ( ; first != last; ++first ) {
+		*first = gen();
+	} //for ( ; first != last; ++first )
+	return;
+}
+
+template<typename Container, typename Generator>
+constexpr auto generate(Container&& c, Generator gen)
+		noexcept(noexcept(constexprStd::generate(std::begin(std::forward<Container>(c)),
+		                                         std::end(std::forward<Container>(c)), std::move(gen)))) {
+	return constexprStd::generate(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                              std::move(gen));
+}
+
 template<typename OutputIter, typename Size, typename Generator>
 constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 		noexcept(noexcept(count-- > 0) && noexcept(*first = g()) && noexcept(++first)) {

@@ -59,6 +59,7 @@ class TestConstexprStd : public QObject {
 	void testFill(void) const noexcept;
 	void testFillN(void) const noexcept;
 	void testTransform(void) const noexcept;
+	void testGenerate(void) const noexcept;
 	void testGenerateN(void) const noexcept;
 	
 	//Minimum/maximum operations
