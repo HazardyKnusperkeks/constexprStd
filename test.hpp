@@ -61,6 +61,7 @@ class TestConstexprStd : public QObject {
 	void testTransform(void) const noexcept;
 	void testGenerate(void) const noexcept;
 	void testGenerateN(void) const noexcept;
+	void testRemoveIf(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;

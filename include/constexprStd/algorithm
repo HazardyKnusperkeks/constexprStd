@@ -813,6 +813,48 @@ constexpr OutputIter generate_n(OutputIter first, Size count, Generator g)
 	return first;
 }
 
+template<typename ForwardIter, typename UnaryPredicate>
+constexpr ForwardIter remove_if(ForwardIter first, const ForwardIter last, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::find_if(first, last, pred)) && std::is_nothrow_move_assignable_v<ForwardIter> &&
+		         noexcept(first == last) && noexcept(constexprStd::next(first)) &&
+		         std::is_nothrow_move_constructible_v<ForwardIter> && noexcept(first != last) && noexcept(++first) &&
+		         noexcept(!pred(*first)) &&
+		         std::is_nothrow_move_assignable_v<typename std::iterator_traits<ForwardIter>::value_type>) {
+	first = constexprStd::find_if(first, last, pred);
+	if ( first == last ) {
+		return first;
+	} //if ( first == last )
+	
+	for ( auto scan = constexprStd::next(first); scan != last; ++scan ) {
+		if ( !pred(*scan) ) {
+			*first = std::move(*scan);
+			++first;
+		} //if ( !pred(*scan) )
+	} //for ( auto scan = constexprStd::next(first); scan != last; ++scan )
+	return first;
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr auto remove_if(Container&& c, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::remove_if(std::begin(std::forward<Container>(c)),
+		                                          std::end(std::forward<Container>(c)), std::move(pred)))) {
+	return constexprStd::remove_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                               std::move(pred));
+}
+
+template<typename ForwardIter, typename T>
+constexpr ForwardIter remove(const ForwardIter first, const ForwardIter last, const T& value)
+		noexcept(noexcept(constexprStd::remove_if(first, last, details::cmp::EqualToValue{value}))){
+	return constexprStd::remove_if(first, last, details::cmp::EqualToValue{value});
+}
+
+template<typename Container, typename T>
+constexpr auto remove(Container&& c, const T& value)
+		noexcept(noexcept(constexprStd::remove(std::begin(std::forward<Container>(c)),
+		                                       std::end(std::forward<Container>(c)), value))) {
+	return constexprStd::remove(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), value);
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

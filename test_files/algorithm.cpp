@@ -1184,6 +1184,37 @@ void TestConstexprStd::testGenerateN(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testRemoveIf(void) const noexcept {
+	constexpr TestContainer intExpected{4, 6, 8, 10, 6, 7, 8, 9, 10, 10};
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::remove_if(c, isOdd);
+			constexprStd::remove(c, 2);
+			return c;
+		};
+	static_assert(l() == intExpected);
+	
+	TestContainer s;
+	std::remove_if(s.begin(), s.end(), isOdd);
+	std::remove(s.begin(), s.end(), 2);
+	QVERIFY(s == intExpected);
+	
+	std::array<std::string, 6> ca{bazString, emptyString, fooString, barString, longString};
+	std::array<std::string, 6> sa{bazString, emptyString, fooString, barString, longString};
+	const std::array<std::string, 6> stringExpected{emptyString, fooString, longString, emptyString, emptyString};
+	
+	auto check = [](const std::string& str) noexcept { return !str.empty() && str[0] == 'b'; };
+	
+	const auto siter =          std::remove_if(sa.begin(), sa.end(), check);
+	const auto citer = constexprStd::remove_if(ca.begin(), ca.end(), check);
+	
+	QVERIFY(sa == stringExpected);
+	QVERIFY(ca == stringExpected);
+	QVERIFY(*siter == *citer);
+	QVERIFY(std::distance(sa.begin(), siter) == std::distance(ca.begin(), citer));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
