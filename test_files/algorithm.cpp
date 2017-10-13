@@ -1215,6 +1215,44 @@ void TestConstexprStd::testRemoveIf(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testRemoveCopyIf(void) const noexcept {
+	constexpr TestContainer intExpected{2, 4, 6, 8, 10};
+	constexpr TestContainer c;
+	
+	constexpr auto l = [c](void) constexpr noexcept {
+			std::array<int, 5> a{};
+			constexprStd::remove_copy_if(c, a.begin(), isOdd);
+			return TestContainer{a};
+		};
+	static_assert(l() == intExpected);
+	
+	std::array<int, 5> s;
+	std::remove_copy_if(c.begin(), c.end(), s.begin(), isOdd);
+	QVERIFY(TestContainer{s} == intExpected);
+	
+	const std::array<std::string, 10> ca{fooString, fooString, bazString, emptyString, fooString, barString, fooString, fooString, longString, fooString};
+	const std::array<std::string, 10> sa{fooString, fooString, bazString, emptyString, fooString, barString, fooString, fooString, longString, fooString};
+	const std::vector<std::string> stringExpected1{bazString, emptyString, barString, longString};
+	const std::vector<std::string> stringExpected2{emptyString, longString};
+	
+	std::vector<std::string> c1, c2, s1, s2;
+	
+	auto check = [](const std::string& str) noexcept { return !str.empty() && str[0] == 'b'; };
+	
+	         std::remove_copy(sa.begin(), sa.end(), std::back_inserter(s1), fooString);
+	constexprStd::remove_copy(ca.begin(), ca.end(), std::back_inserter(c1), fooString);
+	
+	QVERIFY(c1 == stringExpected1);
+	QVERIFY(s1 == stringExpected1);
+	
+	         std::remove_copy_if(s1.begin(), s1.end(), std::back_inserter(s2), check);
+	constexprStd::remove_copy_if(c1.begin(), c1.end(), std::back_inserter(c2), check);
+	
+	QVERIFY(s2 == stringExpected2);
+	QVERIFY(c2 == stringExpected2);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

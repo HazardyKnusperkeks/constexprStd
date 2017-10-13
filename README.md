@@ -117,8 +117,8 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] generate_n
 - [X] remove
 - [X] remove_if
-- [ ] remove_copy
-- [ ] remove_copy_if
+- [X] remove_copy
+- [X] remove_copy_if
 - [ ] replace
 - [ ] replace_if
 - [ ] replace_copy

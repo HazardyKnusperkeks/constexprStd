@@ -855,6 +855,37 @@ constexpr auto remove(Container&& c, const T& value)
 	return constexprStd::remove(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), value);
 }
 
+template<typename InputIter, typename OutputIter, typename UnaryPredicate>
+constexpr OutputIter remove_copy_if(const InputIter first, const InputIter last, const OutputIter d_first,
+                                    UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::copy_if(first, last, d_first, constexprStd::not_fn(std::move(pred))))) {
+	return constexprStd::copy_if(first, last, d_first, constexprStd::not_fn(std::move(pred)));
+}
+
+template<typename Container, typename OutputIter, typename UnaryPredicate>
+constexpr OutputIter remove_copy_if(Container&& c, const OutputIter d_first, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::remove_copy_if(std::begin(std::forward<Container>(c)),
+		                                               std::end(std::forward<Container>(c)), d_first,
+		                                               std::move(pred)))) {
+	return constexprStd::remove_copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                    d_first, std::move(pred));
+}
+
+template<typename ForwardIter, typename OutputIter, typename T>
+constexpr OutputIter remove_copy(const ForwardIter first, const ForwardIter last, const OutputIter d_first,
+                                  const T& value)
+		noexcept(noexcept(constexprStd::remove_copy_if(first, last, d_first, details::cmp::EqualToValue{value}))){
+	return constexprStd::remove_copy_if(first, last, d_first, details::cmp::EqualToValue{value});
+}
+
+template<typename Container, typename OutputIter, typename T>
+constexpr OutputIter remove_copy(Container&& c, const OutputIter d_first, const T& value)
+		noexcept(noexcept(constexprStd::remove_copy_if(std::begin(std::forward<Container>(c)),
+		                                               std::end(std::forward<Container>(c)), d_first, value))) {
+	return constexprStd::remove_copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                    d_first, value);
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
