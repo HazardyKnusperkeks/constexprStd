@@ -886,6 +886,43 @@ constexpr OutputIter remove_copy(Container&& c, const OutputIter d_first, const 
 	                                    d_first, value);
 }
 
+template<typename ForwardIter, typename UnaryPredicate, typename T>
+constexpr void replace_if(ForwardIter first, const ForwardIter last, UnaryPredicate pred, const T& newValue)
+		noexcept(noexcept(first != last) && noexcept(++first) && noexcept(pred(*first)) &&
+		         noexcept(*first = newValue)) {
+	for ( ; first != last; ++first ) {
+		if ( pred(*first) ) {
+			*first = newValue;
+		} //if ( pred(*first) )
+	} //for ( ; first != last; ++first )
+	return;
+}
+
+template<typename Container, typename UnaryPredicate, typename T>
+constexpr void replace_if(Container&& c, UnaryPredicate pred, const T& newValue)
+		noexcept(noexcept(constexprStd::replace_if(std::begin(std::forward<Container>(c)),
+		                                           std::end(std::forward<Container>(c)), std::move(pred), newValue))) {
+	constexprStd::replace_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                         std::move(pred), newValue);
+	return;
+}
+
+template<typename ForwardIter, typename T>
+constexpr void replace(const ForwardIter first, const ForwardIter last, const T& oldValue, const T& newValue)
+		noexcept(noexcept(constexprStd::replace_if(first, last, details::cmp::EqualToValue{oldValue}, newValue))){
+	constexprStd::replace_if(first, last, details::cmp::EqualToValue{oldValue}, newValue);
+	return;
+}
+
+template<typename Container, typename T>
+constexpr void replace(Container&& c, const T& oldValue, const T& newValue)
+		noexcept(noexcept(constexprStd::replace(std::begin(std::forward<Container>(c)),
+		                                        std::end(std::forward<Container>(c)), oldValue, newValue))) {
+	constexprStd::replace(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), oldValue,
+	                      newValue);
+	return;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

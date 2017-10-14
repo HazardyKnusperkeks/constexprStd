@@ -1253,6 +1253,38 @@ void TestConstexprStd::testRemoveCopyIf(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testReplaceIf(void) const noexcept {
+	constexpr TestContainer intExpected{5, 9, 5, 4, 5, 6, 5, 8, 5, 10};
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::replace_if(c, isOdd, 5);
+			constexprStd::replace(c, 2, 9);
+			return c;
+		};
+	static_assert(l() == intExpected);
+	
+	TestContainer s;
+	std::replace_if(s.begin(), s.end(), isOdd, 5);
+	std::replace(s.begin(), s.end(), 2, 9);
+	QVERIFY(s == intExpected);
+	
+	std::array<std::string, 5> ca{bazString, emptyString, fooString, barString, longString};
+	std::array<std::string, 5> sa{bazString, emptyString, fooString, barString, longString};
+	const std::array<std::string, 5> stringExpected{fooString, barString, fooString, fooString, longString};
+	
+	auto check = [](const std::string& str) noexcept { return !str.empty() && str[0] == 'b'; };
+	
+	         std::replace_if(sa.begin(), sa.end(), check, fooString);
+	constexprStd::replace_if(ca.begin(), ca.end(), check, fooString);
+	
+	         std::replace(sa.begin(), sa.end(), emptyString, barString);
+	constexprStd::replace(ca.begin(), ca.end(), emptyString, barString);
+	
+	QVERIFY(sa == stringExpected);
+	QVERIFY(ca == stringExpected);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
