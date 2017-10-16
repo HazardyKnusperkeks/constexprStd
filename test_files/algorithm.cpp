@@ -1285,6 +1285,54 @@ void TestConstexprStd::testReplaceIf(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testReplaceCopyIf(void) const noexcept {
+	constexpr TestContainer intExpected1{5, 2, 5, 4, 5, 6, 5, 8, 5, 10};
+	constexpr TestContainer intExpected2{1, 9, 3, 4, 5, 6, 7, 8, 9, 10};
+	constexpr TestContainer c;
+	
+	constexpr auto l1 = [c](void) constexpr noexcept {
+			std::array<int, 10> a{};
+			constexprStd::replace_copy_if(c, a.begin(), isOdd, 5);
+			return TestContainer{a};
+		};
+	static_assert(l1() == intExpected1);
+	
+	constexpr auto l2 = [c](void) constexpr noexcept {
+			std::array<int, 10> a{};
+			constexprStd::replace_copy(c, a.begin(), 2, 9);
+			return TestContainer{a};
+		};
+	static_assert(l2() == intExpected2);
+	
+	std::array<int, 10> s;
+	std::replace_copy_if(c.begin(), c.end(), s.begin(), isOdd, 5);
+	QVERIFY(TestContainer{s} == intExpected1);
+	
+	std::replace_copy(c.begin(), c.end(), s.begin(), 2, 9);
+	QVERIFY(TestContainer{s} == intExpected2);
+	
+	std::array<std::string, 5> src{bazString, emptyString, fooString, barString, longString};
+	std::array<std::string, 5> ca{};
+	std::array<std::string, 5> sa{};
+	const std::array<std::string, 5> stringExpected1{bazString, fooString, fooString, barString, longString};
+	const std::array<std::string, 5> stringExpected2{fooString, emptyString, fooString, fooString, longString};
+	
+	auto check = [](const std::string& str) noexcept { return !str.empty() && str[0] == 'b'; };
+	
+	         std::replace_copy(src.begin(), src.end(), sa.begin(), emptyString, fooString);
+	constexprStd::replace_copy(src.begin(), src.end(), ca.begin(), emptyString, fooString);
+	
+	QVERIFY(sa == stringExpected1);
+	QVERIFY(ca == stringExpected1);
+	
+	         std::replace_copy_if(src.begin(), src.end(), sa.begin(), check, fooString);
+	constexprStd::replace_copy_if(src.begin(), src.end(), ca.begin(), check, fooString);
+	
+	QVERIFY(sa == stringExpected2);
+	QVERIFY(ca == stringExpected2);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

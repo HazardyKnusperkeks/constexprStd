@@ -923,6 +923,40 @@ constexpr void replace(Container&& c, const T& oldValue, const T& newValue)
 	return;
 }
 
+template<typename InputIter, typename OutputIter, typename UnaryPredicate, typename T>
+constexpr OutputIter replace_copy_if(const InputIter first, const InputIter last, const OutputIter d_first,
+                                     UnaryPredicate pred, const T& newValue)
+		noexcept(noexcept(constexprStd::transform(first, last, d_first,
+                                                  details::ReplaceCopyIf{std::move(pred), newValue}))) {
+	return constexprStd::transform(first, last, d_first, details::ReplaceCopyIf{std::move(pred), newValue});
+}
+
+template<typename Container, typename OutputIter, typename UnaryPredicate, typename T>
+constexpr OutputIter replace_copy_if(Container&& c, const OutputIter d_first, UnaryPredicate pred, const T& newValue)
+		noexcept(noexcept(constexprStd::replace_copy_if(std::begin(std::forward<Container>(c)),
+		                                               std::end(std::forward<Container>(c)), d_first,
+		                                               std::move(pred), newValue))) {
+	return constexprStd::replace_copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                     d_first, std::move(pred), newValue);
+}
+
+template<typename InputIter, typename OutputIter, typename T>
+constexpr OutputIter replace_copy(const InputIter first, const InputIter last, const OutputIter d_first,
+                                  const T& oldValue, const T& newValue)
+		noexcept(noexcept(constexprStd::replace_copy_if(first, last, d_first, details::cmp::EqualToValue{oldValue},
+		                                                newValue))){
+	return constexprStd::replace_copy_if(first, last, d_first, details::cmp::EqualToValue{oldValue}, newValue);
+}
+
+template<typename Container, typename OutputIter, typename T>
+constexpr OutputIter replace_copy(Container&& c, const OutputIter d_first, const T& oldValue, const T& newValue)
+		noexcept(noexcept(constexprStd::replace_copy(std::begin(std::forward<Container>(c)),
+		                                             std::end(std::forward<Container>(c)), d_first, oldValue,
+		                                             newValue))) {
+	return constexprStd::replace_copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                  d_first, oldValue, newValue);
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

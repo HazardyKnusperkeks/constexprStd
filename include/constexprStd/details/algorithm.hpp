@@ -53,6 +53,27 @@ struct Equal {
 };
 } //namespace cmp
 
+template<typename UnaryPredicate, typename T>
+struct ReplaceCopyIf {
+	UnaryPredicate Pred;
+	const T& NewValue;
+	
+	constexpr const T& operator()(const T& value) const
+			noexcept(noexcept(std::declval<const ReplaceCopyIf&>().Pred(value))) {
+		return Pred(value) ? NewValue : value;
+	}
+	
+	template<typename U>
+	constexpr U operator()(const U& value) const
+			noexcept(noexcept(std::declval<const ReplaceCopyIf&>().Pred(value)) &&
+			         std::is_nothrow_constructible_v<U, const T&> && std::is_nothrow_copy_constructible_v<U>) {
+		return Pred(value) ? NewValue : value;
+	}
+};
+
+template<typename UnaryPredicate, typename T>
+ReplaceCopyIf(UnaryPredicate&&, const T&) -> ReplaceCopyIf<UnaryPredicate, T>;
+
 template<typename IterT1, typename IterT2, typename BinaryPredicate,
          std::enable_if_t<std::conjunction_v<IsRaIter<IterT1>, IsRaIter<IterT2>>>* = nullptr>
 constexpr bool equalImpl(const IterT1 first1, const IterT1 last1, const IterT2 first2, const IterT2 last2,
