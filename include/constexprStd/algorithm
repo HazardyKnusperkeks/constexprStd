@@ -880,10 +880,10 @@ constexpr OutputIter remove_copy(const ForwardIter first, const ForwardIter last
 
 template<typename Container, typename OutputIter, typename T>
 constexpr OutputIter remove_copy(Container&& c, const OutputIter d_first, const T& value)
-		noexcept(noexcept(constexprStd::remove_copy_if(std::begin(std::forward<Container>(c)),
-		                                               std::end(std::forward<Container>(c)), d_first, value))) {
-	return constexprStd::remove_copy_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
-	                                    d_first, value);
+		noexcept(noexcept(constexprStd::remove_copy(std::begin(std::forward<Container>(c)),
+		                                            std::end(std::forward<Container>(c)), d_first, value))) {
+	return constexprStd::remove_copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                 d_first, value);
 }
 
 template<typename ForwardIter, typename UnaryPredicate, typename T>
