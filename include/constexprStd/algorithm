@@ -30,6 +30,7 @@
 #include "details/algorithm.hpp"
 #include "functional"
 #include "iterator"
+#include "utility"
 
 namespace constexprStd {
 /*****                                     Non-modifying sequence operations                                      *****/
@@ -955,6 +956,32 @@ constexpr OutputIter replace_copy(Container&& c, const OutputIter d_first, const
 		                                             newValue))) {
 	return constexprStd::replace_copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
 	                                  d_first, oldValue, newValue);
+}
+
+template<typename ForwardIter1, typename ForwardIter2>
+constexpr void iter_swap(const ForwardIter1 iter1, const ForwardIter2 iter2)
+		noexcept(std::is_nothrow_swappable_with_v<typename std::iterator_traits<ForwardIter1>::value_type,
+		                                          typename std::iterator_traits<ForwardIter2>::value_type>) {
+	constexprStd::swap(*iter1, *iter2);
+	return;
+}
+
+template<typename ForwardIter1, typename ForwardIter2>
+constexpr ForwardIter2 swap_ranges(ForwardIter1 first1, const ForwardIter1 last1, ForwardIter2 first2)
+		noexcept(noexcept(first1 != last1) && noexcept(static_cast<void>(++first1), ++first2) &&
+		         noexcept(constexprStd::iter_swap(first1, first2))) {
+	for ( ; first1 != last1; static_cast<void>(++first1), ++first2 ) {
+		constexprStd::iter_swap(first1, first2);
+	} //for ( ; first1 != last1; static_cast<void>(++first1), ++first2 )
+	return first2;
+}
+
+template<typename Container, typename ForwardIter2>
+constexpr ForwardIter2 swap_ranges(Container&& c, ForwardIter2 first2)
+		noexcept(noexcept(constexprStd::swap_ranges(std::begin(std::forward<Container>(c)),
+		                                            std::end(std::forward<Container>(c)), first2))) {
+	return constexprStd::swap_ranges(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                 first2);
 }
 
 /*****                                        Minimum/Maximum Operations                                          *****/

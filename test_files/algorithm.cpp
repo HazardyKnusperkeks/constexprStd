@@ -1333,6 +1333,17 @@ void TestConstexprStd::testReplaceCopyIf(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testSwapRanges(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			std::array<int, 10> a{};
+			constexprStd::swap_ranges(c, a.begin());
+			return c;
+		};
+	static_assert(l() == TestContainer{0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
