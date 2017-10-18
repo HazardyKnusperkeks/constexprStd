@@ -1344,6 +1344,30 @@ void TestConstexprStd::testSwapRanges(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testReverse(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::reverse(c);
+			return c;
+		};
+	static_assert(l() == TestContainer{10, 9, 8, 7, 6, 5, 4, 3, 2, 1});
+	
+	std::array<int, 3> s{1, 2, 3}, c{1, 2, 3};
+	
+	         std::reverse(s.end(), s.end());
+	constexprStd::reverse(c.end(), c.end());
+	
+	QCOMPARE(s, (std::array{1, 2, 3}));
+	QVERIFY(c == s);
+	
+	         std::reverse(s.begin(), s.end());
+	constexprStd::reverse(c.begin(), c.end());
+	
+	QCOMPARE(s, (std::array{3, 2, 1}));
+	QVERIFY(c == s);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

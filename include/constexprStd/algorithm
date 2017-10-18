@@ -984,6 +984,28 @@ constexpr ForwardIter2 swap_ranges(Container&& c, ForwardIter2 first2)
 	                                 first2);
 }
 
+template<typename BidirIter>
+constexpr void reverse(BidirIter first, BidirIter last)
+		noexcept(noexcept(first == last) && noexcept(first != last && first != --last) && noexcept(++first) &&
+		         noexcept(constexprStd::iter_swap(first, last))) {
+	if ( first == last ) {
+		return;
+	} //if ( first == last )
+	
+	for ( ; first != last && first != --last; ++first ) {
+		constexprStd::iter_swap(first, last);
+	} //for ( ; first != last && first != --last; ++first )
+	return;
+}
+
+template<typename Container>
+constexpr void reverse(Container&& c)
+		noexcept(noexcept(constexprStd::reverse(std::begin(std::forward<Container>(c)),
+		                                        std::end(std::forward<Container>(c))))) {
+	constexprStd::reverse(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)));
+	return;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

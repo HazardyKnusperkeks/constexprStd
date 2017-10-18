@@ -125,7 +125,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] replace_copy_if
 - [X] swap_ranges
 - [X] iter_swap
-- [ ] reverse
+- [X] reverse
 - [ ] reverse_copy
 - [ ] rotate
 - [ ] rotate_copy
