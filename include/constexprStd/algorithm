@@ -1006,6 +1006,21 @@ constexpr void reverse(Container&& c)
 	return;
 }
 
+template<typename BidirIter, typename OutputIter>
+constexpr OutputIter reverse_copy(const BidirIter first, const BidirIter last, const OutputIter d_first)
+		noexcept(noexcept(constexprStd::copy(std::make_reverse_iterator(last), std::make_reverse_iterator(first),
+		                                     d_first))) {
+	return constexprStd::copy(std::make_reverse_iterator(last), std::make_reverse_iterator(first), d_first);
+}
+
+template<typename Container, typename OutputIter>
+constexpr OutputIter reverse_copy(Container&& c, const OutputIter d_first)
+		noexcept(noexcept(constexprStd::reverse_copy(std::begin(std::forward<Container>(c)),
+		                                             std::end(std::forward<Container>(c)), d_first))) {
+	return constexprStd::reverse_copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                  d_first);
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

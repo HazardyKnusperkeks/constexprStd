@@ -1368,6 +1368,25 @@ void TestConstexprStd::testReverse(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testReverseCopy(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c, ret{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+			constexprStd::reverse_copy(c, ret.begin());
+			return ret;
+		};
+	static_assert(l() == TestContainer{10, 9, 8, 7, 6, 5, 4, 3, 2, 1});
+	
+	const std::array<int, 3> from{1, 2, 3};
+	std::array<int, 3> s{0, 0, 0}, c{0, 0, 0};
+	
+	         std::reverse_copy(from.begin(), from.end(), s.begin());
+	constexprStd::reverse_copy(from.begin(), from.end(), c.begin());
+	
+	QCOMPARE(s, (std::array{3, 2, 1}));
+	QVERIFY(c == s);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

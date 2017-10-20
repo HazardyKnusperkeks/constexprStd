@@ -67,6 +67,7 @@ class TestConstexprStd : public QObject {
 	void testReplaceCopyIf(void) const noexcept;
 	void testSwapRanges(void) const noexcept;
 	void testReverse(void) const noexcept;
+	void testReverseCopy(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;
