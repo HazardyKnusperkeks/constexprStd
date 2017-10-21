@@ -1021,6 +1021,40 @@ constexpr OutputIter reverse_copy(Container&& c, const OutputIter d_first)
 	                                  d_first);
 }
 
+template<typename ForwardIter>
+constexpr ForwardIter rotate(ForwardIter first, ForwardIter n_first, const ForwardIter last) {
+	//Copied from cppreference, my solutions didn't work out. Altough I don't think that this is linear.
+	if ( first == n_first ) {
+		return last;
+	} //if ( first == n_first )
+	
+	if ( n_first == last ) {
+		return first;
+	} //if ( n_first == last )
+	
+	auto next = n_first;
+	
+	do { //while ( next != last )
+		constexprStd::iter_swap(first++, next++);
+		if ( first == n_first ) {
+			n_first = next;
+		} //if ( first == n_first )
+	} while ( next != last );
+	
+	auto ret = first;
+	
+	for ( next = n_first; next != last; ) {
+		constexprStd::iter_swap(first++, next++);
+		if ( first == n_first ) {
+			n_first = next;
+		} //if ( first == n_first )
+		else if ( next == last ) {
+			next = n_first;
+		} //else if ( next == last )
+	} //for ( next = n_first; next != last; )
+	return ret;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

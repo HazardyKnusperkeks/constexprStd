@@ -163,6 +163,16 @@ constexpr RandomAccessIter1 findEndImpl(const RandomAccessIter1 first, const Ran
 	} //for ( auto dist = distance - sDistance; dist >= 0; --dist )
 	return last;
 }
+
+template<typename T>
+constexpr void threeSwap(T& one, T& two, T& three)
+		noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>) {
+	auto temp  = std::move(one);
+	     one   = std::move(two);
+	     two   = std::move(three);
+	     three = std::move(temp);
+	return;
+}
 } //namespace constexprStd::details
 
 #endif

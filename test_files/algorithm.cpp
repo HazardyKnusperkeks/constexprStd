@@ -1387,6 +1387,55 @@ void TestConstexprStd::testReverseCopy(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testRotate(void) const noexcept {
+	constexpr std::array<int, 10> expected1{2, 3, 4, 5, 6, 7, 8, 9, 10, 1};
+	constexpr std::array<int, 10> expected2{5, 6, 7, 8, 9, 10, 1, 2, 3, 4};
+	
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::rotate(c.begin(), constexprStd::next(c.begin()), c.end());
+			return c;
+		};
+	
+	static_assert(l() == TestContainer{expected1});
+	
+	TestContainer s;
+	TestContainer c{l()};
+	
+	std::rotate(s.begin(), std::next(s.begin()), s.end());
+	QVERIFY(s == expected1);
+	
+	auto siter =          std::rotate(s.begin(), std::next(s.begin(), 3), s.end());
+	auto citer = constexprStd::rotate(c.begin(), std::next(c.begin(), 3), c.end());
+	QVERIFY(s == expected2);
+	QVERIFY(c == expected2);
+	
+	QVERIFY(std::distance(s.begin(), siter) == std::distance(c.begin(), citer));
+	QVERIFY(*siter == *citer);
+	
+	for ( int i = 0; i <= 10; ++i ) {
+		         std::rotate(s.begin(), std::next(s.begin(), i), s.end());
+		constexprStd::rotate(c.begin(), std::next(c.begin(), i), c.end());
+		
+		if ( c != s ) {
+			QCOMPARE(i, -1);
+		} //if ( c != s )
+	} //for ( int i = 0; i <= 10; ++i )
+	
+	std::forward_list<int> sl{1, 2, 3, 4, 5, 6};
+	std::forward_list<int> cl{1, 2, 3, 4, 5, 6};
+	
+	         std::rotate(sl.begin(), std::next(sl.begin(), 1), sl.end());
+	constexprStd::rotate(cl.begin(), std::next(cl.begin(), 1), cl.end());
+	
+	         std::rotate(sl.begin(), std::next(sl.begin(), 2), sl.end());
+	constexprStd::rotate(cl.begin(), std::next(cl.begin(), 2), cl.end());
+	
+	QVERIFY((sl == std::forward_list{4, 5, 6, 1, 2, 3}));
+	QVERIFY(sl == cl);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
