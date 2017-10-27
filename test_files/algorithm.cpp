@@ -1436,6 +1436,26 @@ void TestConstexprStd::testRotate(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testRotateCopy(void) const noexcept {
+	constexpr std::array<int, 10> expected{5, 6, 7, 8, 9, 10, 1, 2, 3, 4};
+	
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			std::array<int, 10> a{};
+			constexprStd::rotate_copy(c.begin(), constexprStd::next(c.begin(), 4), c.end(), a.begin());
+			return a;
+		};
+	
+	static_assert(TestContainer{l()} == TestContainer{expected});
+	
+	TestContainer s;
+	std::array<int, 10> a{};
+	
+	std::rotate_copy(s.begin(), std::next(s.begin(), 4), s.end(), a.begin());
+	QVERIFY(a == expected);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

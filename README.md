@@ -128,7 +128,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] reverse
 - [X] reverse_copy
 - [X] rotate
-- [ ] rotate_copy
+- [X] rotate_copy
 - [ ] shuffle
 - [ ] sample
 - [ ] unique
