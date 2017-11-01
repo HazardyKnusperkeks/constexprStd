@@ -131,7 +131,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] rotate_copy
 - [ ] shuffle
 - [ ] sample
-- [ ] unique
+- [X] unique
 - [ ] unique_copy
 
 #### Partitioning operations

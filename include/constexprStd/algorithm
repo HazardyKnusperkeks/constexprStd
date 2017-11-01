@@ -1062,6 +1062,33 @@ constexpr OutputIter rotate_copy(const ForwardIter first, const ForwardIter n_fi
 	return constexprStd::copy(first, n_first, constexprStd::copy(n_first, last, d_first));
 }
 
+template<typename ForwardIter, typename BinaryPredicate = std::equal_to<>>
+constexpr ForwardIter unique(ForwardIter first, const ForwardIter last, BinaryPredicate pred = {})
+noexcept(noexcept(constexprStd::adjacent_find(first, last, pred)) && noexcept(first == last) &&
+         noexcept(constexprStd::next(first)) && std::is_nothrow_move_assignable_v<ForwardIter> &&
+         noexcept(first != last) && noexcept(++first) && noexcept(!pred(*first, *first)) &&
+         std::is_nothrow_move_assignable_v<typename std::iterator_traits<ForwardIter>::value_type>) {
+	auto ret = constexprStd::adjacent_find(first, last, pred);
+	if ( ret == last ) {
+		return ret;
+	} //if ( ret == last )
+	
+	for ( first = constexprStd::next(ret); first != last; ++first ) {
+		if ( !pred(*ret, *first) ) {
+			*++ret = std::move(*first);
+		} //if ( !pred(*ret, *first) )
+	} //for ( first = constexprStd::next(ret); first != last; ++first )
+	return ++ret;
+}
+
+template<typename Container, typename BinaryPredicate = std::equal_to<>>
+constexpr auto unique(Container&& c, BinaryPredicate pred = {})
+		noexcept(noexcept(constexprStd::unique(std::begin(std::forward<Container>(c)),
+		                                       std::end(std::forward<Container>(c)), std::move(pred)))) {
+	return constexprStd::unique(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                            std::move(pred));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

@@ -70,6 +70,7 @@ class TestConstexprStd : public QObject {
 	void testReverseCopy(void) const noexcept;
 	void testRotate(void) const noexcept;
 	void testRotateCopy(void) const noexcept;
+	void testUnique(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;

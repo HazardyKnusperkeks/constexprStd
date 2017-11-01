@@ -1456,6 +1456,36 @@ void TestConstexprStd::testRotateCopy(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testUnique(void) const noexcept {
+	constexpr std::array<int, 16> from     {1, 3, 1, 1, 4, 3, 4, 4, 5, 7, 7, 5, 2, 2, 9, 4};
+	constexpr std::array<int, 12> expected1{1, 3, 1, 4, 3, 4, 5, 7, 5, 2, 9, 4};
+	constexpr std::array<int, 10> expected2{1, 4, 3, 4, 4, 5, 2, 2, 9, 4};
+	
+	constexpr auto l1 = [from,expected1](void) constexpr noexcept {
+			auto copy{from};
+			auto iter = constexprStd::unique(copy);
+			return constexprStd::equal(copy.begin(), iter, expected1.begin(), expected1.end());
+		};
+	
+	constexpr auto l2 = [from,expected2](void) constexpr noexcept {
+			auto copy{from};
+			auto iter = constexprStd::unique(copy, bothOdd);
+			return constexprStd::equal(copy.begin(), iter, expected2.begin(), expected2.end());
+		};
+	
+	static_assert(l1());
+	static_assert(l2());
+	
+	auto copy1{from};
+	auto iter1 = std::unique(copy1.begin(), copy1.end());
+	QVERIFY(std::equal(copy1.begin(), iter1, expected1.begin(), expected1.end()));
+	
+	auto copy2{from};
+	auto iter2 = std::unique(copy2.begin(), copy2.end(), bothOdd);
+	QVERIFY(std::equal(copy2.begin(), iter2, expected2.begin(), expected2.end()));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
