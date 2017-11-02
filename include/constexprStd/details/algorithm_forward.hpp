@@ -26,6 +26,8 @@
 
 #include <type_traits>
 
+#include "iterator_forward.hpp"
+
 namespace constexprStd {
 template<typename IterT1, typename IterT2, typename BinaryPredicate>
 constexpr bool equal(IterT1 first1, const IterT1 last1, IterT2 first2, const BinaryPredicate pred)
@@ -40,6 +42,16 @@ constexpr ForwardIter1 search(ForwardIter1 first, const ForwardIter1 last,
 		                  pred(*first, *std::declval<ForwardIter2&>())) &&
 		         noexcept(++first, ++std::declval<ForwardIter2&>()) &&
 		         noexcept(std::declval<ForwardIter2&>() == s_last) && noexcept(first == last));
+
+template<typename ForwardIter, typename BinaryPredicate>
+constexpr ForwardIter adjacent_find(ForwardIter first, const ForwardIter last, BinaryPredicate pred)
+		noexcept(noexcept(first == last) && noexcept(constexprStd::next(first)) && noexcept(first != last) &&
+		         noexcept(++first, ++first) && noexcept(pred(*first, *first)));
+
+template<typename InputIterator, typename OutputIterator>
+constexpr OutputIterator copy(InputIterator sourceFirst, const InputIterator sourceLast, OutputIterator destination)
+		noexcept(noexcept(sourceFirst != sourceLast) && noexcept(++sourceFirst) && noexcept(++destination) &&
+		         noexcept(*destination = *sourceFirst));
 } //namespace constexpr
 
 #endif

@@ -28,6 +28,7 @@
 #include <type_traits>
 
 #include "details/iterator.hpp"
+#include "details/iterator_forward.hpp"
 
 namespace constexprStd {
 
@@ -103,7 +104,7 @@ constexpr auto distance(const InputIterator first, const InputIterator last)
 
 template<typename InputIterator>
 constexpr InputIterator next(InputIterator iter,
-                             const typename std::iterator_traits<InputIterator>::difference_type n = 1)
+                             const typename std::iterator_traits<InputIterator>::difference_type n)
                              noexcept(noexcept(constexprStd::advance(iter, n))) {
 	constexprStd::advance(iter, n);
 	return iter;

@@ -28,6 +28,7 @@
 #include <type_traits>
 
 #include "details/algorithm.hpp"
+#include "details/algorithm_forward.hpp"
 #include "functional"
 #include "iterator"
 #include "utility"
@@ -1087,6 +1088,26 @@ constexpr auto unique(Container&& c, BinaryPredicate pred = {})
 		                                       std::end(std::forward<Container>(c)), std::move(pred)))) {
 	return constexprStd::unique(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
 	                            std::move(pred));
+}
+
+template<typename InputIter, typename OutputIter, typename BinaryPredicate = std::equal_to<>>
+constexpr OutputIter unique_copy(const InputIter first, const InputIter last, const OutputIter d_first,
+                                 BinaryPredicate pred = {})
+		noexcept(noexcept(first == last) &&
+		         noexcept(details::uniqueCopyImpl(first, last, d_first, std::move(pred),
+		                                          details::iteratorCategory<InputIter>))) {
+	if ( first == last ) {
+		return d_first;
+	} //if ( first == last )
+	return details::uniqueCopyImpl(first, last, d_first, std::move(pred), details::iteratorCategory<InputIter>);
+}
+
+template<typename Container, typename OutputIter, typename BinaryPredicate = std::equal_to<>>
+constexpr OutputIter unique_copy(Container&& c, const OutputIter d_first, BinaryPredicate pred = {})
+		noexcept(noexcept(constexprStd::unique_copy(std::begin(std::forward<Container>(c)),
+		                                            std::end(std::forward<Container>(c)), d_first, std::move(pred)))) {
+	return constexprStd::unique_copy(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
+	                                 d_first, std::move(pred));
 }
 
 /*****                                        Minimum/Maximum Operations                                          *****/

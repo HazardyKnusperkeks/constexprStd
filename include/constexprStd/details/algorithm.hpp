@@ -173,6 +173,80 @@ constexpr void threeSwap(T& one, T& two, T& three)
 	     three = std::move(temp);
 	return;
 }
+
+template<typename ForwardIter, typename OutputIter, typename BinaryPredicate>
+constexpr OutputIter uniqueCopyImpl(ForwardIter first, const ForwardIter last, OutputIter d_first, BinaryPredicate pred,
+                                    const std::forward_iterator_tag)
+		noexcept(std::is_nothrow_move_constructible_v<ForwardIter> &&
+		         noexcept(constexprStd::adjacent_find(first, last, pred)) && noexcept(first != last) &&
+		         std::is_nothrow_move_assignable_v<ForwardIter> && std::is_nothrow_move_assignable_v<OutputIter> &&
+		         noexcept(constexprStd::copy(first, ++first, d_first)) &&
+		         std::is_nothrow_copy_assignable_v<ForwardIter> && noexcept(first != last && pred(*first, *first)) &&
+		         noexcept(++first) && noexcept(constexprStd::copy(first, last, d_first))) {
+	auto iter = constexprStd::adjacent_find(first, last, pred);
+	for ( ; iter != last; iter = constexprStd::adjacent_find(first, last, pred) ) {
+		d_first = constexprStd::copy(first, ++iter, d_first);
+		for ( first = iter; first != last && pred(*iter, *first); ++first ) {
+			
+		} //for ( first = iter; first != last && pred(*iter, *first); ++first )
+	} //for ( ; iter != last; iter = constexprStd::adjacent_find(first, last, pred) )
+	return constexprStd::copy(first, last, d_first);
+}
+
+template<typename Iter>
+using typeOf = typename std::iterator_traits<Iter>::value_type;
+
+template<typename InputIter, typename OutputIter, typename BinaryPredicate>
+constexpr OutputIter uniqueCopyInputImpl(InputIter first, const InputIter last, OutputIter d_first,
+                                         BinaryPredicate pred, const std::output_iterator_tag)
+		noexcept(std::is_nothrow_move_constructible_v<typeOf<InputIter>> && noexcept(*first) &&
+		         std::is_nothrow_copy_assignable_v<InputIter> && noexcept(++first) && noexcept(first != last) &&
+		         noexcept(!pred(std::declval<typeOf<InputIter>&>(), std::declval<typeOf<InputIter>&>())) &&
+		         std::is_nothrow_move_assignable_v<typeOf<InputIter>> && noexcept(++d_first) &&
+		         std::is_nothrow_assignable_v<decltype(*d_first), typeOf<InputIter>&>) {
+	auto lastCopied = *first;
+	*d_first = lastCopied;
+	for ( ++first; first != last; ++first ) {
+		auto current = *first;
+		if ( !pred(lastCopied, current) ) {
+			*++d_first = lastCopied = std::move(current);
+		} //if ( !pred(lastCopied, current) )
+	} //for ( ++first; first != last; ++first )
+	return ++d_first;
+}
+
+template<typename Iter1, typename Iter2>
+constexpr bool sameType = std::is_same_v<typename std::iterator_traits<Iter1>::value_type,
+                                         typename std::iterator_traits<Iter2>::value_type>;
+
+template<typename InputIter, typename OutputIter, typename BinaryPredicate>
+constexpr OutputIter uniqueCopyInputImpl(InputIter first, const InputIter last, OutputIter d_first,
+                                         BinaryPredicate pred, const std::forward_iterator_tag)
+		noexcept((!sameType<InputIter, OutputIter> || (noexcept(*d_first = *first) && noexcept(++first) &&
+		                                               noexcept(first != last) && noexcept(++d_first) &&
+		                                               noexcept(!pred(*d_first, *first)))) &&
+		         (sameType<InputIter, OutputIter> ||
+		          noexcept(uniqueCopyInputImpl(first, last, d_first, std::move(pred), std::output_iterator_tag{})))) {
+	if constexpr ( sameType<InputIter, OutputIter> ) {
+		*d_first = *first;
+		for ( ++first; first != last; ++first ) {
+			if ( !pred(*d_first, *first) ) {
+				*++d_first = *first;
+			} //if ( !pred(*d_first, *first) )
+		} //for ( ++first; first != last; ++first )
+	} //if constexpr ( sameType<InputIter, OutputIter> )
+	else {
+		return uniqueCopyInputImpl(first, last, d_first, std::move(pred), std::output_iterator_tag{});
+	} //else -> if constexpr ( sameType<InputIter, OutputIter> )
+	return ++d_first;
+}
+
+template<typename InputIter, typename OutputIter, typename BinaryPredicate>
+constexpr OutputIter uniqueCopyImpl(const InputIter first, const InputIter last, const OutputIter d_first,
+                                    BinaryPredicate pred, const std::input_iterator_tag)
+		noexcept(noexcept(uniqueCopyInputImpl(first, last, d_first, std::move(pred), iteratorCategory<OutputIter>))) {
+	return uniqueCopyInputImpl(first, last, d_first, std::move(pred), iteratorCategory<OutputIter>);
+}
 } //namespace constexprStd::details
 
 #endif

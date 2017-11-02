@@ -34,6 +34,7 @@
 #include <array>
 #include <forward_list>
 #include <iterator>
+#include <sstream>
 #include <tuple>
 #include <utility>
 
@@ -1483,6 +1484,85 @@ void TestConstexprStd::testUnique(void) const noexcept {
 	auto copy2{from};
 	auto iter2 = std::unique(copy2.begin(), copy2.end(), bothOdd);
 	QVERIFY(std::equal(copy2.begin(), iter2, expected2.begin(), expected2.end()));
+	return;
+}
+
+void TestConstexprStd::testUniqueCopy(void) const noexcept {
+	//Case 1, from is forward iterator
+	constexpr std::array<int, 16> from     {1, 3, 1, 1, 4, 3, 4, 4, 5, 7, 7, 5, 2, 2, 9, 4};
+	constexpr std::array<int, 16> expected1{1, 3, 1, 4, 3, 4, 5, 7, 5, 2, 9, 4, 0, 0, 0, 0};
+	constexpr std::array<int, 16> expected2{1, 4, 3, 4, 4, 5, 2, 2, 9, 4, 0, 0, 0, 0, 0, 0};
+	
+	constexpr auto l1 = [from](void) constexpr noexcept {
+			std::decay_t<decltype(from)> copy{};
+			auto iter = constexprStd::unique_copy(from, copy.begin());
+			if ( *iter != 0 ) {
+				*iter = -1;
+			} //if ( *iter != 0 )
+			return copy;
+		};
+	
+	constexpr auto l2 = [from](void) constexpr noexcept {
+			std::decay_t<decltype(from)> copy{};
+			auto iter = constexprStd::unique_copy(from, copy.begin(), bothOdd);
+			if ( *iter != 0 ) {
+				*iter = -1;
+			} //if ( *iter != 0 )
+			return copy;
+		};
+	
+	std::decay_t<decltype(from)> s1{}, s2{};
+	constexpr auto c1{l1()};
+	constexpr auto c2{l2()};
+	
+	std::unique_copy(from.begin(), from.end(), s1.begin());
+	std::unique_copy(from.begin(), from.end(), s2.begin(), bothOdd);
+	
+	QVERIFY(s1 == expected1);
+	QVERIFY(s2 == expected2);
+	QVERIFY(c1 == expected1);
+	QVERIFY(c2 == expected2);
+	
+	//Case 2, from is input, but to is forward
+	constexpr auto string = "Foo,  Bar,    Baaazzz0rr";
+	std::istringstream stream;
+	constexpr std::array<char, 24> streamExpected1{"Fo, Bar, Baz0r"};
+	constexpr std::array<char, 24> streamExpected2{"Fo,  Bar,    Bazzz0rr"};
+	
+	std::array<char, 24> ss1{}, ss2{}, cs1{}, cs2{};
+	
+	using streamIter = std::istreambuf_iterator<char>;
+	
+	stream.str(string);
+	         std::unique_copy(streamIter{stream}, streamIter{}, ss1.begin());
+	stream.str(string);
+	constexprStd::unique_copy(streamIter{stream}, streamIter{}, cs1.begin());
+	stream.str(string);
+	         std::unique_copy(streamIter{stream}, streamIter{}, ss2.begin(), bothVocal);
+	stream.str(string);
+	constexprStd::unique_copy(streamIter{stream}, streamIter{}, cs2.begin(), bothVocal);
+	
+	QVERIFY(ss1 == streamExpected1);
+	QVERIFY(ss2 == streamExpected2);
+	QVERIFY(cs1 == streamExpected1);
+	QVERIFY(cs2 == streamExpected2);
+	
+	//Case 3, from is input, and to is output
+	std::vector<char> sv1, sv2, cv1, cv2;
+	
+	stream.str(string);
+	         std::unique_copy(streamIter{stream}, streamIter{}, std::back_inserter(sv1));
+	stream.str(string);
+	constexprStd::unique_copy(streamIter{stream}, streamIter{}, std::back_inserter(cv1));
+	stream.str(string);
+	         std::unique_copy(streamIter{stream}, streamIter{}, std::back_inserter(sv2), bothVocal);
+	stream.str(string);
+	constexprStd::unique_copy(streamIter{stream}, streamIter{}, std::back_inserter(cv2), bothVocal);
+	
+	QVERIFY(std::equal(sv1.begin(), sv1.end(), streamExpected1.begin()));
+	QVERIFY(std::equal(sv2.begin(), sv2.end(), streamExpected2.begin()));
+	QVERIFY(sv1 == cv1);
+	QVERIFY(sv2 == cv2);
 	return;
 }
 
