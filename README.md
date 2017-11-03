@@ -135,7 +135,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] unique_copy
 
 #### Partitioning operations
-- [ ] is_partitioned
+- [X] is_partitioned
 - [ ] partition
 - [ ] partition_copy
 - [ ] stable_partition

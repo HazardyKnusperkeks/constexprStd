@@ -73,6 +73,9 @@ class TestConstexprStd : public QObject {
 	void testUnique(void) const noexcept;
 	void testUniqueCopy(void) const noexcept;
 	
+	//Partitioning operations
+	void testIsPartioned(void) const noexcept;
+	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;
 	

@@ -1566,6 +1566,18 @@ void TestConstexprStd::testUniqueCopy(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testIsPartioned(void) const noexcept {
+	constexpr TestContainer c1, c2{1, 3, 5, 7, 9, 2, 4, 6, 8, 10}, c3{2, 4, 6, 8, 10, 1, 3, 5, 7, 9};
+	static_assert(!constexprStd::is_partitioned(c1, isOdd));
+	static_assert( constexprStd::is_partitioned(c2, isOdd));
+	static_assert(!constexprStd::is_partitioned(c3, isOdd));
+	
+	QVERIFY(!std::is_partitioned(c1.begin(), c1.end(), isOdd));
+	QVERIFY( std::is_partitioned(c2.begin(), c2.end(), isOdd));
+	QVERIFY(!std::is_partitioned(c3.begin(), c3.end(), isOdd));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

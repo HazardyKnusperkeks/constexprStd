@@ -1110,6 +1110,28 @@ constexpr OutputIter unique_copy(Container&& c, const OutputIter d_first, Binary
 	                                 d_first, std::move(pred));
 }
 
+/*****                                          Partitioning Operations                                           *****/
+
+template<typename InputIter, typename UnaryPredicate>
+constexpr bool is_partitioned(InputIter first, const InputIter last, UnaryPredicate pred)
+		noexcept(noexcept(first != last && pred(*first)) && noexcept(++first) && noexcept(first == last) &&
+		         noexcept(constexprStd::find_if(first, last, pred) == last)) {
+	for ( ; first != last && pred(*first); ++first ) {
+		
+	} //for ( ; first != last && pred(*first); ++first )
+	
+	if ( first == last ) {
+		return true;
+	} //if ( first == last )
+	return constexprStd::find_if(first, last, pred) == last;
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr bool is_partitioned(const Container& c, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::is_partitioned(std::begin(c), std::end(c), std::move(pred)))) {
+	return constexprStd::is_partitioned(std::begin(c), std::end(c), std::move(pred));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
