@@ -1578,6 +1578,95 @@ void TestConstexprStd::testIsPartioned(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testPartition(void) const noexcept {
+	constexpr TestContainer f1, f2{1, 3, 5, 7, 9, 2, 4, 6, 8, 10}, f3{2, 4, 6, 8, 10, 1, 3, 5, 7, 9};
+	
+	TestContainer s1{f1}, s2{f2}, s3{f3};
+	TestContainer c1{f1}, c2{f2}, c3{f3};
+	
+	constexpr TestContainer cc{[f1](void) constexpr noexcept {
+			TestContainer copy{f1};
+			constexprStd::partition(copy, isOdd);
+			return copy;
+		}()};
+	QVERIFY(std::is_partitioned(cc.begin(), cc.end(), isOdd));
+	
+	int count = 0;
+	auto pred = [&count](const int x) noexcept { ++count; return isOdd(x); };
+	
+	auto siter1 = std::partition(s1.begin(), s1.end(), pred);
+	QVERIFY(std::is_partitioned(s1.begin(), s1.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto siter2 = std::partition(s2.begin(), s2.end(), pred);
+	QVERIFY(std::is_partitioned(s2.begin(), s2.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto siter3 = std::partition(s3.begin(), s3.end(), pred);
+	QVERIFY(std::is_partitioned(s3.begin(), s3.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto citer1 = constexprStd::partition(c1.begin(), c1.end(), pred);
+	QVERIFY(std::is_partitioned(c1.begin(), c1.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto citer2 = constexprStd::partition(c2.begin(), c2.end(), pred);
+	QVERIFY(std::is_partitioned(c2.begin(), c2.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto citer3 = constexprStd::partition(c3.begin(), c3.end(), pred);
+	QVERIFY(std::is_partitioned(c3.begin(), c3.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	QVERIFY(*siter1 == *citer1);
+	QVERIFY(*siter2 == *citer2);
+	QVERIFY(*siter3 == *citer3);
+	
+	std::forward_list<int> sl1, sl2, sl3, cl1, cl2, cl3;
+	std::copy(f1.rbegin(), f1.rend(), std::front_inserter(sl1));
+	std::copy(f2.rbegin(), f2.rend(), std::front_inserter(sl2));
+	std::copy(f3.rbegin(), f3.rend(), std::front_inserter(sl3));
+	std::copy(f1.rbegin(), f1.rend(), std::front_inserter(cl1));
+	std::copy(f2.rbegin(), f2.rend(), std::front_inserter(cl2));
+	std::copy(f3.rbegin(), f3.rend(), std::front_inserter(cl3));
+	
+	count = 0;
+	std::partition(sl1.begin(), sl1.end(), pred);
+	QVERIFY(std::is_partitioned(sl1.begin(), sl1.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	std::partition(sl2.begin(), sl2.end(), pred);
+	QVERIFY(std::is_partitioned(sl2.begin(), sl2.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	std::partition(sl3.begin(), sl3.end(), pred);
+	QVERIFY(std::is_partitioned(sl3.begin(), sl3.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	constexprStd::partition(cl1.begin(), cl1.end(), pred);
+	QVERIFY(std::is_partitioned(cl1.begin(), cl1.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	constexprStd::partition(cl2.begin(), cl2.end(), pred);
+	QVERIFY(std::is_partitioned(cl2.begin(), cl2.end(), isOdd));
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	constexprStd::partition(cl3.begin(), cl3.end(), pred);
+	QVERIFY(std::is_partitioned(cl3.begin(), cl3.end(), isOdd));
+	QCOMPARE(count, 10);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

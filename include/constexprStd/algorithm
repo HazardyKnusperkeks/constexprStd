@@ -29,6 +29,8 @@
 
 #include "details/algorithm.hpp"
 #include "details/algorithm_forward.hpp"
+#include "details/cmp.hpp"
+#include "details/find.hpp"
 #include "functional"
 #include "iterator"
 #include "utility"
@@ -240,49 +242,6 @@ constexpr bool equal(Container1&& c1, Container2&& c2)
 		                                      std::end(std::forward<Container2>(c2))))) {
 	return constexprStd::equal(std::begin(std::forward<Container1>(c1)), std::end(std::forward<Container1>(c1)),
 	                           std::begin(std::forward<Container2>(c2)), std::end(std::forward<Container2>(c2)));
-}
-
-template<typename InputIter, typename UnaryPredicate>
-constexpr InputIter find_if(InputIter first, const InputIter last, const UnaryPredicate pred)
-		noexcept(noexcept(first != last && !pred(*first)) && noexcept(++first)) {
-	for ( ; first != last && !pred(*first); ++first ) {
-		
-	} //for ( ; first != last && !pred(*first); ++first )
-	return first;
-}
-
-template<typename Container, typename UnaryPredicate>
-constexpr auto find_if(Container&& c, const UnaryPredicate pred)
-		noexcept(noexcept(constexprStd::find_if(std::begin(std::forward<Container>(c)),
-		                                        std::end(std::forward<Container>(c)), pred))) {
-	return constexprStd::find_if(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), pred);
-}
-
-template<typename InputIter, typename T>
-constexpr InputIter find(const InputIter first, const InputIter last, const T& t)
-		noexcept(noexcept(constexprStd::find_if(first, last, details::cmp::EqualToValue{t}))) {
-	return constexprStd::find_if(first, last, details::cmp::EqualToValue{t});
-}
-
-template<typename Container, typename T>
-constexpr auto find(Container&& c, const T& t)
-		noexcept(noexcept(constexprStd::find(std::begin(std::forward<Container>(c)),
-		                                     std::end(std::forward<Container>(c)), t))) {
-	return constexprStd::find(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)), t);
-}
-
-template<typename InputIter, typename UnaryPredicate>
-constexpr InputIter find_if_not(const InputIter first, const InputIter last, UnaryPredicate pred)
-		noexcept(noexcept(constexprStd::find_if(first, last, constexprStd::not_fn(std::move(pred))))) {
-	return constexprStd::find_if(first, last, constexprStd::not_fn(std::move(pred)));
-}
-
-template<typename Container, typename UnaryPredicate>
-constexpr auto find_if_not(Container&& c, const UnaryPredicate pred)
-		noexcept(noexcept(constexprStd::find_if_not(std::begin(std::forward<Container>(c)),
-		                                            std::end(std::forward<Container>(c)), pred))) {
-	return constexprStd::find_if_not(std::begin(std::forward<Container>(c)), std::end(std::forward<Container>(c)),
-	                                 pred);
 }
 
 template<typename InputIter, typename UnaryPredicate>
@@ -1130,6 +1089,19 @@ template<typename Container, typename UnaryPredicate>
 constexpr bool is_partitioned(const Container& c, UnaryPredicate pred)
 		noexcept(noexcept(constexprStd::is_partitioned(std::begin(c), std::end(c), std::move(pred)))) {
 	return constexprStd::is_partitioned(std::begin(c), std::end(c), std::move(pred));
+}
+
+template<typename ForwardIter, typename UnaryPredicate>
+constexpr ForwardIter partition(const ForwardIter first, const ForwardIter last, UnaryPredicate pred)
+		noexcept(noexcept(details::partitionImpl(first, last, std::move(pred),
+		                                         details::iteratorCategory<ForwardIter>))) {
+	return details::partitionImpl(first, last, std::move(pred), details::iteratorCategory<ForwardIter>);
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr auto partition(Container& c, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::partition(std::begin(c), std::end(c), std::move(pred)))) {
+	return constexprStd::partition(std::begin(c), std::end(c), std::move(pred));
 }
 
 /*****                                        Minimum/Maximum Operations                                          *****/

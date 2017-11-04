@@ -75,6 +75,7 @@ class TestConstexprStd : public QObject {
 	
 	//Partitioning operations
 	void testIsPartioned(void) const noexcept;
+	void testPartition(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;

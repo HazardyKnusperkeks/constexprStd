@@ -52,6 +52,11 @@ template<typename InputIterator, typename OutputIterator>
 constexpr OutputIterator copy(InputIterator sourceFirst, const InputIterator sourceLast, OutputIterator destination)
 		noexcept(noexcept(sourceFirst != sourceLast) && noexcept(++sourceFirst) && noexcept(++destination) &&
 		         noexcept(*destination = *sourceFirst));
+
+template<typename ForwardIter1, typename ForwardIter2>
+constexpr void iter_swap(const ForwardIter1 iter1, const ForwardIter2 iter2)
+		noexcept(std::is_nothrow_swappable_with_v<typename std::iterator_traits<ForwardIter1>::value_type,
+		                                          typename std::iterator_traits<ForwardIter2>::value_type>);
 } //namespace constexpr
 
 #endif

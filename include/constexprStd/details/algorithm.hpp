@@ -28,31 +28,10 @@
 
 #include "../iterator"
 #include "algorithm_forward.hpp"
+#include "find.hpp"
 #include "helper.hpp"
 
 namespace constexprStd::details {
-namespace cmp {
-template<typename T>
-struct EqualToValue {
-	const T& Object;
-	
-	template<typename U>
-	constexpr bool operator()(const U& compare) const noexcept(noexcept(Object == compare)) {
-		return Object == compare;
-	}
-};
-
-template<typename T>
-EqualToValue(T) -> EqualToValue<T>;
-
-struct Equal {
-	template<typename T1, typename T2>
-	constexpr bool operator()(const T1& t1, const T2& t2) const noexcept(noexcept(t1 == t2)) {
-		return t1 == t2;
-	}
-};
-} //namespace cmp
-
 template<typename UnaryPredicate, typename T>
 struct ReplaceCopyIf {
 	UnaryPredicate Pred;
@@ -246,6 +225,54 @@ constexpr OutputIter uniqueCopyImpl(const InputIter first, const InputIter last,
                                     BinaryPredicate pred, const std::input_iterator_tag)
 		noexcept(noexcept(uniqueCopyInputImpl(first, last, d_first, std::move(pred), iteratorCategory<OutputIter>))) {
 	return uniqueCopyInputImpl(first, last, d_first, std::move(pred), iteratorCategory<OutputIter>);
+}
+
+template<typename BidirIter, typename UnaryPredicate>
+constexpr BidirIter partitionImpl(BidirIter first, BidirIter last, UnaryPredicate pred,
+                                  const std::bidirectional_iterator_tag)
+		noexcept(noexcept(first != last) && noexcept(first != last && pred(*first)) && noexcept(++first) &&
+		         noexcept(first == last) && noexcept(first != --last && !pred(*last)) &&
+		         noexcept(constexprStd::iter_swap(first, last))) {
+	while ( first != last ) {
+		for ( ; first != last && pred(*first); ++first ) {
+			
+		} //for ( ; first != last && pred(*first); ++first )
+		
+		if ( first == last ) {
+			break;
+		} //if ( first == last )
+		
+		for ( ; first != --last && !pred(*last); ) {
+			
+		} //for ( ; first != --last && !pred(*last); )
+		
+		if ( first != last ) {
+			constexprStd::iter_swap(first, last);
+			++first;
+		} //if ( first != last )
+	} //while ( first != last )
+	return first;
+}
+
+template<typename ForwardIter, typename UnaryPredicate>
+constexpr ForwardIter partitionImpl(ForwardIter first, const ForwardIter last, UnaryPredicate pred,
+                                    const std::forward_iterator_tag)
+noexcept(std::is_nothrow_move_constructible_v<ForwardIter> &&
+         noexcept(constexprStd::find_if_not(first, last, pred)) && std::is_nothrow_copy_assignable_v<ForwardIter>) {
+	auto ret = constexprStd::find_if_not(first, last, pred);
+	if ( ret != last ) {
+		first = ret;
+		++first;
+		while ( first != last ) {
+			first = constexprStd::find_if(first, last, pred);
+			if ( first != last ) {
+				constexprStd::iter_swap(ret, first);
+				++ret;
+				++first;
+			} //if ( first != last )
+		} //while ( first != last )
+	} //if ( ret != last )
+	return ret;
 }
 } //namespace constexprStd::details
 
