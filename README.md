@@ -137,7 +137,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 #### Partitioning operations
 - [X] is_partitioned
 - [X] partition
-- [ ] partition_copy
+- [X] partition_copy
 - [ ] stable_partition
 - [ ] partition_point
 

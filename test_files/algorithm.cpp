@@ -1589,6 +1589,7 @@ void TestConstexprStd::testPartition(void) const noexcept {
 			constexprStd::partition(copy, isOdd);
 			return copy;
 		}()};
+	
 	QVERIFY(std::is_partitioned(cc.begin(), cc.end(), isOdd));
 	
 	int count = 0;
@@ -1664,6 +1665,26 @@ void TestConstexprStd::testPartition(void) const noexcept {
 	constexprStd::partition(cl3.begin(), cl3.end(), pred);
 	QVERIFY(std::is_partitioned(cl3.begin(), cl3.end(), isOdd));
 	QCOMPARE(count, 10);
+	return;
+}
+
+void TestConstexprStd::testPartitionCopy(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			std::array<int, 5> odd{}, even{};
+			constexprStd::partition_copy(c, odd.begin(), even.begin(), isOdd);
+			return std::pair{odd, even};
+		};
+	constexpr std::array expectedOdd{1, 3, 5, 7, 9}, expectedEven{2, 4, 6, 8, 10};
+	constexpr TestContainer tc{};
+	constexpr auto c{l()};
+	QVERIFY(c.first  == expectedOdd);
+	QVERIFY(c.second == expectedEven);
+	
+	std::array<int, 5> even{}, odd{};
+	std::partition_copy(tc.begin(), tc.end(), odd.begin(), even.begin(), isOdd);
+	QVERIFY(odd  == expectedOdd);
+	QVERIFY(even == expectedEven);
 	return;
 }
 

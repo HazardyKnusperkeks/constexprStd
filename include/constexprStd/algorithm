@@ -1104,6 +1104,37 @@ constexpr auto partition(Container& c, UnaryPredicate pred)
 	return constexprStd::partition(std::begin(c), std::end(c), std::move(pred));
 }
 
+template<typename InputIter, typename OutputIter1, typename OutputIter2, typename UnaryPredicate>
+constexpr std::pair<OutputIter1, OutputIter2> partition_copy(InputIter first, const InputIter last,
+                                                             OutputIter1 d_first_true, OutputIter2 d_first_false,
+                                                             UnaryPredicate pred)
+		noexcept(noexcept(first != last) && noexcept(++first) &&
+		         std::is_nothrow_copy_constructible_v<details::typeOf<InputIter>> &&
+		         noexcept(pred(std::declval<details::typeOf<InputIter>&>())) &&
+		         noexcept(*d_first_true = std::declval<details::typeOf<InputIter>&&>()) && noexcept(++d_first_true) &&
+		         noexcept(*d_first_false = std::declval<details::typeOf<InputIter>&&>()) && noexcept(++d_first_false)) {
+	for ( ; first != last; ++first ) {
+		auto element = *first;
+		if ( pred(element) ) {
+			*d_first_true = std::move(element);
+			++d_first_true;
+		} //if ( pred(element) )
+		else {
+			*d_first_false = std::move(element);
+			++d_first_false;
+		} //else -> if ( pred(element) )
+	} //for ( ; first != last; ++first )
+	return {d_first_true, d_first_false};
+}
+
+template<typename Container, typename OutputIter1, typename OutputIter2, typename UnaryPredicate>
+constexpr std::pair<OutputIter1, OutputIter2> partition_copy(const Container& c, const OutputIter1 d_first_true,
+                                                             const OutputIter2 d_first_false, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::partition_copy(std::begin(c), std::end(c), d_first_true, d_first_false,
+		                                               std::move(pred)))) {
+	return constexprStd::partition_copy(std::begin(c), std::end(c), d_first_true, d_first_false, std::move(pred));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
