@@ -274,6 +274,47 @@ noexcept(std::is_nothrow_move_constructible_v<ForwardIter> &&
 	} //if ( ret != last )
 	return ret;
 }
+
+template<typename BidirIter>
+constexpr void rotateOneRight(const BidirIter first, BidirIter last)
+noexcept {
+	auto beforeLast = constexprStd::prev(last);
+	auto temp = std::move(*beforeLast);
+	constexprStd::move_backward(first, beforeLast, last);
+	*first = std::move(temp);
+	return;
+}
+
+template<typename RandomAccessIter, typename UnaryPredicate>
+constexpr RandomAccessIter partitionPointImpl(RandomAccessIter first, RandomAccessIter last, UnaryPredicate pred,
+                                              const std::random_access_iterator_tag)
+		noexcept(noexcept(first != last) && noexcept(constexprStd::distance(first, last)) &&
+		         std::is_nothrow_move_constructible_v<typename
+		                                              std::iterator_traits<RandomAccessIter>::difference_type> &&
+		         noexcept(std::declval<typename std::iterator_traits<RandomAccessIter>::difference_type&>() / 2) &&
+		         noexcept(constexprStd::next(first)) && std::is_nothrow_move_constructible_v<RandomAccessIter> &&
+		         noexcept(pred(*first)) && noexcept(++first) && std::is_nothrow_copy_assignable_v<RandomAccessIter>) {
+	while ( first != last ) {
+		const auto dist = constexprStd::distance(first, last);
+		const auto incr = dist / 2;
+		auto middle = constexprStd::next(first, incr);
+		
+		if ( pred(*middle) ) {
+			first = ++middle;
+		} //if ( pred(*middle) )
+		else {
+			last = middle;
+		} //else -> if ( pred(*middle) )
+	} //while ( first != last )
+	return last;
+}
+
+template<typename ForwardIter, typename UnaryPredicate>
+constexpr ForwardIter partitionPointImpl(ForwardIter first, ForwardIter last, UnaryPredicate pred,
+                                         const std::forward_iterator_tag)
+		noexcept(noexcept(constexprStd::find_if_not(first, last, std::move(pred)))) {
+	return constexprStd::find_if_not(first, last, std::move(pred));
+}
 } //namespace constexprStd::details
 
 #endif

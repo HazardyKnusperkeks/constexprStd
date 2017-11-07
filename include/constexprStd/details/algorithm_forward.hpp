@@ -57,6 +57,10 @@ template<typename ForwardIter1, typename ForwardIter2>
 constexpr void iter_swap(const ForwardIter1 iter1, const ForwardIter2 iter2)
 		noexcept(std::is_nothrow_swappable_with_v<typename std::iterator_traits<ForwardIter1>::value_type,
 		                                          typename std::iterator_traits<ForwardIter2>::value_type>);
+
+template<typename BidirIter1, typename BidirIter2>
+constexpr BidirIter2 move_backward(const BidirIter1 first, BidirIter1 last, BidirIter2 d_last)
+		noexcept(noexcept(first != last) && noexcept(*--d_last = std::move(*--last)));
 } //namespace constexpr
 
 #endif

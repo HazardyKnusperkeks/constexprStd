@@ -1135,6 +1135,41 @@ constexpr std::pair<OutputIter1, OutputIter2> partition_copy(const Container& c,
 	return constexprStd::partition_copy(std::begin(c), std::end(c), d_first_true, d_first_false, std::move(pred));
 }
 
+template<typename BidirIter, typename UnaryPredicate>
+constexpr BidirIter stable_partition(BidirIter first, const BidirIter last, UnaryPredicate pred)
+noexcept(true) {
+	first = constexprStd::find_if_not(first, last, pred);
+	auto iter = constexprStd::next(first);
+	while ( iter != last ) {
+		iter = constexprStd::find_if(iter, last, pred);
+		if ( iter == last ) {
+			break;
+		} //if ( iter == last )
+		details::rotateOneRight(first, ++iter);
+		++first;
+	} //while ( iter != last )
+	return first;
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr auto stable_partition(Container& c, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::stable_partition(std::begin(c), std::end(c), std::move(pred)))) {
+	return constexprStd::stable_partition(std::begin(c), std::end(c), std::move(pred));
+}
+
+template<typename ForwardIterator, typename UnaryPredicate>
+constexpr ForwardIterator partition_point(const ForwardIterator first, const ForwardIterator last, UnaryPredicate pred)
+		noexcept(noexcept(details::partitionPointImpl(first, last, std::move(pred),
+		                                              details::iteratorCategory<ForwardIterator>))) {
+	return details::partitionPointImpl(first, last, std::move(pred), details::iteratorCategory<ForwardIterator>);
+}
+
+template<typename Container, typename UnaryPredicate>
+constexpr auto partition_point(const Container& c, UnaryPredicate pred)
+		noexcept(noexcept(constexprStd::partition_point(std::begin(c), std::end(c), std::move(pred)))) {
+	return constexprStd::partition_point(std::begin(c), std::end(c), std::move(pred));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

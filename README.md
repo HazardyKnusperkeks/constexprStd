@@ -79,6 +79,9 @@ Note that emplace() and emplace_hint() are not constexpr, because without copyin
 It the provided `constexprStd::allocator` runs out of memory it falls back to `std::allocator`.
 This results in a compile time error, when happening in constexpr mode, in this case you have to increase the preallocated memory.
 
+### Algorithms
+- `constexprStd::stable_partition` never runs in O(n) swaps, because we can not allocate extra memory.
+
 ## Implementation
 ### [Algorihms library](http://en.cppreference.com/w/cpp/algorithm)
 The execution policies and the overloads for the algorithms are not implemented, because as far as I know, there is no chance of performing paralell computations in `constexpr`.
@@ -138,8 +141,8 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [X] is_partitioned
 - [X] partition
 - [X] partition_copy
-- [ ] stable_partition
-- [ ] partition_point
+- [X] stable_partition
+- [X] partition_point
 
 #### Sorting operations
 - [ ] is_sorted

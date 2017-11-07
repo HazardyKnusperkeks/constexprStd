@@ -1688,6 +1688,70 @@ void TestConstexprStd::testPartitionCopy(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testStablePartition(void) const noexcept {
+	constexpr TestContainer f1, f2{1, 3, 5, 7, 9, 2, 4, 6, 8, 10}, f3{2, 4, 6, 8, 10, 1, 3, 5, 7, 9};
+	constexpr TestContainer expected{f2};
+	
+	TestContainer s1{f1}, s2{f2}, s3{f3};
+	TestContainer c1{f1}, c2{f2}, c3{f3};
+	
+	constexpr TestContainer cc{[f1](void) constexpr noexcept {
+			TestContainer copy{f1};
+			constexprStd::stable_partition(copy, isOdd);
+			return copy;
+		}()};
+	
+	QVERIFY(cc == expected);
+	
+	int count = 0;
+	auto pred = [&count](const int x) noexcept { ++count; return isOdd(x); };
+	
+	auto siter1 = std::stable_partition(s1.begin(), s1.end(), pred);
+	QVERIFY(s1 == expected);
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto siter2 = std::stable_partition(s2.begin(), s2.end(), pred);
+	QVERIFY(s2 == expected);
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto siter3 = std::stable_partition(s3.begin(), s3.end(), pred);
+	QVERIFY(s3 == expected);
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto citer1 = constexprStd::stable_partition(c1.begin(), c1.end(), pred);
+	QVERIFY(c1 == expected);
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto citer2 = constexprStd::stable_partition(c2.begin(), c2.end(), pred);
+	QVERIFY(c2 == expected);
+	QCOMPARE(count, 10);
+	
+	count = 0;
+	auto citer3 = constexprStd::stable_partition(c3.begin(), c3.end(), pred);
+	QVERIFY(c3 == expected);
+	QCOMPARE(count, 10);
+	
+	QVERIFY(*siter1 == *citer1);
+	QVERIFY(*siter2 == *citer2);
+	QVERIFY(*siter3 == *citer3);
+	return;
+}
+
+void TestConstexprStd::testPartitionPoint(void) const noexcept {
+	constexpr TestContainer c{1, 3, 5, 7, 9, 2, 4, 6, 8, 10};
+	static_assert(*constexprStd::partition_point(c, isOdd) == 2);
+	QCOMPARE(*std::partition_point(c.begin(), c.end(), isOdd), 2);
+	
+	std::forward_list<int> l{1, 3, 5, 7, 9, 2, 4, 6, 8, 10};
+	QCOMPARE(*constexprStd::partition_point(l.begin(), l.end(), isOdd), 2);
+	QCOMPARE(*         std::partition_point(l.begin(), l.end(), isOdd), 2);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
