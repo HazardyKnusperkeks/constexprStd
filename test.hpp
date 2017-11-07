@@ -80,6 +80,9 @@ class TestConstexprStd : public QObject {
 	void testStablePartition(void) const noexcept;
 	void testPartitionPoint(void) const noexcept;
 	
+	//Sorting operations
+	void testIsSortedUntil(void) const noexcept;
+	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;
 	

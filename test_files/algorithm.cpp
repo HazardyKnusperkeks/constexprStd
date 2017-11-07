@@ -1752,6 +1752,21 @@ void TestConstexprStd::testPartitionPoint(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testIsSortedUntil(void) const noexcept {
+	constexpr TestContainer c1, c2{1, 2, 3, 4, 6, 5, 7, 8, 9, 10}, c3{2, 1, 4, 5}, c4{1, 1, 1, 2, 4, 3};
+	
+	static_assert( constexprStd::is_sorted_until(c1) == c1.end());
+	static_assert(*constexprStd::is_sorted_until(c2) == 5);
+	static_assert(*constexprStd::is_sorted_until(c3) == 1);
+	static_assert(*constexprStd::is_sorted_until(c4) == 3);
+	
+	QCOMPARE( std::is_sorted_until(c1.begin(), c1.end()), c1.end());
+	QCOMPARE(*std::is_sorted_until(c2.begin(), c2.end()), 5);
+	QCOMPARE(*std::is_sorted_until(c3.begin(), c3.end()), 1);
+	QCOMPARE(*std::is_sorted_until(c4.begin(), c4.end()), 3);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

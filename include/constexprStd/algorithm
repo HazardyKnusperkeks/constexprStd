@@ -1170,6 +1170,27 @@ constexpr auto partition_point(const Container& c, UnaryPredicate pred)
 	return constexprStd::partition_point(std::begin(c), std::end(c), std::move(pred));
 }
 
+/*****                                            Sorting operations                                              *****/
+
+template<typename ForwardIter, typename Compare = std::less<>>
+constexpr ForwardIter is_sorted_until(ForwardIter first, const ForwardIter last, Compare cmp = {})
+noexcept {
+	if ( first == last ) {
+		return first;
+	} //if ( first == last )
+	
+	for ( auto old = first++; first != last && !cmp(*first, *old); ++first, ++old ) {
+		
+	} //for ( auto old = first++; first != last && !cmp(*first, *old); ++first, ++old )
+	return first;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr auto is_sorted_until(const Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_sorted_until(std::begin(c), std::end(c), std::move(cmp)))) {
+	return constexprStd::is_sorted_until(std::begin(c), std::end(c), std::move(cmp));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

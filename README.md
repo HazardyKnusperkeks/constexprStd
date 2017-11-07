@@ -146,7 +146,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 
 #### Sorting operations
 - [ ] is_sorted
-- [ ] is_sorted_until
+- [X] is_sorted_until
 - [ ] sort
 - [ ] partial_sort
 - [ ] partial_sort_copy
