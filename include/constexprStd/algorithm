@@ -1204,6 +1204,48 @@ constexpr bool is_sorted(const Container& c, Compare cmp = {})
 	return constexprStd::is_sorted(std::begin(c), std::end(c), std::move(cmp));
 }
 
+/*****                                             Heap operations                                                *****/
+
+template<typename RandIter, typename Compare = std::less<>,
+         typename Dist = typename std::iterator_traits<RandIter>::difference_type>
+constexpr RandIter is_heap_until(const RandIter first, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::distance(first, last)) && std::is_nothrow_move_constructible_v<Dist> &&
+		         noexcept(std::declval<const Dist&>() / 2) && std::is_nothrow_constructible_v<Dist, int> &&
+		         std::is_nothrow_copy_constructible_v<RandIter> &&
+		         noexcept(std::declval<Dist&>() < std::declval<const Dist&>()) &&
+		         noexcept(++std::declval<Dist&>(), ++std::declval<RandIter&>()) &&
+		         noexcept(std::declval<Dist&>() * 2 + 1) &&
+		         noexcept(constexprStd::next(first, std::declval<const Dist&>())) &&
+		         std::is_nothrow_move_constructible_v<RandIter> &&
+		         noexcept(cmp(*std::declval<RandIter&>(), *std::declval<RandIter&>())) &&
+		         noexcept(++std::declval<RandIter&>() != last)) {
+	const auto n = constexprStd::distance(first, last);
+	const auto upperBound = n / 2;
+	Dist currentIndex = 0;
+	
+	for ( auto current = first; currentIndex < upperBound; ++currentIndex, ++current ) {
+		const auto childIndex = currentIndex * 2 + 1;
+		auto child = constexprStd::next(first, childIndex);
+		
+		if ( cmp(*current, *child) ) {
+			return child;
+		} //if ( cmp(*current, *child) )
+		
+		if ( ++child != last ) {
+			if ( cmp(*current, *child) ) {
+				return child;
+			} //if ( cmp(*current, *child) )
+		} //if ( ++child != last )
+	} //for ( auto current = first; currentIndex < upperBound; ++currentIndex, ++current )
+	return last;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr auto is_heap_until(const Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_heap_until(std::begin(c), std::end(c), std::move(cmp)))) {
+	return constexprStd::is_heap_until(std::begin(c), std::end(c), std::move(cmp));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

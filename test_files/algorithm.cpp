@@ -1782,6 +1782,39 @@ void TestConstexprStd::testIsSorted(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testIsHeapUntil(void) const noexcept {
+	constexpr TestContainer cc;
+	
+	static_assert(constexprStd::is_heap_until(cc) == constexprStd::next(cc.begin()));
+	static_assert(constexprStd::is_heap_until(cc, std::greater<>{}) == cc.end());
+	
+	TestContainer c{1, 10, 9, 8, 7, 6, 5, 4, 3, 2};
+	
+	auto first = c.begin(), last = c.end();
+	
+	do { //while ( std::next_permutation(first, last) )
+		auto siter =          std::is_heap_until(first, last);
+		auto citer = constexprStd::is_heap_until(first, last);
+		
+		auto sdist = std::distance(first, siter);
+		auto cdist = std::distance(first, citer);
+		
+		QCOMPARE(cdist, sdist);
+	} while ( std::next_permutation(first, last) );
+	std::prev_permutation(first, last);
+	
+	for ( auto iter = first; iter != last; ++iter ) {
+		auto siter =          std::is_heap_until(first, iter);
+		auto citer = constexprStd::is_heap_until(first, iter);
+		
+		auto sdist = std::distance(first, siter);
+		auto cdist = std::distance(first, citer);
+		
+		QCOMPARE(cdist, sdist);
+	} //for ( auto iter = first; iter != last; ++iter )
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
