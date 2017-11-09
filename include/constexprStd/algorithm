@@ -1174,7 +1174,8 @@ constexpr auto partition_point(const Container& c, UnaryPredicate pred)
 
 template<typename ForwardIter, typename Compare = std::less<>>
 constexpr ForwardIter is_sorted_until(ForwardIter first, const ForwardIter last, Compare cmp = {})
-noexcept {
+		noexcept(noexcept(first == last) && noexcept(first++) && std::is_nothrow_move_constructible_v<ForwardIter> &&
+		         noexcept(first != last && !cmp(*first, *first)) && noexcept(++first, ++first)) {
 	if ( first == last ) {
 		return first;
 	} //if ( first == last )
@@ -1189,6 +1190,18 @@ template<typename Container, typename Compare = std::less<>>
 constexpr auto is_sorted_until(const Container& c, Compare cmp = {})
 		noexcept(noexcept(constexprStd::is_sorted_until(std::begin(c), std::end(c), std::move(cmp)))) {
 	return constexprStd::is_sorted_until(std::begin(c), std::end(c), std::move(cmp));
+}
+
+template<typename ForwardIter, typename Compare = std::less<>>
+constexpr bool is_sorted(const ForwardIter first, const ForwardIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_sorted_until(first, last, std::move(cmp)) == last)) {
+	return constexprStd::is_sorted_until(first, last, std::move(cmp)) == last;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr bool is_sorted(const Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_sorted(std::begin(c), std::end(c), std::move(cmp)))) {
+	return constexprStd::is_sorted(std::begin(c), std::end(c), std::move(cmp));
 }
 
 /*****                                        Minimum/Maximum Operations                                          *****/

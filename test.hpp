@@ -82,6 +82,7 @@ class TestConstexprStd : public QObject {
 	
 	//Sorting operations
 	void testIsSortedUntil(void) const noexcept;
+	void testIsSorted(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;

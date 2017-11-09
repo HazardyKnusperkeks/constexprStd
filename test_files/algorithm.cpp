@@ -1767,6 +1767,21 @@ void TestConstexprStd::testIsSortedUntil(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testIsSorted(void) const noexcept {
+	constexpr TestContainer c1, c2{1, 2, 3, 4, 6, 5, 7, 8, 9, 10}, c3{2, 1, 4, 5}, c4{1, 1, 1, 2, 4, 3};
+	
+	static_assert( constexprStd::is_sorted(c1));
+	static_assert(!constexprStd::is_sorted(c2));
+	static_assert(!constexprStd::is_sorted(c3));
+	static_assert(!constexprStd::is_sorted(c4));
+	
+	QVERIFY( std::is_sorted(c1.begin(), c1.end()));
+	QVERIFY(!std::is_sorted(c2.begin(), c2.end()));
+	QVERIFY(!std::is_sorted(c3.begin(), c3.end()));
+	QVERIFY(!std::is_sorted(c4.begin(), c4.end()));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
