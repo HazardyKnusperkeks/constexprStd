@@ -1822,6 +1822,19 @@ void TestConstexprStd::testIsHeap(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testPushHeap(void) const noexcept {
+	constexpr std::array a{5, 4, 5, 2, 1, 9};
+	static_assert(!constexprStd::is_heap(a));
+	constexpr auto l = [a](void) constexpr noexcept {
+			auto copy{a};
+			constexprStd::push_heap(copy.begin(), copy.end());
+			return copy;
+		};
+	constexpr auto b{l()};
+	static_assert(constexprStd::is_heap(b));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
