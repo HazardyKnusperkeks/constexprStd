@@ -1246,6 +1246,18 @@ constexpr auto is_heap_until(const Container& c, Compare cmp = {})
 	return constexprStd::is_heap_until(std::begin(c), std::end(c), std::move(cmp));
 }
 
+template<typename RandIter, typename Compare = std::less<>>
+constexpr bool is_heap(const RandIter first, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_heap_until(first, last, std::move(cmp)) == last)) {
+	return constexprStd::is_heap_until(first, last, std::move(cmp)) == last;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr auto is_heap(const Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_heap(std::begin(c), std::end(c), std::move(cmp)))) {
+	return constexprStd::is_heap(std::begin(c), std::end(c), std::move(cmp));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

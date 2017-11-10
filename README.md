@@ -169,7 +169,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] set_union
 
 #### Heap operations
-- [ ] is_heap
+- [X] is_heap
 - [X] is_heap_until
 - [ ] make_heap
 - [ ] push_heap

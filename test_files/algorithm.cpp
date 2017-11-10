@@ -1815,6 +1815,13 @@ void TestConstexprStd::testIsHeapUntil(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testIsHeap(void) const noexcept {
+	constexpr TestContainer c;
+	static_assert(!constexprStd::is_heap(c));
+	static_assert( constexprStd::is_heap(c, std::greater<>{}));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};
