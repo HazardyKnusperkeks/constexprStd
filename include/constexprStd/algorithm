@@ -1290,6 +1290,24 @@ constexpr void push_heap(const RandIter first, RandIter last, Compare cmp = {})
 	return;
 }
 
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void make_heap(const RandIter first, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_heap_until(first, last, cmp)) &&
+		         std::is_nothrow_move_constructible_v<RandIter> && noexcept(std::declval<RandIter&>()++ != last) &&
+		         noexcept(constexprStd::push_heap(first, std::declval<RandIter&>(), cmp))) {
+	for ( auto iter = constexprStd::is_heap_until(first, last, cmp); iter++ != last; ) {
+		constexprStd::push_heap(first, iter, cmp);
+	} //for ( auto iter = constexprStd::is_heap_until(first, last, cmp); iter++ != last; )
+	return;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr void make_heap(Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::make_heap(std::begin(c), std::end(c), std::move(cmp)))) {
+	constexprStd::make_heap(std::begin(c), std::end(c), std::move(cmp));
+	return;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>

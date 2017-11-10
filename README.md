@@ -171,7 +171,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 #### Heap operations
 - [X] is_heap
 - [X] is_heap_until
-- [ ] make_heap
+- [X] make_heap
 - [X] push_heap
 - [ ] pop_heap
 - [ ] sort_heap

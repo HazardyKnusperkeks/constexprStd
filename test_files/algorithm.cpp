@@ -1835,6 +1835,19 @@ void TestConstexprStd::testPushHeap(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testMakeHeap(void) const noexcept {
+	constexpr TestContainer a;
+	static_assert(!constexprStd::is_heap(a));
+	constexpr auto l = [a](void) constexpr noexcept {
+			auto copy{a};
+			constexprStd::make_heap(copy);
+			return copy;
+		};
+	constexpr auto b{l()};
+	static_assert(constexprStd::is_heap(b));
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

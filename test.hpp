@@ -88,6 +88,7 @@ class TestConstexprStd : public QObject {
 	void testIsHeapUntil(void) const noexcept;
 	void testIsHeap(void) const noexcept;
 	void testPushHeap(void) const noexcept;
+	void testMakeHeap(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;
