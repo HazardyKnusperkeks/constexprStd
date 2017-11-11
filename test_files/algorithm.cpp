@@ -1848,6 +1848,30 @@ void TestConstexprStd::testMakeHeap(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testPopHeap(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::pop_heap(c.begin(), c.end(), std::greater<>{});
+			return *constexprStd::is_heap_until(c, std::greater<>{});
+		};
+	static_assert(l() == 1);
+	
+	std::array s{2, 9, 17, 34, 9, 90, 34, 5, 2, 0, 7, 23};
+	std::make_heap(s.begin(), s.end());
+	decltype(s) c{s};
+	
+	for ( auto sIter = s.end(), cIter = c.end(); sIter != s.begin(); --sIter, --cIter ) {
+		         std::pop_heap(s.begin(), sIter);
+		constexprStd::pop_heap(c.begin(), cIter);
+		
+		const auto sDist = std::distance(s.begin(), std::is_heap_until(s.begin(), s.end()));
+		const auto cDist = std::distance(c.begin(), std::is_heap_until(c.begin(), c.end()));
+		QCOMPARE(cDist, sDist);
+	} //for ( auto sIter = s.end(), cIter = c.end(); sIter != s.begin(); --sIter, --cIter )
+	QVERIFY(c == s);
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

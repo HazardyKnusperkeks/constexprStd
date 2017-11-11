@@ -1308,6 +1308,65 @@ constexpr void make_heap(Container& c, Compare cmp = {})
 	return;
 }
 
+template<typename RandIter, typename Compare = std::less<>,
+         typename Dist = typename std::iterator_traits<RandIter>::difference_type>
+constexpr void pop_heap(const RandIter first, RandIter last, Compare cmp = {})
+		noexcept(noexcept(first == last) && noexcept(constexprStd::iter_swap(first, --last)) &&
+		         noexcept(constexprStd::distance(first, last)) && std::is_nothrow_move_constructible_v<Dist> &&
+		         noexcept(std::declval<const Dist&>() / 2) && std::is_nothrow_constructible_v<Dist, int> &&
+		         noexcept(std::declval<Dist&>() < std::declval<const Dist&>()) &&
+		         noexcept(std::declval<Dist&>() * 2 + 1) && noexcept(std::declval<const Dist&>() + 1) &&
+		         noexcept(constexprStd::next(first, std::declval<const Dist&>())) &&
+		         noexcept(cmp(*first, *first)) && noexcept(constexprStd::iter_swap(first, first)) &&
+		         std::is_nothrow_copy_assignable_v<Dist>) {
+	if ( first == last ) {
+		return;
+	} //if ( first == last )
+	
+	constexprStd::iter_swap(first, --last);
+	
+	const auto n = constexprStd::distance(first, last);
+	const auto upperBound = n / 2;
+	Dist currentIndex = 0;
+	
+	while ( currentIndex < upperBound ) {
+		const auto leftChildIndex  = currentIndex * 2 + 1;
+		const auto rightChildIndex = leftChildIndex + 1;
+		const auto current    = constexprStd::next(first, currentIndex);
+		const auto leftChild  = constexprStd::next(first, leftChildIndex);
+		const auto rightChild = constexprStd::next(first, rightChildIndex);
+		
+		auto checkAndSwap = [&current,&currentIndex,&cmp,&upperBound](auto& child, const auto& childIndex)
+		                    noexcept(noexcept(cmp(*current, *child)) &&
+		                    noexcept(constexprStd::iter_swap(current, child)) &&
+		                    std::is_nothrow_copy_assignable_v<Dist>) {
+				if ( cmp(*current, *child) ) {
+					constexprStd::iter_swap(current, child);
+					currentIndex = childIndex;
+				} //if ( cmp(*current, *child) )
+				else {
+					currentIndex = upperBound;
+				} //else -> if ( cmp(*current, *child) )
+				return;
+			};
+		
+		if ( rightChild == last ) {
+			//Only one child, eventually swap with it
+			checkAndSwap(leftChild, leftChildIndex);
+		} //if ( rightChild == last )
+		else {
+			//Two childs, look for the bigger one
+			if ( cmp(*leftChild, *rightChild) ) {
+				checkAndSwap(rightChild, rightChildIndex);
+			} //if ( cmp(*leftChild, *rightChild) )
+			else {
+				checkAndSwap(leftChild, leftChildIndex);
+			} //else -> if ( cmp(*leftChild, *rightChild) )
+		} //else -> if ( rightChild == last )
+	} //while ( currentIndex < upperBound )
+	return;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
