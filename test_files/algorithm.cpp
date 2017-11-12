@@ -34,6 +34,7 @@
 #include <array>
 #include <forward_list>
 #include <iterator>
+#include <random>
 #include <sstream>
 #include <tuple>
 #include <utility>
@@ -1869,6 +1870,51 @@ void TestConstexprStd::testPopHeap(void) const noexcept {
 		QCOMPARE(cDist, sDist);
 	} //for ( auto sIter = s.end(), cIter = c.end(); sIter != s.begin(); --sIter, --cIter )
 	QVERIFY(c == s);
+	return;
+}
+
+void TestConstexprStd::testSortHeap(void) const noexcept {
+	auto l = [](void) constexpr noexcept {
+			TestContainer c;
+			constexprStd::make_heap(c);
+			constexprStd::sort_heap(c);
+			return c;
+		};
+	constexpr TestContainer c{l()};
+	QVERIFY(std::is_sorted(c.begin(), c.end()));
+	return;
+}
+
+void TestConstexprStd::testHeapRandom(void) const noexcept {
+	std::mt19937 gen{std::random_device{}()};
+	std::uniform_int_distribution<int> elementCount{0, 24};
+	std::uniform_int_distribution<int> element{0, 999};
+	
+	std::vector<int> s(24), c;
+	
+	for ( int i = 0; i < 20; ++i ) {
+		s.clear();
+		const int numberOfElements = elementCount(gen);
+		for ( int j = 0; j < numberOfElements; ++j ) {
+			s.push_back(element(gen));
+		} //for ( int j = 0; j < numberOfElements; ++j )
+		
+		const auto begin = s.begin();
+		const auto end   = s.end();
+		const auto sDist = std::distance(begin,          std::is_heap_until(begin, end));
+		const auto cDist = std::distance(begin, constexprStd::is_heap_until(begin, end));
+		
+		QCOMPARE(cDist, sDist);
+		
+		c = s;
+		std::make_heap(begin, end);
+		constexprStd::make_heap(c);
+		QVERIFY(std::is_heap(c.begin(), c.end()));
+		
+		std::sort_heap(begin, end);
+		constexprStd::sort_heap(c);
+		QVERIFY(s == c);
+	} //for ( int i = 0; i < 20; ++i )
 	return;
 }
 

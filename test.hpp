@@ -90,6 +90,8 @@ class TestConstexprStd : public QObject {
 	void testPushHeap(void) const noexcept;
 	void testMakeHeap(void) const noexcept;
 	void testPopHeap(void) const noexcept;
+	void testSortHeap(void) const noexcept;
+	void testHeapRandom(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;

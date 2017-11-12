@@ -1367,6 +1367,22 @@ constexpr void pop_heap(const RandIter first, RandIter last, Compare cmp = {})
 	return;
 }
 
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void sort_heap(const RandIter first, RandIter last, Compare cmp = {})
+		noexcept(noexcept(first != last) && noexcept(--last) && noexcept(constexprStd::pop_heap(first, last, cmp))) {
+	for ( ; first != last; --last ) {
+		constexprStd::pop_heap(first, last, cmp);
+	} //for ( ; first != last; --last )
+	return;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr void sort_heap(Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::sort_heap(std::begin(c), std::end(c), std::move(cmp)))) {
+	constexprStd::sort_heap(std::begin(c), std::end(c), std::move(cmp));
+	return;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
