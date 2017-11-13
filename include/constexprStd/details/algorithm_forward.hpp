@@ -61,6 +61,53 @@ constexpr void iter_swap(const ForwardIter1 iter1, const ForwardIter2 iter2)
 template<typename BidirIter1, typename BidirIter2>
 constexpr BidirIter2 move_backward(const BidirIter1 first, BidirIter1 last, BidirIter2 d_last)
 		noexcept(noexcept(first != last) && noexcept(*--d_last = std::move(*--last)));
+
+template<typename RandIter, typename Compare = std::less<>,
+         typename Dist = typename std::iterator_traits<RandIter>::difference_type>
+constexpr RandIter is_heap_until(const RandIter first, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::distance(first, last)) && std::is_nothrow_move_constructible_v<Dist> &&
+		         noexcept(std::declval<const Dist&>() / 2) && std::is_nothrow_constructible_v<Dist, int> &&
+		         std::is_nothrow_copy_constructible_v<RandIter> &&
+		         noexcept(std::declval<Dist&>() < std::declval<const Dist&>()) &&
+		         noexcept(++std::declval<Dist&>(), ++std::declval<RandIter&>()) &&
+		         noexcept(std::declval<Dist&>() * 2 + 1) &&
+		         noexcept(constexprStd::next(first, std::declval<const Dist&>())) &&
+		         std::is_nothrow_move_constructible_v<RandIter> &&
+		         noexcept(cmp(*std::declval<RandIter&>(), *std::declval<RandIter&>())) &&
+		         noexcept(++std::declval<RandIter&>() != last));
+
+template<typename RandIter, typename Compare = std::less<>,
+         typename Dist = typename std::iterator_traits<RandIter>::difference_type>
+constexpr void push_heap(const RandIter first, RandIter last, Compare cmp = {})
+		noexcept(noexcept(first == last) && noexcept(constexprStd::distance(first, --last)) &&
+		         std::is_nothrow_move_constructible_v<Dist> && std::is_nothrow_constructible_v<bool, Dist&> &&
+		         noexcept((std::declval<Dist&>() - 1) / 2) &&
+		         noexcept(constexprStd::next(first, std::declval<Dist&>())) &&
+		         noexcept(constexprStd::next(first, std::declval<const Dist&>())) &&
+		         noexcept(cmp(*first, *first)) && noexcept(constexprStd::iter_swap(first, first)) &&
+		         std::is_nothrow_copy_assignable_v<Dist>);
+
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void make_heap(const RandIter first, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::is_heap_until(first, last, cmp)) &&
+		         std::is_nothrow_move_constructible_v<RandIter> && noexcept(std::declval<RandIter&>()++ != last) &&
+		         noexcept(constexprStd::push_heap(first, std::declval<RandIter&>(), cmp)));
+
+template<typename RandIter, typename Compare = std::less<>,
+         typename Dist = typename std::iterator_traits<RandIter>::difference_type>
+constexpr void pop_heap(const RandIter first, RandIter last, Compare cmp = {})
+		noexcept(noexcept(first == last) && noexcept(constexprStd::iter_swap(first, --last)) &&
+		         noexcept(constexprStd::distance(first, last)) && std::is_nothrow_move_constructible_v<Dist> &&
+		         noexcept(std::declval<const Dist&>() / 2) && std::is_nothrow_constructible_v<Dist, int> &&
+		         noexcept(std::declval<Dist&>() < std::declval<const Dist&>()) &&
+		         noexcept(std::declval<Dist&>() * 2 + 1) && noexcept(std::declval<const Dist&>() + 1) &&
+		         noexcept(constexprStd::next(first, std::declval<const Dist&>())) &&
+		         noexcept(cmp(*first, *first)) && noexcept(constexprStd::iter_swap(first, first)) &&
+		         std::is_nothrow_copy_assignable_v<Dist>);
+
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void sort_heap(const RandIter first, RandIter last, Compare cmp = {})
+		noexcept(noexcept(first != last) && noexcept(--last) && noexcept(constexprStd::pop_heap(first, last, cmp)));
 } //namespace constexpr
 
 #endif

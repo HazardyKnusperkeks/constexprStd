@@ -1204,11 +1204,27 @@ constexpr bool is_sorted(const Container& c, Compare cmp = {})
 	return constexprStd::is_sorted(std::begin(c), std::end(c), std::move(cmp));
 }
 
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void sort(const RandIter first, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::make_heap(first, last, cmp)) &&
+		         noexcept(constexprStd::sort_heap(first, last, std::move(cmp)))) {
+	constexprStd::make_heap(first, last, cmp);
+	constexprStd::sort_heap(first, last, std::move(cmp));
+	return;
+}
+
+template<typename Container, typename Compare = std::less<>>
+constexpr void sort(Container& c, Compare cmp = {})
+		noexcept(noexcept(constexprStd::sort(std::begin(c), std::end(c), std::move(cmp)))) {
+	constexprStd::sort(std::begin(c), std::end(c), std::move(cmp));
+	return;
+}
+
 /*****                                             Heap operations                                                *****/
 
 template<typename RandIter, typename Compare = std::less<>,
          typename Dist = typename std::iterator_traits<RandIter>::difference_type>
-constexpr RandIter is_heap_until(const RandIter first, const RandIter last, Compare cmp = {})
+constexpr RandIter is_heap_until(const RandIter first, const RandIter last, Compare cmp)
 		noexcept(noexcept(constexprStd::distance(first, last)) && std::is_nothrow_move_constructible_v<Dist> &&
 		         noexcept(std::declval<const Dist&>() / 2) && std::is_nothrow_constructible_v<Dist, int> &&
 		         std::is_nothrow_copy_constructible_v<RandIter> &&
@@ -1260,7 +1276,7 @@ constexpr auto is_heap(const Container& c, Compare cmp = {})
 
 template<typename RandIter, typename Compare = std::less<>,
          typename Dist = typename std::iterator_traits<RandIter>::difference_type>
-constexpr void push_heap(const RandIter first, RandIter last, Compare cmp = {})
+constexpr void push_heap(const RandIter first, RandIter last, Compare cmp)
 		noexcept(noexcept(first == last) && noexcept(constexprStd::distance(first, --last)) &&
 		         std::is_nothrow_move_constructible_v<Dist> && std::is_nothrow_constructible_v<bool, Dist&> &&
 		         noexcept((std::declval<Dist&>() - 1) / 2) &&
@@ -1291,7 +1307,7 @@ constexpr void push_heap(const RandIter first, RandIter last, Compare cmp = {})
 }
 
 template<typename RandIter, typename Compare = std::less<>>
-constexpr void make_heap(const RandIter first, const RandIter last, Compare cmp = {})
+constexpr void make_heap(const RandIter first, const RandIter last, Compare cmp)
 		noexcept(noexcept(constexprStd::is_heap_until(first, last, cmp)) &&
 		         std::is_nothrow_move_constructible_v<RandIter> && noexcept(std::declval<RandIter&>()++ != last) &&
 		         noexcept(constexprStd::push_heap(first, std::declval<RandIter&>(), cmp))) {
@@ -1310,7 +1326,7 @@ constexpr void make_heap(Container& c, Compare cmp = {})
 
 template<typename RandIter, typename Compare = std::less<>,
          typename Dist = typename std::iterator_traits<RandIter>::difference_type>
-constexpr void pop_heap(const RandIter first, RandIter last, Compare cmp = {})
+constexpr void pop_heap(const RandIter first, RandIter last, Compare cmp)
 		noexcept(noexcept(first == last) && noexcept(constexprStd::iter_swap(first, --last)) &&
 		         noexcept(constexprStd::distance(first, last)) && std::is_nothrow_move_constructible_v<Dist> &&
 		         noexcept(std::declval<const Dist&>() / 2) && std::is_nothrow_constructible_v<Dist, int> &&
@@ -1368,7 +1384,7 @@ constexpr void pop_heap(const RandIter first, RandIter last, Compare cmp = {})
 }
 
 template<typename RandIter, typename Compare = std::less<>>
-constexpr void sort_heap(const RandIter first, RandIter last, Compare cmp = {})
+constexpr void sort_heap(const RandIter first, RandIter last, Compare cmp)
 		noexcept(noexcept(first != last) && noexcept(--last) && noexcept(constexprStd::pop_heap(first, last, cmp))) {
 	for ( ; first != last; --last ) {
 		constexprStd::pop_heap(first, last, cmp);

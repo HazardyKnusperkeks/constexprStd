@@ -32,6 +32,10 @@ constexpr void advance(InputIterator& i, const Distance n)
 		noexcept(noexcept(details::advanceImpl(i, n, details::iteratorCategory<InputIterator>)));
 
 template<typename InputIterator>
+constexpr auto distance(const InputIterator first, const InputIterator last)
+		noexcept(noexcept(details::distanceImpl(first, last, details::iteratorCategory<InputIterator>)));
+
+template<typename InputIterator>
 constexpr InputIterator next(InputIterator iter,
                              const typename std::iterator_traits<InputIterator>::difference_type n = 1)
                              noexcept(noexcept(constexprStd::advance(iter, n)));

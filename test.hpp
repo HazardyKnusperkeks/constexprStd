@@ -83,6 +83,7 @@ class TestConstexprStd : public QObject {
 	//Sorting operations
 	void testIsSortedUntil(void) const noexcept;
 	void testIsSorted(void) const noexcept;
+	void testSort(void) const noexcept;
 	
 	//Heap operations
 	void testIsHeapUntil(void) const noexcept;

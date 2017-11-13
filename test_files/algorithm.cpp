@@ -1783,6 +1783,35 @@ void TestConstexprStd::testIsSorted(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testSort(void) const noexcept {
+	constexpr std::array<int, 16> powerOfTwo{5, 4, 7, 9, 23, 6, 23, 6, 1, 0, 5, 8, 23, 6, 666, 42};
+	constexpr std::array<int, 11> odd{9, 23, 41, 55, 777, 1024, 3, 5, 6, 2, 4};
+	
+	constexpr auto cPowerOfTwo{[powerOfTwo](void) constexpr noexcept {
+			auto ret{powerOfTwo};
+			constexprStd::sort(ret);
+			return ret;
+		}()};
+	constexpr auto cOdd{[odd](void) constexpr noexcept {
+			auto ret{odd};
+			constexprStd::sort(ret);
+			return ret;
+		}()};
+	
+	auto sPowerOfTwo{powerOfTwo};
+	std::sort(sPowerOfTwo.begin(), sPowerOfTwo.end());
+	QVERIFY(std::is_sorted(sPowerOfTwo.begin(), sPowerOfTwo.end()));
+	QVERIFY(std::is_sorted(cPowerOfTwo.begin(), cPowerOfTwo.end()));
+	QVERIFY(sPowerOfTwo == cPowerOfTwo);
+	
+	auto sOdd{odd};
+	std::sort(sOdd.begin(), sOdd.end());
+	QVERIFY(std::is_sorted(sOdd.begin(), sOdd.end()));
+	QVERIFY(std::is_sorted(cOdd.begin(), cOdd.end()));
+	QVERIFY(sOdd == cOdd);
+	return;
+}
+
 void TestConstexprStd::testIsHeapUntil(void) const noexcept {
 	constexpr TestContainer cc;
 	
