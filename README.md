@@ -151,7 +151,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] partial_sort
 - [ ] partial_sort_copy
 - [ ] stable_sort
-- [ ] nth_element
+- [X] nth_element
 
 #### Binary search operations (on sorted ranges)
 - [ ] lower_bound

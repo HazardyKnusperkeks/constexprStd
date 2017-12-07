@@ -315,6 +315,67 @@ constexpr ForwardIter partitionPointImpl(ForwardIter first, ForwardIter last, Un
 		noexcept(noexcept(constexprStd::find_if_not(first, last, std::move(pred)))) {
 	return constexprStd::find_if_not(first, last, std::move(pred));
 }
+
+template<typename RandIter, typename Compare,
+         typename Dist = typename std::iterator_traits<RandIter>::difference_type>
+constexpr RandIter moveMedianOfThreeToEnd(const RandIter first, const RandIter last, Compare& cmp)
+		noexcept(noexcept(constexprStd::distance(first, last) / 2) && std::is_nothrow_move_constructible_v<Dist> &&
+		         noexcept(constexprStd::next(first, std::declval<const Dist&>())) &&
+		         std::is_nothrow_move_constructible_v<RandIter> &&
+		         noexcept(constexprStd::prev(last)) && noexcept(cmp(*first, *first)) &&
+		         noexcept(constexprStd::iter_swap(first, last))) {
+	const Dist diff   = constexprStd::distance(first, last) / 2;
+	const auto middle = constexprStd::next(first, diff);
+	const auto end    = constexprStd::prev(last);
+	
+	if ( cmp(*first, *middle) ) {
+		if ( cmp(*middle, *end) ) {
+			constexprStd::iter_swap(middle, end);
+		} //if ( cmp(*middle, *end) )
+		else {
+			if ( cmp(*end, *first) ) {
+				constexprStd::iter_swap(first, end);
+			} //if ( cmp(*end, *first) )
+		} //else -> if ( cmp(*middle, *end) )
+	} //if ( cmp(*first, *middle) )
+	else {
+		if ( cmp(*end, *middle) ) {
+			constexprStd::iter_swap(middle, end);
+		} //if ( cmp(*end, *middle) )
+		else {
+			if ( cmp(*first, *end) ) {
+				constexprStd::iter_swap(first, end);
+			} //if ( cmp(*first, *end) )
+		} //else -> if ( cmp(*end, *middle) )
+	} //else -> if ( cmp(*first, *middle) )
+	return end;
+}
+
+template<typename RandIter, typename Compare>
+constexpr RandIter partitionByElement(RandIter first, const RandIter end, Compare& cmp)
+		noexcept(noexcept(constexprStd::prev(end)) && std::is_nothrow_move_constructible_v<RandIter> &&
+		         noexcept(first < first) && noexcept(cmp(*first, *end) && first != first) && noexcept(++first) &&
+		         noexcept(--first) && noexcept(first != first) && noexcept(constexprStd::iter_swap(first, first)) &&
+		         noexcept(cmp(*end, *first)) && noexcept(constexprStd::iter_swap(first, end))) {
+	auto rfirst = constexprStd::prev(end);
+	while ( first < rfirst ) {
+		for ( ; cmp(*first, *end) && first != rfirst; ++first ) {
+			
+		} //for ( ; cmp(*first, *end) && first != rfirst; ++first )
+		
+		for ( ; !cmp(*rfirst, *end) && first != rfirst; --rfirst ) {
+			
+		} //for ( ; !cmp(*rfirst, *end) && first != rfirst; --rfirst )
+		
+		if ( first != rfirst ) {
+			constexprStd::iter_swap(first, rfirst);
+		} //if ( first != rfirst )
+	} //while ( first < rfirst )
+	if ( cmp(*end, *first) ) {
+		constexprStd::iter_swap(first, end);
+	} //if ( cmp(*end, *first) )
+	return first;
+}
 } //namespace constexprStd::details
 
 #endif

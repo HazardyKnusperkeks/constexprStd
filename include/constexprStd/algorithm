@@ -1220,6 +1220,30 @@ constexpr void sort(Container& c, Compare cmp = {})
 	return;
 }
 
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void nth_element(RandIter first, const RandIter nth, RandIter last, Compare cmp = {})
+		noexcept(noexcept(first != last) && noexcept(details::moveMedianOfThreeToEnd(first, last, cmp)) &&
+		         std::is_nothrow_move_constructible_v<RandIter> &&
+		         noexcept(details::partitionByElement(first, first, cmp)) && noexcept(first == nth) &&
+		         noexcept(first < nth) && std::is_nothrow_copy_assignable_v<RandIter> && noexcept(++first)) {
+	while ( first != last ) {
+		auto end = details::moveMedianOfThreeToEnd(first, last, cmp);
+		auto cut = details::partitionByElement(first, end, cmp);
+		
+		if ( cut == nth ) {
+			return;
+		} //if ( cut == nth )
+		
+		if ( cut < nth ) {
+			first = ++cut;
+		} //if ( cut < nth )
+		else {
+			last = cut;
+		} //else -> if ( cut < nth )
+	} //while ( first != last )
+	return;
+}
+
 /*****                                             Heap operations                                                *****/
 
 template<typename RandIter, typename Compare = std::less<>,

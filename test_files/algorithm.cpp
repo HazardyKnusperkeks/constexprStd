@@ -1812,6 +1812,82 @@ void TestConstexprStd::testSort(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testNthElement(void) const noexcept {
+	constexpr std::array<int, 10> a{2, 9, 12, 4, 9, 2, 19, 54, 76, 2};
+	
+	std::array<int, 10> s{a}, c{a};
+	
+	const auto sBegin{s.begin()}, sEnd{s.end()}, cBegin{c.begin()}, cEnd{c.end()};
+	auto sTarget{std::next(sBegin, 5)}, cTarget{std::next(cBegin, 5)};
+	
+	         std::nth_element(sBegin, sTarget, sEnd);
+	constexprStd::nth_element(cBegin, cTarget, cEnd);
+	
+	QCOMPARE(*sTarget, 9);
+	QCOMPARE(*cTarget, 9);
+	
+	for ( auto siter = sBegin, citer = cBegin; siter != sTarget; ++siter, ++citer ) {
+		QVERIFY(*siter <= *sTarget);
+		QVERIFY(*citer <= *cTarget);
+	} //for ( auto siter = sBegin, citer = cBegin; siter != sTarget; ++siter, ++citer )
+	
+	for ( auto siter = sTarget, citer = cTarget; siter != sEnd; ++siter, ++citer ) {
+		QVERIFY(*siter >= *sTarget);
+		QVERIFY(*citer >= *cTarget);
+	} //for ( auto siter = sTarget, citer = cTarget; siter != sEnd; ++siter, ++citer )
+	
+	sTarget = std::next(sBegin, 8);
+	cTarget = std::next(cBegin, 8);
+	
+	         std::nth_element(sBegin, sTarget, sEnd);
+	constexprStd::nth_element(cBegin, cTarget, cEnd);
+	
+	QCOMPARE(*sTarget, 54);
+	QCOMPARE(*cTarget, 54);
+	
+	for ( auto siter = sBegin, citer = cBegin; siter != sTarget; ++siter, ++citer ) {
+		QVERIFY(*siter <= *sTarget);
+		QVERIFY(*citer <= *cTarget);
+	} //for ( auto siter = sBegin, citer = cBegin; siter != sTarget; ++siter, ++citer )
+	
+	for ( auto siter = sTarget, citer = cTarget; siter != sEnd; ++siter, ++citer ) {
+		QVERIFY(*siter >= *sTarget);
+		QVERIFY(*citer >= *cTarget);
+	} //for ( auto siter = sTarget, citer = cTarget; siter != sEnd; ++siter, ++citer )
+	
+	std::array<int, 10> perm{a};
+	std::sort(perm.begin(), perm.end());
+	
+	int permCount = 0;
+	do { //while ( std::next_permutation(perm.begin(), perm.end()) )
+		for ( sTarget = sBegin, cTarget = cBegin; sTarget != sEnd; ++sTarget, ++cTarget ) {
+			s = perm;
+			c = perm;
+			
+			         std::nth_element(sBegin, sTarget, sEnd);
+			constexprStd::nth_element(cBegin, cTarget, cEnd);
+			
+			using pair = std::pair<int, int>;
+			
+			if ( *cTarget != *sTarget) {
+				QCOMPARE((pair{permCount, sTarget - sBegin}), (pair{-1, 0}));
+			} //if ( *cTarget != *sTarget)
+			
+			for ( auto siter = sBegin, citer = cBegin; siter != sTarget; ++siter, ++citer ) {
+				QVERIFY(*siter <= *sTarget);
+				QVERIFY(*citer <= *cTarget);
+			} //for ( auto siter = sBegin, citer = cBegin; siter != sTarget; ++siter, ++citer )
+			
+			for ( auto siter = sTarget, citer = cTarget; siter != sEnd; ++siter, ++citer ) {
+				QVERIFY(*siter >= *sTarget);
+				QVERIFY(*citer >= *cTarget);
+			} //for ( auto siter = sTarget, citer = cTarget; siter != sEnd; ++siter, ++citer )
+		} //for ( sTarget = sBegin, cTarget = cBegin; sTarget != sEnd; ++sTarget, ++cTarget )
+		++permCount;
+	} while ( std::next_permutation(perm.begin(), perm.end())  );
+	return;
+}
+
 void TestConstexprStd::testIsHeapUntil(void) const noexcept {
 	constexpr TestContainer cc;
 	

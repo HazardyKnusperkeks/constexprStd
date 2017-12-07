@@ -22,6 +22,7 @@
 #include <QTest>
 
 #include <string>
+#include <utility>
 
 class TestConstexprStd : public QObject {
 	Q_OBJECT
@@ -84,6 +85,7 @@ class TestConstexprStd : public QObject {
 	void testIsSortedUntil(void) const noexcept;
 	void testIsSorted(void) const noexcept;
 	void testSort(void) const noexcept;
+	void testNthElement(void) const noexcept;
 	
 	//Heap operations
 	void testIsHeapUntil(void) const noexcept;
@@ -167,6 +169,11 @@ namespace QTest {
 inline bool qCompare(const std::string& t1, const char *t2, const char *actual, const char *expected, const char *file,
                      const int line) {
 	return compare_string_helper(t1.c_str(), t2, actual, expected, file, line);
+}
+
+template<>
+inline char* toString<std::pair<int, int>>(const std::pair<int, int>& pair) {
+	return toString(QStringLiteral("{%1,%2}").arg(pair.first).arg(pair.second));
 }
 } //namespace QTest
 
