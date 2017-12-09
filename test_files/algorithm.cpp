@@ -1888,6 +1888,20 @@ void TestConstexprStd::testNthElement(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testPartialSort(void) const noexcept {
+	constexpr std::array a{9, 7, 23, 56, 90, 23, 56, 2, 0, 9};
+	constexpr auto c{[a](void) constexpr noexcept {
+			auto ret{a};
+			constexprStd::partial_sort(ret.begin(), constexprStd::next(ret.begin(), 5), ret.end());
+			return ret;
+		}()};
+	auto s{a};
+	std::partial_sort(s.begin(), std::next(s.begin(), 5), s.end());
+	QVERIFY(std::distance(s.begin(), std::is_sorted_until(s.begin(), s.end())) >= 5);
+	QVERIFY(std::distance(c.begin(), std::is_sorted_until(c.begin(), c.end())) >= 5);
+	return;
+}
+
 void TestConstexprStd::testIsHeapUntil(void) const noexcept {
 	constexpr TestContainer cc;
 	

@@ -1244,6 +1244,15 @@ constexpr void nth_element(RandIter first, const RandIter nth, RandIter last, Co
 	return;
 }
 
+template<typename RandIter, typename Compare = std::less<>>
+constexpr void partial_sort(const RandIter first, const RandIter middle, const RandIter last, Compare cmp = {})
+		noexcept(noexcept(constexprStd::nth_element(first, middle, last, cmp)) &&
+		         noexcept(constexprStd::sort(first, middle, std::move(cmp)))) {
+	constexprStd::nth_element(first, middle, last, cmp);
+	constexprStd::sort(first, middle, std::move(cmp));
+	return;
+}
+
 /*****                                             Heap operations                                                *****/
 
 template<typename RandIter, typename Compare = std::less<>,
