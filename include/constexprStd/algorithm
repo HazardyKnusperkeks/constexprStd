@@ -1253,6 +1253,49 @@ constexpr void partial_sort(const RandIter first, const RandIter middle, const R
 	return;
 }
 
+template<typename InputIter, typename RandIter, typename Compare = std::less<>>
+constexpr RandIter partial_sort_copy(InputIter first, const InputIter last, const RandIter d_first,
+                                     const RandIter d_last, Compare cmp = {})
+		noexcept(std::is_nothrow_copy_constructible_v<RandIter> &&
+		         noexcept(first != last && std::declval<RandIter&>() != d_last) &&
+		         noexcept(++first) && noexcept(*std::declval<RandIter&>() = *first) &&
+		         noexcept(++std::declval<RandIter&>()) &&
+		         noexcept(constexprStd::push_heap(d_first, std::declval<RandIter&>(), cmp)) &&
+		         noexcept(constexprStd::prev(d_last)) && std::is_nothrow_move_constructible_v<RandIter> &&
+		         noexcept(first != last) &&
+		         std::is_nothrow_copy_constructible_v<typename std::iterator_traits<InputIter>::value_type> &&
+		         noexcept(cmp(std::declval<typename std::iterator_traits<InputIter>::value_type&>(), *d_first)) &&
+		         noexcept(constexprStd::pop_heap(d_first, d_last, cmp)) &&
+		         noexcept(*d_first = std::move(std::declval<typename std::iterator_traits<InputIter>::value_type&>()))&&
+		         noexcept(constexprStd::push_heap(d_first, d_last, cmp)) &&
+		         noexcept(constexprStd::sort_heap(d_first, std::declval<RandIter&>(), cmp))) {
+	auto heapIter = d_first;
+	for ( ; first != last && heapIter != d_last; ++first ) {
+		*heapIter = *first;
+		++heapIter;
+		constexprStd::push_heap(d_first, heapIter, cmp);
+	} //for ( ; first != last && heapIter != d_last; ++first )
+	
+	const RandIter beforeLast = constexprStd::prev(d_last);
+	for ( ; first != last; ++first ) {
+		auto val = *first;
+		if ( cmp(val, *d_first) ) {
+			constexprStd::pop_heap(d_first, d_last, cmp);
+			*beforeLast = std::move(val);
+			constexprStd::push_heap(d_first, d_last, cmp);
+		} //if ( cmp(val, *d_first) )
+	} //for ( ; first != last; ++first )
+	constexprStd::sort_heap(d_first, heapIter, cmp);
+	return heapIter;
+}
+
+template<typename Container1, typename Container2, typename Compare = std::less<>>
+constexpr auto partial_sort_copy(const Container1& c1, Container2& c2, Compare cmp = {})
+		noexcept(noexcept(constexprStd::partial_sort_copy(std::begin(c1), std::end(c1),
+		                                                  std::begin(c2), std::end(c2), std::move(cmp)))) {
+	return constexprStd::partial_sort_copy(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), std::move(cmp));
+}
+
 /*****                                             Heap operations                                                *****/
 
 template<typename RandIter, typename Compare = std::less<>,

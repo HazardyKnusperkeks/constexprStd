@@ -87,6 +87,7 @@ class TestConstexprStd : public QObject {
 	void testSort(void) const noexcept;
 	void testNthElement(void) const noexcept;
 	void testPartialSort(void) const noexcept;
+	void testPartialSortCopy(void) const noexcept;
 	
 	//Heap operations
 	void testIsHeapUntil(void) const noexcept;

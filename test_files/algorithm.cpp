@@ -1895,10 +1895,38 @@ void TestConstexprStd::testPartialSort(void) const noexcept {
 			constexprStd::partial_sort(ret.begin(), constexprStd::next(ret.begin(), 5), ret.end());
 			return ret;
 		}()};
+	
 	auto s{a};
 	std::partial_sort(s.begin(), std::next(s.begin(), 5), s.end());
 	QVERIFY(std::distance(s.begin(), std::is_sorted_until(s.begin(), s.end())) >= 5);
 	QVERIFY(std::distance(c.begin(), std::is_sorted_until(c.begin(), c.end())) >= 5);
+	return;
+}
+
+void TestConstexprStd::testPartialSortCopy(void) const noexcept {
+	constexpr std::array<int, 10> in  {6, 9, 2, 4, 7, 0, 9, 2, 5, 7};
+	constexpr std::array<int, 7>  ex7 {0, 2, 2, 4, 5, 6, 7};
+	constexpr std::array<int, 13> ex13{0, 2, 2, 4, 5, 6, 7, 7, 9, 9, 0, 0, 0};
+	
+	constexpr auto c7 = [in](void) constexpr noexcept {
+			std::array<int, 7> ret{};
+			constexprStd::partial_sort_copy(in, ret);
+			return ret;
+		}();
+	constexpr auto c13 = [in](void) constexpr noexcept {
+			std::array<int, 13> ret{};
+			constexprStd::partial_sort_copy(in, ret);
+			return ret;
+		}();
+	
+	std::array<int, 7> s7{};
+	std::array<int, 13> s13{};
+	std::partial_sort_copy(in.begin(), in.end(), s7.begin(), s7.end());
+	std::partial_sort_copy(in.begin(), in.end(), s13.begin(), s13.end());
+	QCOMPARE(s7, ex7);
+	QCOMPARE(s13, ex13);
+	QCOMPARE(c7, ex7);
+	QCOMPARE(c13, ex13);
 	return;
 }
 
