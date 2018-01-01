@@ -160,7 +160,7 @@ But we offer some convenience overloads, e.g. instead of `copy(c.begin(), c.end(
 - [ ] equal_range
 
 #### Set operations (on sorted ranges)
-- [ ] merge
+- [X] merge
 - [ ] inplace_merge
 - [ ] includes
 - [ ] set_difference

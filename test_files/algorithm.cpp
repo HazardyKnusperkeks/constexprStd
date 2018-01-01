@@ -2065,6 +2065,21 @@ void TestConstexprStd::testHeapRandom(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testMerge(void) const noexcept {
+	constexpr std::array<int, 5> a{1, 3, 5, 7, 9}, b{2, 4, 6, 8, 10};
+	constexpr auto l = [a,b](void) constexpr noexcept {
+			std::array<int, 10> ret{};
+			constexprStd::merge(a, b, ret.begin());
+			return ret;
+		};
+	constexpr TestContainer c{l()};
+	static_assert(c == TestContainer{});
+	TestContainer s{0};
+	std::merge(a.begin(), a.end(), b.begin(), b.end(), s.begin());
+	QCOMPARE(s, TestContainer{});
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

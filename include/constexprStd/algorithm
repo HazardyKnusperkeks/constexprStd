@@ -1475,6 +1475,39 @@ constexpr void sort_heap(Container& c, Compare cmp = {})
 	return;
 }
 
+/*****                                     Set operations (on sorted ranges)                                      *****/
+
+template<typename InputIter1, typename InputIter2, typename OutputIter, typename Compare = std::less<>>
+constexpr OutputIter merge(InputIter1 first1, const InputIter1 last1, InputIter2 first2, const InputIter2 last2,
+                           OutputIter d_first, Compare cmp = {})
+		noexcept(noexcept(first1 != last1 && first2 != last2) && noexcept(++d_first) &&
+		         noexcept(cmp(*first2, *first1)) && noexcept(*d_first = *first2) && noexcept(++first2) &&
+		         noexcept(*d_first = *first1) && noexcept(++first1) &&
+		         noexcept(constexprStd::copy(first1, last1, d_first)) &&
+		         noexcept(constexprStd::copy(first2, last2, d_first))) {
+	for ( ; first1 != last1 && first2 != last2; ++d_first ) {
+		if ( cmp(*first2, *first1) ) {
+			*d_first = *first2;
+			++first2;
+		} //if ( cmp(*first2, *first1) )
+		else {
+			*d_first = *first1;
+			++first1;
+		} //else -> if ( cmp(*first2, *first1) )
+	} //for ( ; first1 != last1 && first2 != last2; ++d_first )
+	
+	constexprStd::copy(first1, last1, d_first);
+	constexprStd::copy(first2, last2, d_first);
+	return d_first;
+}
+
+template<typename Container1, typename Container2, typename OutputIter, typename Compare = std::less<>>
+constexpr OutputIter merge(const Container1& c1, const Container2& c2, const OutputIter d_first, Compare cmp = {})
+		noexcept(noexcept(constexprStd::merge(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2),
+		                                      d_first, std::move(cmp)))) {
+	return constexprStd::merge(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), d_first, std::move(cmp));
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
