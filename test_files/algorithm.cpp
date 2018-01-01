@@ -2080,6 +2080,16 @@ void TestConstexprStd::testMerge(void) const noexcept {
 	return;
 }
 
+void TestConstexprStd::testMergeInplace(void) const noexcept {
+	constexpr auto l = [](void) constexpr noexcept {
+			TestContainer ret{1, 3, 5, 7, 9, 2, 4, 6, 8, 10};
+			constexprStd::inplace_merge(ret.begin(), constexprStd::next(ret.begin(), 5), ret.end());
+			return ret;
+		};
+	static_assert(l() == TestContainer{});
+	return;
+}
+
 void TestConstexprStd::testLexicographicalCompare(void) const noexcept {
 	auto l = [](void) constexpr noexcept {
 			std::array<int,       3> a1{1, 2, 3};

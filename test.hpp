@@ -100,6 +100,7 @@ class TestConstexprStd : public QObject {
 	
 	//Set operations (on sorted ranges)
 	void testMerge(void) const noexcept;
+	void testMergeInplace(void) const noexcept;
 	
 	//Minimum/maximum operations
 	void testLexicographicalCompare(void) const noexcept;

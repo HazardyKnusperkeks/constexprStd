@@ -1508,6 +1508,24 @@ constexpr OutputIter merge(const Container1& c1, const Container2& c2, const Out
 	return constexprStd::merge(std::begin(c1), std::end(c1), std::begin(c2), std::end(c2), d_first, std::move(cmp));
 }
 
+template<typename BidirIter, typename Compare = std::less<>>
+constexpr void inplace_merge(BidirIter first, BidirIter middle, const BidirIter last, Compare cmp = {})
+		noexcept(noexcept(first != middle && middle != last) && noexcept(++first) && noexcept(cmp(*middle, *first)) &&
+		         std::is_nothrow_move_constructible_v<typename std::iterator_traits<BidirIter>::value_type> &&
+		         noexcept(constexprStd::move_backward(first, middle, constexprStd::next(middle))) &&
+		         std::is_nothrow_move_assignable_v<typename std::iterator_traits<BidirIter>::value_type> &&
+		         noexcept(++middle)) {
+	for ( ; first != middle && middle != last; ++first ) {
+		if ( cmp(*middle, *first) ) {
+			auto temp = std::move(*middle);
+			constexprStd::move_backward(first, middle, constexprStd::next(middle));
+			*first = std::move(temp);
+			++middle;
+		} //if ( cmp(*middle, *first) )
+	} //for ( ; first != middle && middle != last; ++first )
+	return;
+}
+
 /*****                                        Minimum/Maximum Operations                                          *****/
 
 template<typename InputIter1, typename InputIter2, typename Compare = std::less<>>
